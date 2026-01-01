@@ -6,6 +6,7 @@
   justify-content: center;
   align-items: center;
   transition: background-color 0.5s ease;
+  position: relative; /* For sparkline layering */
 }
 
 /* Subtle flash when locked */
@@ -16,6 +17,7 @@
 /* --- Start Screen --- */
 .start-screen {
   text-align: center;
+  z-index: 10;
 }
 
 .start-screen h1 {
@@ -43,6 +45,7 @@
   background: var(--text-color);
   color: var(--bg-color);
   transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 /* --- Tuner Interface --- */
@@ -52,32 +55,47 @@
   align-items: center;
   width: 100%;
   max-width: 600px;
+  position: relative;
+  z-index: 5;
 }
 
-/* 1. Note Display */
+/* 1. Sparkline (Background) */
+.sparkline-container {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  transform: translateY(-50%);
+  z-index: -1;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 2. Note Display */
 .note-display {
   font-size: 10rem;
   font-weight: 700;
   line-height: 1;
   color: var(--text-color);
-  transition: color 0.2s ease, opacity 0.5s ease; /* Added opacity transition */
+  transition: color 0.1s ease, opacity 0.5s ease; /* Faster color transition */
   margin-bottom: 2rem;
+  /* Glow is handled inline for dynamic intensity */
 }
 
 .note-display.locked {
   color: var(--accent-locked);
-  text-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
 }
 
 .note-display.holding {
-  opacity: 0.3; /* Dim when holding */
+  opacity: 0.3;
 }
 
-/* 2. Cents Gauge */
+/* 3. Ruler Gauge */
 .gauge-container {
   position: relative;
   width: 80%;
-  height: 40px;
+  height: 60px; /* Taller for ticks */
   margin-bottom: 4rem;
   opacity: 0.3;
   transition: opacity 0.3s ease;
@@ -88,41 +106,56 @@
 }
 
 .gauge-container.holding {
-  opacity: 0.3; /* Dim when holding */
+  opacity: 0.3;
 }
 
-.gauge-track {
+.gauge-ruler {
   width: 100%;
-  height: 4px;
+  height: 2px;
   background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
 }
 
-.center-marker {
-  width: 4px;
-  height: 20px;
-  background-color: var(--text-color);
+.tick {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  width: 1px;
   transform: translate(-50%, -50%);
-  border-radius: 2px;
+}
+
+.tick.major {
+  height: 20px;
+  top: 50%;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.tick.minor {
+  height: 10px;
+  top: 50%;
+}
+
+.tick.center {
+  height: 30px;
+  width: 2px;
+  top: 50%;
+  background-color: var(--accent-locked); /* Green center */
+  box-shadow: 0 0 10px var(--accent-locked);
 }
 
 .gauge-indicator {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background-color: var(--accent-flat);
   border-radius: 50%;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  /* Smooth movement */
-  transition: left 0.1s linear, background-color 0.2s ease;
+  transition: left 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s ease;
   box-shadow: 0 0 10px rgba(255, 138, 101, 0.5);
+  z-index: 2;
+  border: 2px solid var(--bg-color); /* Cutout effect */
 }
 
 .locked .gauge-indicator {
@@ -134,16 +167,18 @@
   position: absolute;
   width: 100%;
   text-align: center;
-  top: 30px;
+  top: 40px; /* Moved down */
   font-family: monospace;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #888;
+  letter-spacing: 1px;
 }
 
-/* 3. Tech Readout */
+/* 4. Tech Readout */
 .tech-readout {
-  font-family: monospace;
-  color: #555;
-  font-size: 0.9rem;
+  font-family: 'Courier New', monospace; /* Monospaced for tech feel */
+  color: #666;
+  font-size: 0.85rem;
   margin-top: auto;
+  opacity: 0.7;
 }

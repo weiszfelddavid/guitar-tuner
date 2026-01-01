@@ -1,13 +1,18 @@
-## 7. Persistence & Smoothing (User Experience)
-**Goal:** Allow users to see the tuning status even as the guitar string decays into silence.
 
-### Requirements
-1.  **Visual Persistence (Hold):**
-    -   When the signal drops below `SILENCE_THRESHOLD`, do not immediately clear the screen.
-    -   **Action:** Enter a "Hold State" for **1.5 seconds**.
-    -   **Visual:** Dim the `NoteDisplay` and `CentsGauge` to 50% opacity.
-    -   **Exit Conditions:**
-        -   *Time Expired:* Clear to "Listening" (--) state.
-        -   *New Signal:* If a valid pitch is detected, immediately update the display and restore 100% opacity.
-2.  **Data Smoothing:**
-    -   Apply a rolling average (or similar low-pass filter) to the `cents` value to prevent the needle from jumping erratically due to micro-fluctuations.
+## 8. Premium UI Enhancements (Level Up)
+**Goal:** Elevate the minimal design to a professional "instrument" quality.
+
+### Features
+1.  **Frequency Sparkline (The "Evolution"):**
+    -   **Visual:** A subtle, thin SVG path running across the background.
+    -   **Behavior:** Plots the pitch deviation over the last 100 frames (~2 seconds).
+    -   **Style:** Low opacity (20%) white line. Smooth curve (Bezier).
+2.  **Precision Ruler Gauge:**
+    -   Replace the simple track with a **Graduated Ruler**.
+    -   **Ticks:** Small markers at -50, -25, 0, +25, +50 cents.
+    -   **Center Mark:** Prominent, glowing "diamond" or "notch" at 0.
+3.  **Reactive Glow (Bloom):**
+    -   The `<NoteDisplay />` should have a dynamic text-shadow.
+    -   **Far:** No glow.
+    -   **Close:** Soft green glow.
+    -   **Locked:** Intense neon green pulse.
