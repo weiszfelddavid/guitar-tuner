@@ -1,35 +1,141 @@
 .App {
-  font-family: Arial, sans-serif;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.5s ease;
+}
+
+/* Subtle flash when locked */
+.App.locked {
+  background-color: #1a221a; 
+}
+
+/* --- Start Screen --- */
+.start-screen {
   text-align: center;
-  padding: 20px;
-  background-color: #282c34;
-  color: white;
-  min-height: 100vh;
+}
+
+.start-screen h1 {
+  font-size: 2rem;
+  font-weight: 300;
+  margin-bottom: 3rem;
+  letter-spacing: 2px;
+  color: var(--text-color);
+}
+
+.start-btn {
+  background: transparent;
+  color: var(--text-color);
+  border: 2px solid var(--text-color);
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.start-btn:hover {
+  background: var(--text-color);
+  color: var(--bg-color);
+  transform: scale(1.05);
+}
+
+/* --- Tuner Interface --- */
+.tuner-interface {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  width: 100%;
+  max-width: 600px;
 }
 
-h1 {
-  color: #61dafb;
+/* 1. Note Display */
+.note-display {
+  font-size: 10rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-color);
+  transition: color 0.2s ease;
+  margin-bottom: 2rem;
 }
 
-button {
-  background-color: #61dafb;
-  color: #282c34;
-  border: none;
-  padding: 10px 20px;
-  margin: 10px 0;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
+.note-display.locked {
+  color: var(--accent-locked);
+  text-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
 }
 
-button:hover {
-  background-color: #21a1f1;
+/* 2. Cents Gauge */
+.gauge-container {
+  position: relative;
+  width: 80%;
+  height: 40px;
+  margin-bottom: 4rem;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
 }
 
-div {
-  margin-top: 20px;
+.gauge-container.visible {
+  opacity: 1;
+}
+
+.gauge-track {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.center-marker {
+  width: 4px;
+  height: 20px;
+  background-color: var(--text-color);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+}
+
+.gauge-indicator {
+  width: 20px;
+  height: 20px;
+  background-color: var(--accent-flat);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* Smooth movement */
+  transition: left 0.1s linear, background-color 0.2s ease;
+  box-shadow: 0 0 10px rgba(255, 138, 101, 0.5);
+}
+
+.locked .gauge-indicator {
+  background-color: var(--accent-locked);
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.8);
+}
+
+.cents-label {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 30px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* 3. Tech Readout */
+.tech-readout {
+  font-family: monospace;
+  color: #555;
+  font-size: 0.9rem;
+  margin-top: auto;
 }

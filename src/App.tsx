@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import processorUrl from './audio/engine/processor?worker&url';
+import { getNoteFromPitch, type NoteData } from './utils/tuner';
 
-// Placeholder for TunerInterface - to be implemented later
+// --- Types ---
 interface TunerUpdate {
   pitch: number;
   clarity: number;
@@ -11,35 +12,49 @@ interface TunerUpdate {
 
 type TunerStatus = 'idle' | 'listening' | 'detecting' | 'locked';
 
-interface TunerInterfaceProps {
-  pitch: number | null;
-  clarity: number | null;
-  status: TunerStatus;
-}
+// --- Components ---
 
-const TunerInterface: React.FC<TunerInterfaceProps> = ({ pitch, clarity, status }) => {
+const NoteDisplay: React.FC<{ note: string; status: TunerStatus }> = ({ note, status }) => {
+  const isLocked = status === 'locked';
   return (
-    <div>
-      <h2>Tuner Interface</h2>
-      <p>Status: {status}</p>
-      <p>Pitch: {pitch ? pitch.toFixed(2) + ' Hz' : 'N/A'}</p>
-      <p>Clarity: {clarity ? (clarity * 100).toFixed(1) + '%' : 'N/A'}</p>
-      <p>(This is a placeholder component)</p>
+    <div className={`note-display ${isLocked ? 'locked' : ''}`}>
+      {note || "--"}
     </div>
   );
 };
 
+const CentsGauge: React.FC<{ cents: number; status: TunerStatus }> = ({ cents, status }) => {
+  // Clamp cents between -50 and 50 for display
+  const clampedCents = Math.max(-50, Math.min(50, cents));
+  // Convert -50..50 to 0..100% for CSS placement
+  const percent = ((clampedCents + 50) / 100) * 100;
+  
+  const isVisible = status === 'detecting' || status === 'locked';
+
+  return (
+    <div className={`gauge-container ${isVisible ? 'visible' : ''}`}>
+      <div className="gauge-track">
+        <div className="center-marker"></div>
+      </div>
+      <div 
+        className="gauge-indicator" 
+        style={{ left: `${percent}%` }}
+      ></div>
+      <div className="cents-label">{isVisible ? `${Math.round(cents)} ct` : ''}</div>
+    </div>
+  );
+};
+
+// --- Main App ---
+
 function App() {
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [pitch, setPitch] = useState<number | null>(null);
-  const [clarity, setClarity] = useState<number | null>(null);
+  const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
   const audioContextRef = useRef<AudioContext | null>(null);
 
   const startTuner = async () => {
-    if (audioContextRef.current) {
-      // If already started, just return
-      return;
-    }
+    if (audioContextRef.current) return;
 
     try {
       setTunerStatus('listening');
@@ -52,26 +67,38 @@ function App() {
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const source = audioContext.createMediaStreamSource(stream);
-
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
-      const SILENCE_THRESHOLD = 0.001; // Adjust as needed, based on typical microphone noise floor
+      // Constants for FSM
+      const SILENCE_THRESHOLD = 0.01; 
+      const CLARITY_THRESHOLD = 0.90; // High confidence for lock
+      const LOCK_TOLERANCE_CENTS = 5;
 
       pitchProcessor.port.onmessage = (event) => {
-        const tunerUpdate: TunerUpdate = event.data;
+        const { pitch, clarity, bufferrms } = event.data as TunerUpdate;
         
-        if (tunerUpdate.bufferrms < SILENCE_THRESHOLD) {
+        // 1. Silence Gate
+        if (bufferrms < SILENCE_THRESHOLD) {
           setTunerStatus('listening');
           setPitch(null);
-          setClarity(null);
-        } else if (tunerUpdate.pitch) {
-          setPitch(tunerUpdate.pitch);
-          setClarity(tunerUpdate.clarity);
-          setTunerStatus('locked');
+          return;
+        }
+
+        // 2. Pitch Detection
+        if (pitch && clarity > 0.8) {
+          setPitch(pitch);
+          const data = getNoteFromPitch(pitch);
+          setNoteData(data);
+
+          // 3. Status Logic
+          if (clarity > CLARITY_THRESHOLD && Math.abs(data.cents) < LOCK_TOLERANCE_CENTS) {
+            setTunerStatus('locked');
+          } else {
+            setTunerStatus('detecting');
+          }
         } else {
-          setPitch(null);
-          setClarity(null);
-          setTunerStatus('detecting');
+          // Noisy signal but loud enough to not be silence
+          setTunerStatus('listening');
         }
       };
 
@@ -81,30 +108,45 @@ function App() {
     } catch (error) {
       console.error('Error starting tuner:', error);
       setTunerStatus('idle');
-      alert('Error starting tuner. Please ensure microphone access is granted.');
+      alert('Microphone access is required to use the tuner.');
     }
   };
 
   useEffect(() => {
     return () => {
-      // Cleanup audio context on component unmount
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
+      audioContextRef.current?.close();
     };
   }, []);
 
   return (
-    <div className="App">
-      <h1>Guitar Tuner</h1>
-      {tunerStatus === 'idle' && (
-        <button onClick={startTuner}>Start Tuner</button>
+    <div className={`App ${tunerStatus}`}>
+      
+      {tunerStatus === 'idle' ? (
+        <div className="start-screen">
+          <h1>Guitar Tuner</h1>
+          <button className="start-btn" onClick={startTuner}>
+            Start Tuner
+          </button>
+        </div>
+      ) : (
+        <main className="tuner-interface">
+          <NoteDisplay 
+            note={tunerStatus === 'listening' ? '--' : noteData.note} 
+            status={tunerStatus} 
+          />
+          
+          <CentsGauge 
+            cents={tunerStatus === 'listening' ? 0 : noteData.cents} 
+            status={tunerStatus} 
+          />
+          
+          <div className="tech-readout">
+            {pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'}
+          </div>
+        </main>
       )}
-      <TunerInterface pitch={pitch} clarity={clarity} status={tunerStatus} />
     </div>
   );
 }
 
 export default App;
-
