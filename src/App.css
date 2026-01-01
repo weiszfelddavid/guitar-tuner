@@ -137,11 +137,13 @@
 }
 
 .tick.center {
-  height: 30px;
-  width: 2px;
+  height: 12px;
+  width: 12px;
   top: 50%;
   background-color: var(--accent-locked); /* Green center */
   box-shadow: 0 0 10px var(--accent-locked);
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: 2px;
 }
 
 .gauge-indicator {

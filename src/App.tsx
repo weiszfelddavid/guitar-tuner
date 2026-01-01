@@ -74,18 +74,44 @@ const Sparkline: React.FC<{ history: number[] }> = ({ history }) => {
   const height = 100;
   
   // Map cents (-50 to +50) to Y (height to 0)
-  // 0 cents = height/2
   const normalizeY = (cents: number) => {
     const clamped = Math.max(-50, Math.min(50, cents));
-    // -50 -> height (bottom), 50 -> 0 (top)
     return height - ((clamped + 50) / 100 * height);
   };
 
-  const points = history.map((val, i) => {
-    const x = (i / (history.length - 1)) * width;
-    const y = normalizeY(val);
-    return `${x},${y}`;
-  }).join(' ');
+  // Generate smooth Bezier path
+  const getPath = (data: number[]) => {
+    if (data.length === 0) return "";
+    
+    const points = data.map((val, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = normalizeY(val);
+      return [x, y];
+    });
+
+    return points.reduce((acc, [x, y], i, arr) => {
+      if (i === 0) return `M ${x},${y}`;
+      
+      const [prevX, prevY] = arr[i - 1];
+      
+      // Simple smoothing: Control point is halfway between X's, but same Y as previous/current? 
+      // Better: Cubic Bezier with control points based on slope.
+      // For simplicity and "sparkline" look, a simple cubic spline works well.
+      // Here we'll use a simplified strategy: Control points at mid-x, preserving y flatness?
+      // No, let's use a standard smoothing technique.
+      
+      // Strategy: Control point 1 is (prevX + (x-prevX)/2, prevY)
+      // Strategy: Control point 2 is (prevX + (x-prevX)/2, y)
+      // This creates an "S" curve between points.
+      
+      const cp1x = prevX + (x - prevX) / 2;
+      const cp1y = prevY;
+      const cp2x = prevX + (x - prevX) / 2;
+      const cp2y = y;
+      
+      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x},${y}`;
+    }, "");
+  };
 
   return (
     <div className="sparkline-container">
@@ -93,8 +119,8 @@ const Sparkline: React.FC<{ history: number[] }> = ({ history }) => {
         {/* Center line */}
         <line x1="0" y1={height/2} x2={width} y2={height/2} stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="4 4" />
         
-        <polyline
-          points={points}
+        <path
+          d={getPath(history)}
           fill="none"
           stroke="rgba(255, 255, 255, 0.2)"
           strokeWidth="2"
@@ -112,12 +138,12 @@ function App() {
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
-  const [centsHistory, setCentsHistory] = useState<number[]>(new Array(50).fill(0));
+  const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const centsBufferRef = useRef<number[]>([]);
   const lastValidTimeRef = useRef<number>(0);
-  const holdTimeoutRef = useRef<any>(null);
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTuner = async () => {
     if (audioContextRef.current) return;
@@ -125,9 +151,8 @@ function App() {
     try {
       setTunerStatus('listening');
 
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const audioContext = new AudioContext();
-      audioContextRef.current = audioContext;
+      const AudioContextConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = new AudioContextConstructor();
 
       await audioContext.audioWorklet.addModule(processorUrl);
 
@@ -185,10 +210,10 @@ function App() {
             cents: smoothedCents
           });
 
-          // Update Sparkline History (keep last 50 points)
+          // Update Sparkline History (keep last 100 points)
           setCentsHistory(prev => {
             const newHistory = [...prev, smoothedCents];
-            return newHistory.slice(Math.max(newHistory.length - 50, 0));
+            return newHistory.slice(Math.max(newHistory.length - 100, 0));
           });
 
           // 3. Status Logic
