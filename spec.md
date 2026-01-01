@@ -59,3 +59,33 @@ We will commit a `tests/fixtures/audio` folder containing:
 - **Bundle Size:** < 2MB (Gzipped).
 - **Permissions:** Handle "Microphone Denied" gracefully with a "Open Settings" deep link.
 - **Offline:** Fully functional PWA with Service Worker.
+
+## 4. User Interface (UI)
+**File:** `src/ui/components/TunerInterface.tsx`
+
+### Requirements
+1.  **Component Type:** Functional React Component.
+2.  **Props:**
+    - `pitch`: number (detected frequency in Hz).
+    - `clarity`: number (0.0 to 1.0 confidence).
+    - `status`: 'idle' | 'listening' | 'locked'.
+3.  **Visual Logic:**
+    - Convert Hz to **Note Name** (e.g., 440Hz -> "A4").
+    - Calculate **Cents Off** (difference from perfect pitch).
+    - **Visual Indicator:** Display a needle or bar showing how sharp/flat the note is.
+    - **Color Coding:**
+        - Green: Locked / In Tune (within 5 cents).
+        - Yellow: Close.
+        - Red: Out of tune.
+
+## 5. Integration & Architecture
+**Files:** `src/App.tsx`, `src/vite-env.d.ts`
+
+### Requirements
+1.  **Worklet Loading Strategy:**
+    - Must use Vite's `?url` import suffix (e.g., `import processorUrl from '...?url'`) to load the AudioWorkletProcessor.
+2.  **Type Safety:**
+    - Create `src/vite-env.d.ts` to declare that `*.ts?url` returns a string.
+3.  **App Orchestration (`src/App.tsx`):**
+    - Initialize `AudioContext` only after a user interaction (Click "Start").
+    - Connect the `PitchProcessor` node to the `TunerInterface` state.
