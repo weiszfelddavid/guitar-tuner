@@ -60,13 +60,17 @@
   font-weight: 700;
   line-height: 1;
   color: var(--text-color);
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, opacity 0.5s ease; /* Added opacity transition */
   margin-bottom: 2rem;
 }
 
 .note-display.locked {
   color: var(--accent-locked);
   text-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
+}
+
+.note-display.holding {
+  opacity: 0.3; /* Dim when holding */
 }
 
 /* 2. Cents Gauge */
@@ -81,6 +85,10 @@
 
 .gauge-container.visible {
   opacity: 1;
+}
+
+.gauge-container.holding {
+  opacity: 0.3; /* Dim when holding */
 }
 
 .gauge-track {
