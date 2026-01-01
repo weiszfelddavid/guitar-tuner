@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css';
-import processorUrl from './audio/engine/processor?url';
+import processorUrl from './audio/engine/processor?worker&url';
 
 // Placeholder for TunerInterface - to be implemented later
 interface TunerUpdate {
@@ -34,7 +34,6 @@ function App() {
   const [pitch, setPitch] = useState<number | null>(null);
   const [clarity, setClarity] = useState<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserNodeRef = useRef<AnalyserNode | null>(null);
 
   const startTuner = async () => {
     if (audioContextRef.current) {
@@ -78,11 +77,6 @@ function App() {
 
       source.connect(pitchProcessor);
       pitchProcessor.connect(audioContext.destination);
-
-      // Optional: Add an analyser node for visualization purposes if needed later
-      const analyser = audioContext.createAnalyser();
-      source.connect(analyser);
-      analysernodeRef.current = analyser;
 
     } catch (error) {
       console.error('Error starting tuner:', error);

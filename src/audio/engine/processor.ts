@@ -1,3 +1,5 @@
+
+
 class PitchProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array;
   private bufferIndex: number = 0;
@@ -11,7 +13,7 @@ class PitchProcessor extends AudioWorkletProcessor {
     this.threshold = options?.processorOptions?.threshold || 0.1;
   }
 
-  process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: any): boolean {
+  process(inputs: Float32Array[][], _outputs: Float32Array[][], _parameters: any): boolean {
     const input = inputs[0];
     if (!input || !input.length) return true;
     

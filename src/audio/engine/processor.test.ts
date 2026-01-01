@@ -3,11 +3,11 @@ import { describe, it, expect, vi } from 'vitest';
 describe('PitchProcessor', () => {
   it('should correctly detect 440Hz', async () => {
     // 1. DEFINE BROWSER GLOBALS (Before loading the file)
-    global.AudioWorkletProcessor = class AudioWorkletProcessor {
+    (global as any).AudioWorkletProcessor = class AudioWorkletProcessor {
         port: any;
         constructor() { this.port = { postMessage: vi.fn() }; }
     } as any;
-    global.registerProcessor = vi.fn();
+    (global as any).registerProcessor = vi.fn();
 
     // 2. LOAD THE FILE DYNAMICALLY (Wait for globals to be ready)
     // This prevents the "ReferenceError" crash
