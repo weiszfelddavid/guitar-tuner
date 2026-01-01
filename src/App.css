@@ -72,23 +72,88 @@
   pointer-events: none;
 }
 
-/* 2. Note Display */
+/* 2. Note Display & String Visualizer */
+.center-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
 .note-display {
   font-size: 10rem;
   font-weight: 700;
   line-height: 1;
   color: var(--text-color);
-  transition: color 0.1s ease, opacity 0.5s ease; /* Faster color transition */
-  margin-bottom: 2rem;
-  /* Glow is handled inline for dynamic intensity */
+  transition: color 0.1s ease, opacity 0.5s ease;
+  margin-bottom: 1rem;
 }
 
-.note-display.locked {
+.string-visualizer {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.string-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.3;
+  transition: all 0.3s ease;
+  transform: scale(0.9);
+}
+
+.string-node.active {
+  opacity: 1;
+  transform: scale(1.2);
   color: var(--accent-locked);
 }
 
-.note-display.holding {
-  opacity: 0.3;
+.string-label {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.octave-label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  margin-top: -4px;
+}
+
+/* 2.5 Tuning Selector */
+.tuning-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 3rem;
+  width: 100%;
+}
+
+.tuning-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tuning-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tuning-chip.active {
+  background: var(--accent-locked);
+  color: #000;
+  font-weight: 600;
+  border-color: var(--accent-locked);
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
 }
 
 /* 3. Ruler Gauge */

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import processorUrl from './audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from './utils/tuner';
+import { TUNINGS, noteToFreq, type Tuning } from './utils/tunings';
 
 // --- Types ---
 interface TunerUpdate {
@@ -13,6 +14,60 @@ interface TunerUpdate {
 type TunerStatus = 'idle' | 'listening' | 'detecting' | 'locked' | 'holding';
 
 // --- Components ---
+
+const TuningSelector: React.FC<{ 
+  selected: Tuning; 
+  onSelect: (t: Tuning) => void 
+}> = ({ selected, onSelect }) => {
+  return (
+    <div className="tuning-selector">
+      {TUNINGS.map(t => (
+        <button 
+          key={t.name}
+          className={`tuning-chip ${selected.name === t.name ? 'active' : ''}`}
+          onClick={() => onSelect(t)}
+        >
+          {t.name}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const StringVisualizer: React.FC<{ 
+  tuning: Tuning; 
+  pitch: number | null;
+}> = ({ tuning, pitch }) => {
+  // Find the closest string in the tuning to the current pitch
+  let closestIndex = -1;
+  if (pitch) {
+    let minDiff = Infinity;
+    tuning.notes.forEach((note, index) => {
+      const targetFreq = noteToFreq(note);
+      const diff = Math.abs(Math.log2(pitch / targetFreq));
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = index;
+      }
+    });
+    // Only highlight if we are somewhat close (within 3 semitones)
+    if (minDiff > 0.2) closestIndex = -1; 
+  }
+
+  return (
+    <div className="string-visualizer">
+      {tuning.notes.map((note, i) => (
+        <div 
+          key={`${tuning.name}-${note}-${i}`} 
+          className={`string-node ${closestIndex === i ? 'active' : ''}`}
+        >
+          <span className="string-label">{note.replace(/[0-9]/g, '')}</span>
+          <span className="octave-label">{note.match(/[0-9]/g)}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const NoteDisplay: React.FC<{ note: string; status: TunerStatus; cents: number }> = ({ note, status, cents }) => {
   const isLocked = status === 'locked';
@@ -139,6 +194,7 @@ function App() {
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
   const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
+  const [selectedTuning, setSelectedTuning] = useState<Tuning>(TUNINGS[0]);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const centsBufferRef = useRef<number[]>([]);
@@ -260,13 +316,25 @@ function App() {
         </div>
       ) : (
         <main className="tuner-interface">
+          <TuningSelector 
+            selected={selectedTuning} 
+            onSelect={setSelectedTuning} 
+          />
+
           <Sparkline history={centsHistory} />
           
-          <NoteDisplay 
-            note={noteData.note} 
-            status={tunerStatus}
-            cents={noteData.cents}
-          />
+          <div className="center-stack">
+            <NoteDisplay 
+              note={noteData.note} 
+              status={tunerStatus}
+              cents={noteData.cents}
+            />
+            
+            <StringVisualizer 
+              tuning={selectedTuning} 
+              pitch={pitch} 
+            />
+          </div>
           
           <RulerGauge 
             cents={noteData.cents} 
