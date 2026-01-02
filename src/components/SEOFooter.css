@@ -1,0 +1,72 @@
+.seo-content {
+  max-width: 800px;
+  margin: 4rem auto 2rem;
+  padding: 0 1.5rem;
+  color: #888;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  text-align: left;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 3rem;
+}
+
+.seo-section {
+  margin-bottom: 2.5rem;
+}
+
+.seo-section h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.seo-section p, .seo-section li {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.seo-section strong {
+  color: #ddd;
+}
+
+.tuning-steps {
+  padding-left: 1.2rem;
+}
+
+.tuning-steps li {
+  margin-bottom: 0.5rem;
+}
+
+.freq-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.freq-table th, .freq-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.freq-table th {
+  color: var(--accent-locked);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .seo-content {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
+  
+  .seo-section h2 {
+    font-size: 1.25rem;
+  }
+}

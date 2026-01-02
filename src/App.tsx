@@ -4,6 +4,7 @@ import processorUrl from './audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from './utils/tuner';
 import { TUNINGS, noteToFreq, type Tuning } from './utils/tunings';
 import { APP_VERSION } from './version';
+import { SEOFooter } from './components/SEOFooter';
 
 // --- Types ---
 interface TunerUpdate {
@@ -344,6 +345,8 @@ function App() {
           {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
         </div>
         
+        <SEOFooter />
+
         <div className="version-footer">
           {APP_VERSION}
         </div>
