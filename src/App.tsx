@@ -3,6 +3,7 @@ import './App.css';
 import processorUrl from './audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from './utils/tuner';
 import { TUNINGS, noteToFreq, type Tuning } from './utils/tunings';
+import { APP_VERSION } from './version';
 
 // --- Types ---
 interface TunerUpdate {
@@ -343,6 +344,10 @@ function App() {
           
           <div className="tech-readout">
             {tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...')}
+          </div>
+          
+          <div className="version-footer">
+            {APP_VERSION}
           </div>
         </main>
       )}

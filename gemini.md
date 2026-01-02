@@ -40,6 +40,7 @@ A web and mobile-capable guitar tuner application built with React, Vite, and Ca
 -   **Build for Production:** `npm run build`
 -   **Lint:** `npm run lint`
 
-## 6. Architecture Notes
--   The application likely uses an `AudioWorklet` to process raw microphone data off the main thread to ensure smooth UI rendering.
--   Global state is managed via Zustand to synchronize the UI with the audio engine's detected pitch.
+## 7. Versioning Strategy
+-   **System:** Semantic Versioning (SemVer) with beta increments for rapid iteration (e.g., `v1.0.0-beta.1`).
+-   **Source of Truth:** `src/version.ts`.
+-   **Rule:** For every set of user-facing changes or significant logic updates, increment the version number in `src/version.ts` before committing. This ensures we can verify which deployment is live.

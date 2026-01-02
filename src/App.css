@@ -248,4 +248,14 @@
   font-size: 0.85rem;
   margin-top: auto;
   opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+
+.version-footer {
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: #fff;
+  opacity: 0.2;
+  margin-top: 0.5rem;
+  letter-spacing: 1px;
 }
