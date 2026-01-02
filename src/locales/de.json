@@ -1,0 +1,117 @@
+{
+  "common": {
+    "tap_to_enable": "Tippen zum Aktivieren des Mikrofons",
+    "ready": "Bereit",
+    "hold": "Halten",
+    "listening": "Höre...",
+    "mic_required": "Mikrofonzugriff ist erforderlich.",
+    "flat": "Zu tief (Links)",
+    "sharp": "Zu hoch (Rechts)",
+    "cents_label": "ct"
+  },
+  "tuner": {
+    "status_idle": "Bereit",
+    "status_holding": "Halten",
+    "status_listening": "Höre..."
+  },
+  "instruments": {
+    "guitar": {
+      "title": "Kostenloses Online-Gitarrenstimmgerät",
+      "desc": "Stimmen Sie Ihre Akustik- oder E-Gitarre sofort. Unser Präzisionstuner erkennt Saiten automatisch mittels fortschrittlicher Algorithmen.",
+      "tips": "Für Standardstimmung (EADGBE) beginnen Sie mit der dicksten Saite (Tiefes E). Neue Saiten sollten sanft gedehnt werden."
+    },
+    "bass": {
+      "title": "Kostenloses Online-Bassstimmgerät",
+      "desc": "Das präziseste Online-Stimmgerät für Bassgitarren. Erfasst tiefe Frequenzen exakt, auch bei 5-Saitern.",
+      "tips": "Tiefe Frequenzen sind für Laptop-Mikrofone schwer zu erfassen. Spielen Sie die Saite kräftig mit dem Daumen oder Plektrum an."
+    },
+    "ukulele": {
+      "title": "Kostenloses Ukulele-Stimmgerät",
+      "desc": "Stimmen Sie Ihre Sopran-, Konzert- oder Tenor-Ukulele in Sekunden. Unterstützt GCEA und Low-G.",
+      "tips": "Nylonsaiten sind temperaturempfindlich. Stimmen Sie häufiger, wenn Sie im Freien spielen."
+    },
+    "cello": {
+      "title": "Online-Cello-Stimmgerät",
+      "desc": "Präzisionsstimmung für Cello (A-D-G-C). Optimiert für die reichen Obertöne von Orchesterinstrumenten.",
+      "tips": "Nutzen Sie lange, gleichmäßige Bogenstriche für die beste Erkennung."
+    },
+    "default": {
+      "title": "Chromatisches Online-Stimmgerät",
+      "desc": "Ein universelles Stimmgerät für alle Saiteninstrumente. Professionelle Genauigkeit über Ihr Mikrofon.",
+      "tips": "Zupfen Sie die Saite klar an. Das Stimmgerät zeigt die Abweichung in Cent an."
+    }
+  },
+  "footer": {
+    "frequencies_title": "Frequenzen (Hz)",
+    "frequencies_ref": "Referenzfrequenzen für",
+    "strings": "Saiten",
+    "pro_tips_title": "Profi-Tipps für",
+    "table_string": "Saite",
+    "table_note": "Note",
+    "table_freq": "Frequenz (Hz)",
+    "step_mic": "Mikrofon aktivieren",
+    "step_mic_desc": "Klicken Sie auf das Overlay, um den Zugriff zu erlauben.",
+    "step_inst": "Instrument wählen",
+    "step_inst_desc_prefix": "Stellen Sie sicher, dass",
+    "step_inst_desc_suffix": "im Menü aktiv ist.",
+    "step_pluck": "Klar anspielen",
+    "step_pluck_desc": "Spielen Sie eine einzelne Saite. Der Tuner markiert die nächste Note.",
+    "step_needle": "Nadel prüfen",
+    "step_needle_flat": "Ton ist zu tief. Wirbel anziehen.",
+    "step_needle_sharp": "Ton ist zu hoch. Wirbel lockern.",
+    "step_diamond": "Diamant-Modus",
+    "step_diamond_desc": "Wenn der Diamant grün leuchtet, ist die Stimmung perfekt (±4 Cent)."
+  },
+  "tunings": {
+    "guitar_standard": {
+      "name": "Gitarre (Standard)",
+      "seoTitle": "Gitarrenstimmgerät Standard | Präziser Online-Tuner",
+      "description": "Stimmen Sie Ihre Gitarre sofort auf EADGBE. Unser Profi-Tuner funktioniert direkt im Browser."
+    },
+    "guitar_drop-d": {
+      "name": "Gitarre (Drop D)",
+      "seoTitle": "Drop D Stimmgerät | Online-Tuner für Rock & Metal",
+      "description": "Schnell auf Drop D (DADGBE) stimmen. Perfekt für Heavy Riffs. Genau und kostenlos."
+    },
+    "guitar_open-g": {
+      "name": "Gitarre (Open G)",
+      "seoTitle": "Open G Stimmgerät | Blues & Slide Tuner",
+      "description": "Stimmen Sie auf Open G (DGDGBD). Die klassische Stimmung für Blues und Slide-Gitarre."
+    },
+    "guitar_dadgad": {
+      "name": "Gitarre (DADGAD)",
+      "seoTitle": "DADGAD Stimmgerät | Keltischer & Akustik Tuner",
+      "description": "Präzise DADGAD-Stimmung. Ideal für keltische Musik und Fingerstyle."
+    },
+    "guitar_half-step-down": {
+      "name": "Gitarre (Halbton tiefer)",
+      "seoTitle": "Halbton Tiefer Stimmgerät | Eb Standard",
+      "description": "Stimmen Sie einen Halbton tiefer auf Eb Standard. Ideal für geringere Saitenspannung."
+    },
+    "bass_standard": {
+      "name": "Bass (Standard)",
+      "seoTitle": "Bass-Stimmgerät Online | Tiefton-Präzision",
+      "description": "Der genaueste Online-Tuner für 4-Saiter-Bass. Erfasst Grundtöne präzise."
+    },
+    "bass_five-string": {
+      "name": "Bass (5-Saiter)",
+      "seoTitle": "5-Saiter Bass Tuner | Low B Erkennung",
+      "description": "Präzisionsstimmung für 5-Saiter, inklusive tiefem H (Low B)."
+    },
+    "ukulele_standard": {
+      "name": "Ukulele (Standard)",
+      "seoTitle": "Ukulele Stimmgerät Online | GCEA Stimmung",
+      "description": "Stimmen Sie Ihre Ukulele sofort auf GCEA. Schnell, kostenlos und genau."
+    },
+    "ukulele_low-g": {
+      "name": "Ukulele (Low G)",
+      "seoTitle": "Low G Ukulele Tuner | Lineare GCEA Stimmung",
+      "description": "Speziell für Ukulelen mit tiefer G-Saite. Perfekte lineare Stimmung."
+    },
+    "cello_standard": {
+      "name": "Cello (Standard)",
+      "seoTitle": "Cello Stimmgerät Online | Präzision für Cellisten",
+      "description": "Stimmen Sie Ihr Cello auf CGDA. Funktioniert perfekt mit Bogen oder Pizzicato."
+    }
+  }
+}

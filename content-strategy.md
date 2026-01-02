@@ -14,12 +14,20 @@
 - **Differentiation:** The "Pro" alternative that works for everyone. While other apps feel like toys or are overly complex, we hit the sweet spot of **Accessible Authority**.
 
 ## 3. Localization Strategy (i18n)
-Global reach via subdirectory architecture.
+Global reach via subdirectory architecture. We target the **Top 10 Languages** on the internet to maximize accessibility.
+
 - **Structure:** `/{locale}/{instrument}/{tuning-slug}`
 - **Locales:**
-  - `en` (Global)
-  - `es` (Latin America/Spain)
-  - `fr` (France/Canada)
+  1.  `en` (English - Global)
+  2.  `es` (Spanish - LATAM/Spain)
+  3.  `fr` (French - Europe/Canada)
+  4.  `pt` (Portuguese - Brazil/Portugal)
+  5.  `de` (German - DACH Region)
+  6.  `it` (Italian - Italy)
+  7.  `ru` (Russian - CIS)
+  8.  `ja` (Japanese - Japan)
+  9.  `zh` (Chinese - Simplified)
+  10. `ko` (Korean - South Korea)
 
 ## 4. Programmatic SEO (The Domination Engine)
 We will not just rank for "Guitar Tuner." We will rank for **specific user intents**.

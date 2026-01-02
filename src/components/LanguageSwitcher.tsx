@@ -5,6 +5,13 @@ const LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'es', name: 'Español' },
   { code: 'fr', name: 'Français' },
+  { code: 'pt', name: 'Português' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'it', name: 'Italiano' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'ja', name: '日本語' },
+  { code: 'zh', name: '中文' },
+  { code: 'ko', name: '한국어' },
 ];
 
 export const LanguageSwitcher: React.FC = () => {

@@ -289,6 +289,9 @@
   gap: 0.5rem;
   font-size: 0.8rem;
   color: #666;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90%;
 }
 
 .lang-link {

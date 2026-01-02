@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-const LANGUAGES = ['en', 'es', 'fr'];
+const LANGUAGES = ['en', 'es', 'fr', 'pt', 'de', 'it', 'ru', 'ja', 'zh', 'ko'];
 const BASE_URL = 'https://tuner.weiszfeld.com';
 
 // Extracted from tunings.ts to avoid TS module resolution issues in simple node script

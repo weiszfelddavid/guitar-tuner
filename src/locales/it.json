@@ -1,0 +1,117 @@
+{
+  "common": {
+    "tap_to_enable": "Tocca per abilitare il microfono",
+    "ready": "Pronto",
+    "hold": "Attesa",
+    "listening": "Ascolto...",
+    "mic_required": "È necessario l'accesso al microfono.",
+    "flat": "Calante (Sinistra)",
+    "sharp": "Crescente (Destra)",
+    "cents_label": "ct"
+  },
+  "tuner": {
+    "status_idle": "Pronto",
+    "status_holding": "Attesa",
+    "status_listening": "Ascolto..."
+  },
+  "instruments": {
+    "guitar": {
+      "title": "Accordatore Chitarra Online Gratis",
+      "desc": "Accorda la tua chitarra acustica o elettrica all'istante. Il nostro accordatore di precisione rileva le corde automaticamente.",
+      "tips": "Per l'accordatura standard (EADGBE), inizia dalla corda più spessa (Mi basso). Se le corde sono nuove, tirale delicatamente."
+    },
+    "bass": {
+      "title": "Accordatore Basso Online Gratis",
+      "desc": "L'accordatore online più preciso per basso. Cattura le basse frequenze con alta precisione, anche per bassi a 5 corde.",
+      "tips": "Le basse frequenze possono essere difficili per i microfoni dei laptop. Suona la corda con decisione."
+    },
+    "ukulele": {
+      "title": "Accordatore Ukulele Online Gratis",
+      "desc": "Accorda il tuo ukulele soprano, concerto o tenore in secondi. Supporta accordatura standard GCEA e Low G.",
+      "tips": "Le corde in nylon sono sensibili alla temperatura. Accorda più spesso se suoni all'aperto."
+    },
+    "cello": {
+      "title": "Accordatore Violoncello Online",
+      "desc": "Accordatura di precisione per Violoncello (A-D-G-C). Ottimizzato per gli armonici degli strumenti orchestrali.",
+      "tips": "Usa arcate lunghe e costanti per la migliore rilevazione."
+    },
+    "default": {
+      "title": "Accordatore Cromatico Online",
+      "desc": "Un accordatore universale per qualsiasi strumento a corda. Precisione professionale tramite microfono.",
+      "tips": "Pizzica la corda chiaramente. L'accordatore mostrerà la deviazione in centesimi."
+    }
+  },
+  "footer": {
+    "frequencies_title": "Frequenze (Hz)",
+    "frequencies_ref": "Frequenze di riferimento per corde di",
+    "strings": "",
+    "pro_tips_title": "Consigli Pro per",
+    "table_string": "Corda",
+    "table_note": "Nota",
+    "table_freq": "Frequenza (Hz)",
+    "step_mic": "Abilita Microfono",
+    "step_mic_desc": "Clicca per consentire l'accesso al microfono.",
+    "step_inst": "Seleziona Strumento",
+    "step_inst_desc_prefix": "Assicurati che",
+    "step_inst_desc_suffix": "sia attivo nel menu.",
+    "step_pluck": "Suona Chiaramente",
+    "step_pluck_desc": "Suona una singola corda. L'accordatore evidenzierà la nota più vicina.",
+    "step_needle": "Controlla l'Ago",
+    "step_needle_flat": "Tono basso. Stringi la meccanica.",
+    "step_needle_sharp": "Tono alto. Allenta la meccanica.",
+    "step_diamond": "Modo Diamante",
+    "step_diamond_desc": "Quando il diamante centrale brilla in verde, sei perfettamente accordato."
+  },
+  "tunings": {
+    "guitar_standard": {
+      "name": "Chitarra (Standard)",
+      "seoTitle": "Accordatore Chitarra Standard | Rilevatore Note Online",
+      "description": "Accorda la tua chitarra in EADGBE all'istante. Il nostro accordatore pro funziona direttamente nel browser."
+    },
+    "guitar_drop-d": {
+      "name": "Chitarra (Drop D)",
+      "seoTitle": "Accordatore Drop D | Accordatore Online Rock & Metal",
+      "description": "Accorda rapidamente in Drop D (DADGBE). Perfetto per riff pesanti. Preciso e gratis."
+    },
+    "guitar_open-g": {
+      "name": "Chitarra (Open G)",
+      "seoTitle": "Accordatore Open G | Accordatore Blues & Slide",
+      "description": "Accorda in Open G (DGDGBD). L'accordatura classica per blues e slide."
+    },
+    "guitar_dadgad": {
+      "name": "Chitarra (DADGAD)",
+      "seoTitle": "Accordatore DADGAD | Accordatore Celtico & Acustico",
+      "description": "Accordatura DADGAD precisa. Ideale per musica celtica e fingerstyle."
+    },
+    "guitar_half-step-down": {
+      "name": "Chitarra (Mezzo Tono Sotto)",
+      "seoTitle": "Accordatore Mezzo Tono Sotto | Eb Standard",
+      "description": "Accorda un semitono sotto in Eb Standard. Ottimo per ridurre la tensione delle corde."
+    },
+    "bass_standard": {
+      "name": "Basso (Standard)",
+      "seoTitle": "Accordatore Basso Online | Precisione Basse Frequenze",
+      "description": "L'accordatore più preciso per basso a 4 corde. Cattura le fondamentali con precisione."
+    },
+    "bass_five-string": {
+      "name": "Basso (5 Corde)",
+      "seoTitle": "Accordatore Basso 5 Corde | Rilevatore Si Basso",
+      "description": "Accordatura precisa per bassi a 5 corde, incluso il Si basso (Low B)."
+    },
+    "ukulele_standard": {
+      "name": "Ukulele (Standard)",
+      "seoTitle": "Accordatore Ukulele Online | Accordatura GCEA",
+      "description": "Accorda il tuo ukulele in GCEA all'istante. Veloce, gratis e preciso."
+    },
+    "ukulele_low-g": {
+      "name": "Ukulele (Low G)",
+      "seoTitle": "Accordatore Ukulele Low G | Accordatura Lineare GCEA",
+      "description": "Progettato per ukulele con corda Sol basso (Low G). Accordatura lineare perfetta."
+    },
+    "cello_standard": {
+      "name": "Violoncello (Standard)",
+      "seoTitle": "Accordatore Violoncello Online | Precisione per Violoncellisti",
+      "description": "Accorda il tuo violoncello in CGDA. Funziona perfettamente con arco o pizzicato."
+    }
+  }
+}
