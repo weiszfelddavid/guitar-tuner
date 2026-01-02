@@ -60,15 +60,16 @@
   max-width: 600px;
   position: relative;
   z-index: 5;
-  margin-bottom: auto; /* Push footer down if extra space */
 }
 
 .tuner-wrapper {
   position: relative;
   width: 100%;
+  min-height: 85vh; /* Hero section feel */
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Center tuner components vertically in hero */
 }
 
 /* 1. Sparkline (Background) */
