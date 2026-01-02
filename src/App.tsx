@@ -345,7 +345,7 @@ function App() {
           {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
         </div>
         
-        <SEOFooter />
+        <SEOFooter tuning={selectedTuning} />
 
         <div className="version-footer">
           {APP_VERSION}
