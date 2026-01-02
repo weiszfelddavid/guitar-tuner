@@ -307,50 +307,46 @@ function App() {
 
   return (
     <div className={`App ${tunerStatus}`}>
-      
-      {tunerStatus === 'idle' ? (
-        <div className="start-screen">
-          <h1>Guitar Tuner</h1>
-          <button className="start-btn" onClick={startTuner}>
-            Start Tuner
-          </button>
+      {tunerStatus === 'idle' && (
+        <div className="start-overlay" onClick={startTuner}>
+          <div className="start-message">Tap to Enable Tuner</div>
         </div>
-      ) : (
-        <main className="tuner-interface">
-          <TuningSelector 
-            selected={selectedTuning} 
-            onSelect={setSelectedTuning} 
-          />
-
-          <Sparkline history={centsHistory} />
-          
-          <div className="center-stack">
-            <NoteDisplay 
-              note={noteData.note} 
-              status={tunerStatus}
-              cents={noteData.cents}
-            />
-            
-            <StringVisualizer 
-              tuning={selectedTuning} 
-              pitch={pitch} 
-            />
-          </div>
-          
-          <RulerGauge 
-            cents={noteData.cents} 
-            status={tunerStatus} 
-          />
-          
-          <div className="tech-readout">
-            {tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...')}
-          </div>
-          
-          <div className="version-footer">
-            {APP_VERSION}
-          </div>
-        </main>
       )}
+
+      <main className="tuner-interface">
+        <TuningSelector 
+          selected={selectedTuning} 
+          onSelect={setSelectedTuning} 
+        />
+
+        <Sparkline history={centsHistory} />
+        
+        <div className="center-stack">
+          <NoteDisplay 
+            note={noteData.note} 
+            status={tunerStatus}
+            cents={noteData.cents}
+          />
+          
+          <StringVisualizer 
+            tuning={selectedTuning} 
+            pitch={pitch} 
+          />
+        </div>
+        
+        <RulerGauge 
+          cents={noteData.cents} 
+          status={tunerStatus} 
+        />
+        
+        <div className="tech-readout">
+          {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
+        </div>
+        
+        <div className="version-footer">
+          {APP_VERSION}
+        </div>
+      </main>
     </div>
   );
 }
