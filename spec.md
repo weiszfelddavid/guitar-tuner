@@ -109,3 +109,17 @@ We will commit a `tests/fixtures/audio` folder containing:
 - **Below-the-Fold SEO:** Content intended for SEO (descriptions, tables, tips) must live below the main tuner interface to avoid distracting the user from the tool's utility.
 - **Responsive Fluidity:** Typography (especially the note display) must use fluid sizing (e.g., clamp) to remain impactful but well-proportioned across all device widths.
 - **Zero Friction:** Avoid unnecessary clicks. If permissions are granted, the tool should be ready or active immediately.
+
+## 10. Privacy & Resource Management
+**Goal:** Be a "Good Citizen" on the user's device. We strictly prioritize user privacy and battery life over convenience.
+
+### Background Policy: "The Hard Stop"
+When the application tab is not active (user switches tabs, minimizes window, or locks screen):
+1.  **Release Hardware:** Immediately stop all `MediaStreamTrack`s. This removes the browser's "Recording" indicator/red dot.
+2.  **Halt Processing:** Close or suspend the `AudioContext` to drop CPU usage to 0%.
+3.  **UI Feedback:** Upon returning to the tab, the user must be presented with a clear "Resume" overlay. We do **not** attempt to stealthily restart the microphone.
+
+### Rationale
+-   **Trust:** Users should never feel "spied on" by a background tab.
+-   **Battery:** Continuous FFT processing is expensive. Pausing saves mobile battery.
+-   **Conflicts:** Prevents our app from blocking other audio apps (Calls, Voice Memos) while in the background.

@@ -158,26 +158,48 @@ export const Tuner: React.FC<{
 }> = ({ initialTuning, onTuningChange }) => {
   const { t } = useTranslation();
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
+  const [isPaused, setIsPaused] = useState(false);
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
   const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
   const [selectedTuning, setSelectedTuning] = useState<Tuning>(initialTuning || TUNINGS[0]);
   
   const audioContextRef = useRef<AudioContext | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const centsBufferRef = useRef<number[]>([]);
   const lastValidTimeRef = useRef<number>(0);
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopTuner = () => {
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+    setTunerStatus('idle');
+    setPitch(null);
+  };
 
   const startTuner = async () => {
     if (audioContextRef.current) return;
 
     try {
+      setIsPaused(false);
       setTunerStatus('listening');
       const AudioContextConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = new AudioContextConstructor();
       await audioContext.audioWorklet.addModule(processorUrl);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
       const source = audioContext.createMediaStreamSource(stream);
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
@@ -251,6 +273,18 @@ export const Tuner: React.FC<{
   };
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Hard Stop: Release hardware immediately
+        if (audioContextRef.current) {
+          stopTuner();
+          setIsPaused(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const checkPermissions = async () => {
       try {
         if (navigator.permissions && navigator.permissions.query) {
@@ -266,8 +300,8 @@ export const Tuner: React.FC<{
     checkPermissions();
 
     return () => {
-      audioContextRef.current?.close();
-      if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopTuner();
     };
   }, []);
 
@@ -284,9 +318,18 @@ export const Tuner: React.FC<{
 
   return (
     <div className="tuner-wrapper">
-      {tunerStatus === 'idle' && (
+      {tunerStatus === 'idle' && !isPaused && (
         <div className="start-overlay" onClick={startTuner}>
           <div className="start-message">{t('common.tap_to_enable')}</div>
+        </div>
+      )}
+
+      {isPaused && (
+        <div className="start-overlay" onClick={startTuner}>
+          <div className="start-message">
+            <div>Tuner Paused</div>
+            <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>Tap to Resume</div>
+          </div>
         </div>
       )}
 
