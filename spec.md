@@ -1,20 +1,14 @@
-## 8. Premium UI Enhancements (Level Up)
-**Goal:** Elevate the minimal design to a professional "instrument" quality.
 
-### Features
-1.  **Frequency Sparkline (The "Evolution"):**
-    -   **Visual:** A subtle, thin SVG path running across the background.
-    -   **Behavior:** Plots the pitch deviation over the last 100 frames (~2 seconds).
-    -   **Style:** Low opacity (20%) white line. Smooth curve (Bezier).
-2.  **Precision Ruler Gauge:**
-    -   Replace the simple track with a **Graduated Ruler**.
-    -   **Ticks:** Small markers at -50, -25, 0, +25, +50 cents.
-    -   **Center Mark:** Prominent, glowing "diamond" or "notch" at 0.
-3.  **Reactive Glow (Bloom):**
-    -   The `<NoteDisplay />` should have a dynamic text-shadow.
-    -   **Far:** No glow.
-    -   **Close:** Soft green glow.
-    -   **Locked:** Intense neon green pulse.
+## 9. Visual Testing & Debugging
+**Goal:** Automated visual verification of the UI on different devices.
+
+### Workflow
+1.  **Tool:** Playwright is used to capture screenshots of the deployed application.
+2.  **Script:** `scripts/capture-ui.js` automates the process.
+3.  **Targets:**
+    -   **Mobile:** iPhone 13 (Viewport: 390x844)
+    -   **Desktop:** Standard 1920x1080
+4.  **Analysis:** The AI Agent analyzes the captured screenshots in `debug-screenshots/` to identify layout issues, cropping, or visual bugs.
 
 ## UI/UX Design Expectations
 - **Minimal & Direct:** The interface must be clutter-free. The primary focus is the tuning visualization.
