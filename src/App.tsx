@@ -300,6 +300,7 @@ function App() {
 
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       audioContextRef.current?.close();
       if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
     };

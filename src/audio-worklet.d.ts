@@ -1,6 +1,22 @@
+interface AudioWorkletNodeOptions {
+  numberOfInputs?: number;
+  numberOfOutputs?: number;
+  outputChannelCount?: number[];
+  parameterData?: Record<string, number>;
+  processorOptions?: Record<string, unknown>;
+}
 
-interface AudioWorkletProcessor {
+interface AudioParamDescriptor {
+  name: string;
+  defaultValue?: number;
+  minValue?: number;
+  maxValue?: number;
+  automationRate?: 'a-rate' | 'k-rate';
+}
+
+declare class AudioWorkletProcessor {
   readonly port: MessagePort;
+  constructor(options?: AudioWorkletNodeOptions);
   process(
     inputs: Float32Array[][],
     outputs: Float32Array[][],
@@ -8,16 +24,11 @@ interface AudioWorkletProcessor {
   ): boolean;
 }
 
-declare var AudioWorkletProcessor: {
-  prototype: AudioWorkletProcessor;
-  new (options?: any): AudioWorkletProcessor;
-};
-
 declare function registerProcessor(
   name: string,
   processorCtor: (new (
-    options?: any
+    options?: AudioWorkletNodeOptions
   ) => AudioWorkletProcessor) & {
-    parameterDescriptors?: any[];
+    parameterDescriptors?: AudioParamDescriptor[];
   }
 ): void;

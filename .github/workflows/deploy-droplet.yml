@@ -24,7 +24,7 @@ jobs:
             
             # Copy files to the actual web root discovered on the server
             rm -rf /var/www/tuner/*
-            cp -r /root/guitar-tuner/* /var/www/tuner/
+            cp -r /root/guitar-tuner/dist/* /var/www/tuner/
             
             echo "Files successfully deployed to /var/www/tuner!"
 

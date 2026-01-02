@@ -1,11 +1,18 @@
 
 
+interface AudioWorkletNodeOptions {
+  processorOptions?: {
+    bufferSize?: number;
+    threshold?: number;
+  };
+}
+
 class PitchProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array;
   private bufferIndex: number = 0;
   private threshold: number = 0.1;
 
-  constructor(options?: any) {
+  constructor(options?: AudioWorkletNodeOptions) {
     super();
     // Default 2048 buffer size for good bass resolution
     const size = options?.processorOptions?.bufferSize || 2048;
@@ -13,7 +20,8 @@ class PitchProcessor extends AudioWorkletProcessor {
     this.threshold = options?.processorOptions?.threshold || 0.1;
   }
 
-  process(inputs: Float32Array[][], _outputs: Float32Array[][], _parameters: any): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  process(inputs: Float32Array[][], _outputs: Float32Array[][], _parameters: Record<string, Float32Array>): boolean {
     const input = inputs[0];
     if (!input || !input.length) return true;
     

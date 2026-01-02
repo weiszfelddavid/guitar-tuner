@@ -1,13 +1,26 @@
 import { describe, it, expect, vi } from 'vitest';
 
+// Define types for our mocks
+interface MockPort {
+  postMessage: ReturnType<typeof vi.fn>;
+}
+
+interface MockProcessor {
+  port: MockPort;
+}
+
 describe('PitchProcessor', () => {
   it('should correctly detect 440Hz', async () => {
     // 1. DEFINE BROWSER GLOBALS (Before loading the file)
-    (global as any).AudioWorkletProcessor = class AudioWorkletProcessor {
-        port: any;
-        constructor() { this.port = { postMessage: vi.fn() }; }
-    } as any;
-    (global as any).registerProcessor = vi.fn();
+    const MockAudioWorkletProcessor = class {
+      port: MockPort;
+      constructor() {
+        this.port = { postMessage: vi.fn() };
+      }
+    };
+
+    vi.stubGlobal('AudioWorkletProcessor', MockAudioWorkletProcessor);
+    vi.stubGlobal('registerProcessor', vi.fn());
 
     // 2. LOAD THE FILE DYNAMICALLY (Wait for globals to be ready)
     // This prevents the "ReferenceError" crash
@@ -27,9 +40,10 @@ describe('PitchProcessor', () => {
         processorOptions: { bufferSize: BUFFER_SIZE }
     });
     
-    // Spy on the output
+    // Type cast to access the mocked port
+    const mockProcessor = processor as unknown as MockProcessor;
     const postMessage = vi.fn();
-    (processor as any).port = { postMessage };
+    mockProcessor.port = { postMessage };
 
     // Process the audio buffer
     processor.process([[buffer]], [], {});
