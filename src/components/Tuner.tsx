@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import '../App.css';
 import processorUrl from '../audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from '../utils/tuner';
@@ -21,17 +21,55 @@ const TuningSelector: React.FC<{
   onSelect: (t: Tuning) => void 
 }> = ({ selected, onSelect }) => {
   const { t } = useTranslation();
+
+  // 1. Derive unique instruments
+  const instruments = useMemo(() => {
+    return Array.from(new Set(TUNINGS.map(t => t.instrument)));
+  }, []);
+
+  // 2. Filter tunings for the currently selected instrument
+  const currentInstrumentTunings = useMemo(() => {
+    return TUNINGS.filter(tuning => tuning.instrument === selected.instrument);
+  }, [selected.instrument]);
+
+  // 3. Handle Instrument Change (Row 1)
+  const handleInstrumentClick = (instrument: string) => {
+    // Find the first tuning for this new instrument
+    const defaultTuning = TUNINGS.find(tuning => tuning.instrument === instrument);
+    if (defaultTuning) {
+      onSelect(defaultTuning);
+    }
+  };
+
   return (
-    <div className="tuning-selector">
-      {TUNINGS.map(tData => (
-        <button 
-          key={`${tData.instrument}-${tData.slug}`}
-          className={`tuning-chip ${selected.slug === tData.slug && selected.instrument === tData.instrument ? 'active' : ''}`}
-          onClick={() => onSelect(tData)}
-        >
-          {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name)}
-        </button>
-      ))}
+    <div className="tuning-control-panel">
+      {/* Row 1: Instruments */}
+      <div className="instrument-row">
+        {instruments.map(inst => (
+          <button
+            key={inst}
+            className={`pill instrument-pill ${selected.instrument === inst ? 'active' : ''}`}
+            onClick={() => handleInstrumentClick(inst)}
+          >
+            {/* Capitalize first letter for display */}
+            {inst.charAt(0).toUpperCase() + inst.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Row 2: Tunings */}
+      <div className="tuning-row">
+        {currentInstrumentTunings.map(tData => (
+          <button 
+            key={`${tData.instrument}-${tData.slug}`}
+            className={`pill tuning-pill ${selected.slug === tData.slug ? 'active' : ''}`}
+            onClick={() => onSelect(tData)}
+          >
+            {/* Display only the specific tuning name (e.g. "Drop D") not "Guitar (Drop D)" */}
+            {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name).replace(/.*\((.*)\)/, '$1')} 
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
