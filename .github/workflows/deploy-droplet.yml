@@ -22,10 +22,9 @@ jobs:
             git reset --hard origin/main
             git clean -fd
             
-            # Copy files to the standard web root
-            # (Assuming Nginx/Apache looks at /var/www/html)
-            rm -rf /var/www/html/*
-            cp -r /root/guitar-tuner/* /var/www/html/
+            # Copy files to the actual web root discovered on the server
+            rm -rf /var/www/tuner/*
+            cp -r /root/guitar-tuner/* /var/www/tuner/
             
-            echo "Files copied to /var/www/html!"
+            echo "Files successfully deployed to /var/www/tuner!"
 
