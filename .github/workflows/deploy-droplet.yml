@@ -21,5 +21,11 @@ jobs:
             git fetch --all
             git reset --hard origin/main
             git clean -fd
-            echo "Deployment complete and server synced!"
+            
+            # Copy files to the standard web root
+            # (Assuming Nginx/Apache looks at /var/www/html)
+            rm -rf /var/www/html/*
+            cp -r /root/guitar-tuner/* /var/www/html/
+            
+            echo "Files copied to /var/www/html!"
 
