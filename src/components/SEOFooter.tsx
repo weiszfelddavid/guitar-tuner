@@ -19,7 +19,6 @@ export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
   const tuningName = t(`tunings.${tuningKey}.name`);
   
   // Localized Instrument Info
-  const instTitle = t(`instruments.${instrumentKey}.title`);
   const instDesc = t(`instruments.${instrumentKey}.desc`);
   const instTips = t(`instruments.${instrumentKey}.tips`);
 

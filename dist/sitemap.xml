@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://tuner.weiszfeld.com/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/guitar/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/guitar/drop-d</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/drop-d"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/guitar/open-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/open-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/guitar/dadgad</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/dadgad"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/guitar/half-step-down</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/half-step-down"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/bass/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/bass/five-string</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/five-string"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/ukulele/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/ukulele/low-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/low-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/en/cello/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/cello/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/guitar/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/guitar/drop-d</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/drop-d"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/guitar/open-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/open-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/guitar/dadgad</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/dadgad"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/guitar/half-step-down</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/half-step-down"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/bass/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/bass/five-string</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/five-string"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/ukulele/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/ukulele/low-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/low-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/es/cello/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/cello/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/guitar/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/guitar/drop-d</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/drop-d"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/drop-d"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/guitar/open-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/open-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/open-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/guitar/dadgad</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/dadgad"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/dadgad"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/guitar/half-step-down</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/guitar/half-step-down"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/guitar/half-step-down"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/bass/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/bass/five-string</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/bass/five-string"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/bass/five-string"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/ukulele/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/standard"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/ukulele/low-g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/ukulele/low-g"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/ukulele/low-g"/>
+  </url>
+  <url>
+    <loc>https://tuner.weiszfeld.com/fr/cello/standard</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tuner.weiszfeld.com/en/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://tuner.weiszfeld.com/es/cello/standard"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://tuner.weiszfeld.com/fr/cello/standard"/>
+  </url>
+</urlset>
