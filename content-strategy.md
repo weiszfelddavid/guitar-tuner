@@ -5,11 +5,13 @@
 
 ## 2. Voice & Tone
 - **Archetype:** "The Studio Engineer."
-- **Target Audience:** Musicians, Producers, and Audio Engineers.
-- **Philosophy:** We speak **peer-to-peer**. We assume the user cares about accuracy. We use professional terminology (Hz, Cents, Signal Clarity) rather than simplified "beginner" language.
-- **Tone:** Precise, encouragement through clarity, authoritative yet invisible.
-- **Style:** Zero fluff. We are a **Reference Tool**, not a blog. Every word must serve the utility.
-- **Differentiation:** The "Pro" alternative. While others feel like toys, we feel like rack-mounted hardware.
+- **Target Audience:** **Universal.** From the seasoned Audio Engineer to the teenager learning "Wonderwall" by the campfire.
+- **Philosophy:** **"Precision for Pros, Simplicity for Everyone."** We democratize professional-grade accuracy. We don't "dumb it down," but we make high-end precision intuitive to use.
+- **Tone:** Encouraging, clear, and instructive.
+    - *For the Pro:* We provide the Hz and Cents data they crave.
+    - *For the Beginner:* We provide clear guidance (e.g., "Too Low -> Tighten String").
+- **Style:** Zero fluff. We are a **Reference Tool**. Every word must serve the utility.
+- **Differentiation:** The "Pro" alternative that works for everyone. While other apps feel like toys or are overly complex, we hit the sweet spot of **Accessible Authority**.
 
 ## 3. Localization Strategy (i18n)
 Global reach via subdirectory architecture.
