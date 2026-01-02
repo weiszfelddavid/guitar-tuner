@@ -4,10 +4,12 @@
 **Goal:** Dominate the global search landscape for instrument tuning by combining **Programmatic SEO (pSEO)** with **High-Quality Localization**. We will move beyond a single homepage to create hundreds of specific, high-authority entry points for every possible tuning intent.
 
 ## 2. Voice & Tone
-- **Archetype:** The "Studio Engineer."
-- **Tone:** Precise, encouraging, authoritative, yet accessible.
-- **Style:** Direct and clutter-free. No "SEO fluff" text blocks—only valuable instruction.
-- **Differentiation:** The "Instant" solution. While others force app downloads, we provide the specific tool immediately.
+- **Archetype:** "The Studio Engineer."
+- **Target Audience:** Musicians, Producers, and Audio Engineers.
+- **Philosophy:** We speak **peer-to-peer**. We assume the user cares about accuracy. We use professional terminology (Hz, Cents, Signal Clarity) rather than simplified "beginner" language.
+- **Tone:** Precise, encouragement through clarity, authoritative yet invisible.
+- **Style:** Zero fluff. We are a **Reference Tool**, not a blog. Every word must serve the utility.
+- **Differentiation:** The "Pro" alternative. While others feel like toys, we feel like rack-mounted hardware.
 
 ## 3. Localization Strategy (i18n)
 Global reach via subdirectory architecture.
