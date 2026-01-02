@@ -1,0 +1,28 @@
+name: Deploy to DigitalOcean Droplet
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            # Navigate to the project directory
+            cd /root/guitar-tuner
+            
+            # Pull the latest changes (including the dist folder)
+            git pull origin main
+            
+            # Optional: Restart Nginx if needed (uncomment if you use Nginx)
+            # systemctl reload nginx
+            
+            echo "Deployment complete!"
