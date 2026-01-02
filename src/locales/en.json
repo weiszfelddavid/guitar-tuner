@@ -1,0 +1,117 @@
+{
+  "common": {
+    "tap_to_enable": "Tap to enable microphone usage",
+    "ready": "Ready",
+    "hold": "Hold",
+    "listening": "Listening...",
+    "mic_required": "Microphone access is required to use the tuner.",
+    "flat": "Flat (Left)",
+    "sharp": "Sharp (Right)",
+    "cents_label": "ct"
+  },
+  "tuner": {
+    "status_idle": "Ready",
+    "status_holding": "Hold",
+    "status_listening": "Listening..."
+  },
+  "instruments": {
+    "guitar": {
+      "title": "Free Online Guitar Tuner",
+      "desc": "Tune your acoustic or electric guitar instantly. Our precision microphone tuner detects strings automatically using advanced pitch detection algorithms.",
+      "tips": "For standard tuning (EADGBE), start with the thickest string (Low E) and work your way down to the thinnest (High E). If you are using new strings, stretch them gently and tune multiple times as they settle."
+    },
+    "bass": {
+      "title": "Free Online Bass Tuner",
+      "desc": "The most accurate online tuner for bass guitars. Captures low fundamental frequencies with high precision, even on 5-string basses with a low B.",
+      "tips": "Bass frequencies can be hard for some built-in laptop microphones to pick up. Play the string firmly with your thumb or a pick to provide a clear signal for the detector."
+    },
+    "ukulele": {
+      "title": "Free Online Ukulele Tuner",
+      "desc": "Tune your Soprano, Concert, or Tenor Ukulele in seconds. Supports Standard GCEA and Low G configurations.",
+      "tips": "Ukulele strings are made of nylon and are sensitive to temperature changes. You may need to tune more frequently if you are playing outdoors or under stage lights."
+    },
+    "cello": {
+      "title": "Online Cello Tuner",
+      "desc": "Precision tuning for Cello (A-D-G-C). Optimized for the rich harmonics of orchestral string instruments.",
+      "tips": "Use long, steady bow strokes for the best detection. Ensure your bridge is properly aligned, as tension changes during tuning can occasionally cause it to lean."
+    },
+    "default": {
+      "title": "Free Online Chromatic Tuner",
+      "desc": "A universal tuner for any stringed instrument. Professional-grade accuracy using your device's microphone.",
+      "tips": "Pluck the string clearly and let it ring. The tuner will automatically detect the nearest musical note and show you exactly how many cents you are off."
+    }
+  },
+  "footer": {
+    "frequencies_title": "Frequencies (Hz)",
+    "frequencies_ref": "Reference frequencies for",
+    "strings": "strings",
+    "pro_tips_title": "Pro Tips for",
+    "table_string": "String",
+    "table_note": "Note",
+    "table_freq": "Frequency (Hz)",
+    "step_mic": "Enable Microphone",
+    "step_mic_desc": "Click the \"Tap to enable\" overlay to grant access to your mic.",
+    "step_inst": "Select Instrument",
+    "step_inst_desc_prefix": "Ensure",
+    "step_inst_desc_suffix": "is active in the menu.",
+    "step_pluck": "Pluck Clearly",
+    "step_pluck_desc": "Sound a single string. The tuner will highlight the closest note.",
+    "step_needle": "Check the Needle",
+    "step_needle_flat": "The pitch is too low. Tighten the tuning peg.",
+    "step_needle_sharp": "The pitch is too high. Loosen the tuning peg.",
+    "step_diamond": "Diamond Mode",
+    "step_diamond_desc": "When the center diamond glows green, you are perfectly in tune (within 4 cents)."
+  },
+  "tunings": {
+    "guitar_standard": {
+      "name": "Guitar (Standard)",
+      "seoTitle": "Standard Guitar Tuner | Precise Online Pitch Detector",
+      "description": "Tune your guitar to standard EADGBE tuning instantly. Our professional-grade microphone tuner works directly in your browser."
+    },
+    "guitar_drop-d": {
+      "name": "Guitar (Drop D)",
+      "seoTitle": "Drop D Guitar Tuner | Online Tuner for Rock & Metal",
+      "description": "Quickly tune your guitar to Drop D (DADGBE). Perfect for heavy riffs and rock music. Accurate, free, and easy to use."
+    },
+    "guitar_open-g": {
+      "name": "Guitar (Open G)",
+      "seoTitle": "Open G Guitar Tuner | Online Blues & Slide Tuner",
+      "description": "Tune your guitar to Open G (DGDGBD). The classic tuning for blues, slide guitar, and Rolling Stones riffs."
+    },
+    "guitar_dadgad": {
+      "name": "Guitar (DADGAD)",
+      "seoTitle": "DADGAD Guitar Tuner | Celtic & Acoustic Online Tuner",
+      "description": "Precision DADGAD tuning for your guitar. Ideal for Celtic music, fingerstyle, and rich acoustic resonances."
+    },
+    "guitar_half-step-down": {
+      "name": "Guitar (Half-Step Down)",
+      "seoTitle": "Half-Step Down Tuner | Eb Standard Guitar Tuning",
+      "description": "Tune your guitar one half-step down to Eb Standard. Great for reducing string tension and matching heavy vocal ranges."
+    },
+    "bass_standard": {
+      "name": "Bass (Standard)",
+      "seoTitle": "Online Bass Guitar Tuner | Low Frequency Precision",
+      "description": "The most accurate online tuner for 4-string bass guitar. Capture low frequencies with high precision using your microphone."
+    },
+    "bass_five-string": {
+      "name": "Bass (5-String)",
+      "seoTitle": "5-String Bass Tuner | Low B String Pitch Detector",
+      "description": "Precision tuning for 5-string bass guitars, including the low B string. Optimized for deep sub-frequencies."
+    },
+    "ukulele_standard": {
+      "name": "Ukulele (Standard)",
+      "seoTitle": "Online Ukulele Tuner | Standard GCEA Tuning",
+      "description": "Tune your Soprano, Concert, or Tenor Ukulele to standard GCEA tuning instantly. Fast, free, and accurate."
+    },
+    "ukulele_low-g": {
+      "name": "Ukulele (Low G)",
+      "seoTitle": "Low G Ukulele Tuner | Linear GCEA Tuning Online",
+      "description": "Specifically designed for ukuleles with a Low G string. Achieve perfect linear tuning for your concert or tenor uke."
+    },
+    "cello_standard": {
+      "name": "Cello (Standard)",
+      "seoTitle": "Online Cello Tuner | Precision Tuning for Cellists",
+      "description": "Fine-tune your cello to standard CGDA pitch. Works perfectly with long bow strokes or pizzicato plucking."
+    }
+  }
+}

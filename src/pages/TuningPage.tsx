@@ -3,22 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Tuner } from '../components/Tuner';
 import { TUNINGS, type Tuning } from '../utils/tunings';
+import { useTranslation } from '../hooks/useTranslation';
 
 export const TuningPage: React.FC = () => {
   const { lang, instrument, tuning } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Find the matching tuning from the URL
   const selectedTuning = TUNINGS.find(t => t.instrument === instrument && t.slug === tuning) || TUNINGS[0];
+  const tuningKey = `${selectedTuning.instrument}_${selectedTuning.slug}`;
 
   // Logic to handle tuning changes via chips (update URL)
-  const handleTuningChange = (t: Tuning) => {
-    navigate(`/${lang}/${t.instrument}/${t.slug}`);
+  const handleTuningChange = (tData: Tuning) => {
+    navigate(`/${lang}/${tData.instrument}/${tData.slug}`);
   };
 
-  // SEO Content Generation (Phase 1 basic version)
-  const pageTitle = `${selectedTuning.name} Online Tuner | Precision Microphone`;
-  const pageDesc = `Tune your ${selectedTuning.name} instantly using your microphone. Accurate, free, and pro-grade.`;
+  // SEO Content Generation from JSON
+  const pageTitle = t(`tunings.${tuningKey}.seoTitle`);
+  const pageDesc = t(`tunings.${tuningKey}.description`);
 
   return (
     <>

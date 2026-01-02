@@ -1,66 +1,48 @@
 import React from 'react';
 import './SEOFooter.css';
 import { type Tuning, noteToFreq } from '../utils/tunings';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface SEOFooterProps {
   tuning: Tuning;
 }
 
-const INSTRUMENT_DATA: Record<string, {
-  title: string;
-  desc: string;
-  tips: string;
-}> = {
-  guitar: {
-    title: "Free Online Guitar Tuner",
-    desc: "Tune your acoustic or electric guitar instantly. Our precision microphone tuner detects strings automatically using advanced pitch detection algorithms.",
-    tips: "For standard tuning (EADGBE), start with the thickest string (Low E) and work your way down to the thinnest (High E). If you are using new strings, stretch them gently and tune multiple times as they settle."
-  },
-  bass: {
-    title: "Free Online Bass Tuner",
-    desc: "The most accurate online tuner for bass guitars. Captures low fundamental frequencies with high precision, even on 5-string basses with a low B.",
-    tips: "Bass frequencies can be hard for some built-in laptop microphones to pick up. Play the string firmly with your thumb or a pick to provide a clear signal for the detector."
-  },
-  ukulele: {
-    title: "Free Online Ukulele Tuner",
-    desc: "Tune your Soprano, Concert, or Tenor Ukulele in seconds. Supports Standard GCEA and Low G configurations.",
-    tips: "Ukulele strings are made of nylon and are sensitive to temperature changes. You may need to tune more frequently if you are playing outdoors or under stage lights."
-  },
-  cello: {
-    title: "Online Cello Tuner",
-    desc: "Precision tuning for Cello (A-D-G-C). Optimized for the rich harmonics of orchestral string instruments.",
-    tips: "Use long, steady bow strokes for the best detection. Ensure your bridge is properly aligned, as tension changes during tuning can occasionally cause it to lean."
-  },
-  default: {
-    title: "Free Online Chromatic Tuner",
-    desc: "A universal tuner for any stringed instrument. Professional-grade accuracy using your device's microphone.",
-    tips: "Pluck the string clearly and let it ring. The tuner will automatically detect the nearest musical note and show you exactly how many cents you are off."
-  }
-};
-
 export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
-  const instrumentInfo = INSTRUMENT_DATA[tuning.instrument] || INSTRUMENT_DATA.default;
+  const { t } = useTranslation();
+  
+  const instrumentKey = tuning.instrument;
+  const tuningKey = `${tuning.instrument}_${tuning.slug}`;
+
+  // Localized Tuning Info
+  const seoTitle = t(`tunings.${tuningKey}.seoTitle`);
+  const description = t(`tunings.${tuningKey}.description`);
+  const tuningName = t(`tunings.${tuningKey}.name`);
+  
+  // Localized Instrument Info
+  const instTitle = t(`instruments.${instrumentKey}.title`);
+  const instDesc = t(`instruments.${instrumentKey}.desc`);
+  const instTips = t(`instruments.${instrumentKey}.tips`);
 
   return (
     <article className="seo-content">
       <section className="seo-section">
-        <h1>{tuning.seoTitle}</h1>
+        <h1>{seoTitle}</h1>
         <p>
-          {tuning.description} {instrumentInfo.desc}
+          {description} {instDesc}
         </p>
       </section>
 
       <section className="seo-section">
-        <h2>{tuning.name} Frequencies (Hz)</h2>
+        <h2>{tuningName} {t('footer.frequencies_title')}</h2>
         <p>
-          Reference frequencies for <strong>{tuning.name}</strong> strings:
+          {t('footer.frequencies_ref')} <strong>{tuningName}</strong> {t('footer.strings')}:
         </p>
         <table className="freq-table">
           <thead>
             <tr>
-              <th>String</th>
-              <th>Note</th>
-              <th>Frequency (Hz)</th>
+              <th>{t('footer.table_string')}</th>
+              <th>{t('footer.table_note')}</th>
+              <th>{t('footer.table_freq')}</th>
             </tr>
           </thead>
           <tbody>
@@ -76,19 +58,19 @@ export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
       </section>
 
       <section className="seo-section">
-        <h2>Pro Tips for {tuning.name}</h2>
-        <p>{instrumentInfo.tips}</p>
+        <h2>{t('footer.pro_tips_title')} {tuningName}</h2>
+        <p>{instTips}</p>
         <ol className="tuning-steps">
-          <li><strong>Enable Microphone:</strong> Click the "Tap to enable" overlay to grant access to your mic.</li>
-          <li><strong>Select Instrument:</strong> Ensure "{tuning.name}" is active in the menu.</li>
-          <li><strong>Pluck Clearly:</strong> Sound a single string. The tuner will highlight the closest note.</li>
-          <li><strong>Check the Needle:</strong>
+          <li><strong>{t('footer.step_mic')}:</strong> {t('footer.step_mic_desc')}</li>
+          <li><strong>{t('footer.step_inst')}:</strong> {t('footer.step_inst_desc_prefix')} "{tuningName}" {t('footer.step_inst_desc_suffix')}</li>
+          <li><strong>{t('footer.step_pluck')}:</strong> {t('footer.step_pluck_desc')}</li>
+          <li><strong>{t('footer.step_needle')}:</strong>
             <ul>
-              <li><strong>Flat (Left):</strong> The pitch is too low. Tighten the tuning peg.</li>
-              <li><strong>Sharp (Right):</strong> The pitch is too high. Loosen the tuning peg.</li>
+              <li><strong>{t('common.flat')}:</strong> {t('footer.step_needle_flat')}</li>
+              <li><strong>{t('common.sharp')}:</strong> {t('footer.step_needle_sharp')}</li>
             </ul>
           </li>
-          <li><strong>Diamond Mode:</strong> When the center diamond glows green, you are perfectly in tune (within 4 cents).</li>
+          <li><strong>{t('footer.step_diamond')}:</strong> {t('footer.step_diamond_desc')}</li>
         </ol>
       </section>
     </article>

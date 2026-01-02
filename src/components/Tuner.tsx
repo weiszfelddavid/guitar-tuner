@@ -3,6 +3,7 @@ import '../App.css';
 import processorUrl from '../audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from '../utils/tuner';
 import { TUNINGS, noteToFreq, type Tuning } from '../utils/tunings';
+import { useTranslation } from '../hooks/useTranslation';
 
 // --- Types ---
 interface TunerUpdate {
@@ -19,15 +20,16 @@ const TuningSelector: React.FC<{
   selected: Tuning; 
   onSelect: (t: Tuning) => void 
 }> = ({ selected, onSelect }) => {
+  const { t } = useTranslation();
   return (
     <div className="tuning-selector">
-      {TUNINGS.map(t => (
+      {TUNINGS.map(tData => (
         <button 
-          key={`${t.instrument}-${t.slug}`}
-          className={`tuning-chip ${selected.slug === t.slug && selected.instrument === t.instrument ? 'active' : ''}`}
-          onClick={() => onSelect(t)}
+          key={`${tData.instrument}-${tData.slug}`}
+          className={`tuning-chip ${selected.slug === tData.slug && selected.instrument === tData.instrument ? 'active' : ''}`}
+          onClick={() => onSelect(tData)}
         >
-          {t.name}
+          {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name)}
         </button>
       ))}
     </div>
@@ -87,6 +89,7 @@ const NoteDisplay: React.FC<{ note: string; status: TunerStatus; cents: number }
 };
 
 const RulerGauge: React.FC<{ cents: number; status: TunerStatus }> = ({ cents, status }) => {
+  const { t } = useTranslation();
   const clampedCents = Math.max(-50, Math.min(50, cents));
   const percent = ((clampedCents + 50) / 100) * 100;
   const isVisible = status === 'detecting' || status === 'locked' || status === 'holding';
@@ -103,7 +106,7 @@ const RulerGauge: React.FC<{ cents: number; status: TunerStatus }> = ({ cents, s
       </div>
       <div className="gauge-indicator" style={{ left: `${percent}%` }}></div>
       <div className="cents-label">
-        {isVisible ? `${cents > 0 ? '+' : ''}${Math.round(cents)} ct` : ''}
+        {isVisible ? `${cents > 0 ? '+' : ''}${Math.round(cents)} ${t('common.cents_label')}` : ''}
       </div>
     </div>
   );
@@ -153,6 +156,7 @@ export const Tuner: React.FC<{
   initialTuning?: Tuning,
   onTuningChange?: (t: Tuning) => void 
 }> = ({ initialTuning, onTuningChange }) => {
+  const { t } = useTranslation();
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
@@ -242,7 +246,7 @@ export const Tuner: React.FC<{
     } catch (error) {
       console.error('Error starting tuner:', error);
       setTunerStatus('idle');
-      alert('Microphone access is required to use the tuner.');
+      alert(t('common.mic_required'));
     }
   };
 
@@ -267,23 +271,22 @@ export const Tuner: React.FC<{
     };
   }, []);
 
-  // Update internal state if prop changes
   useEffect(() => {
     if (initialTuning) {
       setSelectedTuning(initialTuning);
     }
   }, [initialTuning]);
 
-  const handleTuningSelect = (t: Tuning) => {
-    setSelectedTuning(t);
-    onTuningChange?.(t);
+  const handleTuningSelect = (tData: Tuning) => {
+    setSelectedTuning(tData);
+    onTuningChange?.(tData);
   };
 
   return (
     <div className="tuner-wrapper">
       {tunerStatus === 'idle' && (
         <div className="start-overlay" onClick={startTuner}>
-          <div className="start-message">Tap to enable microphone usage</div>
+          <div className="start-message">{t('common.tap_to_enable')}</div>
         </div>
       )}
 
@@ -313,7 +316,7 @@ export const Tuner: React.FC<{
       />
       
       <div className="tech-readout">
-        {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
+        {tunerStatus === 'idle' ? t('common.ready') : (tunerStatus === 'holding' ? t('common.hold') : (pitch ? `${pitch.toFixed(1)} Hz` : t('common.listening')))}
       </div>
     </div>
   );
