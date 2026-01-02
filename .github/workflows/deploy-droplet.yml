@@ -16,14 +16,10 @@ jobs:
           username: root
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            # Navigate to the project directory
             cd /root/guitar-tuner
-            
-            # Pull the latest changes (including the dist folder)
-            git pull origin main
-            
-            # Optional: Restart Nginx if needed (uncomment if you use Nginx)
-            # systemctl reload nginx
-            
-            echo "Deployment complete!"
+            # Force git to match the repository exactly
+            git fetch --all
+            git reset --hard origin/main
+            git clean -fd
+            echo "Deployment complete and server synced!"
 
