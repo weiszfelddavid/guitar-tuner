@@ -4,11 +4,12 @@
 
 ### Workflow
 1.  **Tool:** Playwright is used to capture screenshots of the deployed application.
-2.  **Script:** `scripts/capture-ui.js` automates the process.
-3.  **Targets:**
+2.  **Script:** `scripts/capture-ui.js` automates the process and **must log the deployed version number** detected on the live site.
+3.  **Verification:** Before analyzing screenshots, **always match the deployed version number** (from the screenshot logs) with the local `src/version.ts`. If they do not match, wait for deployment to complete.
+4.  **Targets:**
     -   **Mobile:** iPhone 13 (Viewport: 390x844)
     -   **Desktop:** Standard 1920x1080
-4.  **Analysis:** The AI Agent analyzes the captured screenshots in `debug-screenshots/` to identify layout issues, cropping, or visual bugs.
+5.  **Analysis:** The AI Agent analyzes the captured screenshots in `debug-screenshots/` to identify layout issues, cropping, or visual bugs.
 
 ## UI/UX Design Expectations
 - **Minimal & Direct:** The interface must be clutter-free. The primary focus is the tuning visualization.
