@@ -57,12 +57,40 @@ To beat the incumbents (Fender, GuitarTuna), we must win on speed and clarity.
       - *Step 3:* "Tune down until the needle centers on D."
     - This creates **Rich Snippets** (steps appearing directly in Google Search results).
 
-## 6. Execution Roadmap
-1.  **Architecture Upgrade:** Implement a lightweight SSG (Static Site Generation) approach or smart routing to handle `/instrument/tuning` paths.
-2.  **Database Expansion:** Enrich `tunings.ts` with metadata (SEO titles, specific descriptions) for every tuning.
-3.  **Localization:** Extract UI strings to `locales/*.json`.
-4.  **Sitemap Generation:** Automate `sitemap.xml` creation to list all generated tuning/language combinations.
-5.  **Launch:** Deploy the new structure.
+## 9. Implementation Phases (Step-by-Step)
+
+### Phase 1: The Foundation (Architecture)
+**Goal:** Enable the app to handle routing and language switching.
+- [ ] **Routing Upgrade:** Implement a router (e.g., `react-router` or lightweight alternative) to support `/locale/instrument/tuning` paths.
+- [ ] **Layout System:** Create a `MainLayout` that includes the dynamic `SEOFooter` and `LanguageSwitcher` component.
+- [ ] **URL Management:** Ensure visiting `/` redirects to the user's likely language (e.g., `/en/`) or the default.
+
+### Phase 2: The Knowledge Graph (Data)
+**Goal:** define the "Source of Truth" for every page we want to generate.
+- [ ] **Schema Expansion:** Update `tunings.ts` to include SEO metadata for every tuning:
+  - `seoTitle`: "Drop D Tuning..."
+  - `description`: "How to tune..."
+  - `keywords`: ["drop d", "metal tuning"]
+- [ ] **Tuning Expansion:** Add missing popular tunings (Open G, DADGAD, Half-Step Down, Ukulele Low G).
+
+### Phase 3: The Factory (Programmatic Generation)
+**Goal:** Automate the creation of landing pages.
+- [ ] **Page Component:** Create a `TuningPage.tsx` that accepts a `tuningId` and `locale`.
+- [ ] **Dynamic Injection:** Ensure the Tuner component auto-selects the correct tuning based on the URL.
+- [ ] **Meta Tagging:** Implement `react-helmet-async` (or similar) to dynamically update `<title>`, `<meta description>`, and `<link rel="canonical">`.
+
+### Phase 4: Global Voice (Localization)
+**Goal:** Translate the interface and content.
+- [ ] **Extraction:** Move all hardcoded English text in `App.tsx` and `SEOFooter.tsx` into `src/locales/en.json`.
+- [ ] **Translation:** Create `es.json` and `fr.json`. Use AI or professional services to translate with the "Studio Engineer" tone.
+- [ ] **i18n Hook:** Implement a simple `useTranslation` hook to swap strings based on the active route.
+
+### Phase 5: Launch & Measure
+**Goal:** Go live and verify.
+- [ ] **Sitemap Script:** Write a script to generate `sitemap.xml` listing all 100+ new URLs.
+- [ ] **Robots.txt:** Update to allow crawling.
+- [ ] **Analytics:** Integrate the "Zero-Bloat" stack (GSC + Cloudflare/Clarity).
+- [ ] **Deploy:** Push to production and monitor GSC for indexing.
 
 ## 7. Success Metrics
 - **Rank:** #1-3 for "Online Guitar Tuner".
