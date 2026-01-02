@@ -300,6 +300,23 @@ function App() {
   };
 
   useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        // Check if permissions API is available
+        if (navigator.permissions && navigator.permissions.query) {
+          const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          if (result.state === 'granted') {
+            startTuner();
+          }
+        }
+      } catch (e) {
+        // Permissions API might not support 'microphone' on all browsers or throw
+        console.debug('Permission check failed or not supported', e);
+      }
+    };
+    
+    checkPermissions();
+
     return () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       audioContextRef.current?.close();
@@ -309,40 +326,42 @@ function App() {
 
   return (
     <div className={`App ${tunerStatus}`}>
-      {tunerStatus === 'idle' && (
-        <div className="start-overlay" onClick={startTuner}>
-          <div className="start-message">Tap to Enable Tuner</div>
-        </div>
-      )}
-
       <main className="tuner-interface">
-        <TuningSelector 
-          selected={selectedTuning} 
-          onSelect={setSelectedTuning} 
-        />
+        <div className="tuner-wrapper">
+          {tunerStatus === 'idle' && (
+            <div className="start-overlay" onClick={startTuner}>
+              <div className="start-message">Tap to enable microphone usage</div>
+            </div>
+          )}
 
-        <Sparkline history={centsHistory} />
-        
-        <div className="center-stack">
-          <NoteDisplay 
-            note={noteData.note} 
-            status={tunerStatus}
-            cents={noteData.cents}
+          <TuningSelector 
+            selected={selectedTuning} 
+            onSelect={setSelectedTuning} 
+          />
+
+          <Sparkline history={centsHistory} />
+          
+          <div className="center-stack">
+            <NoteDisplay 
+              note={noteData.note} 
+              status={tunerStatus}
+              cents={noteData.cents}
+            />
+            
+            <StringVisualizer 
+              tuning={selectedTuning} 
+              pitch={pitch} 
+            />
+          </div>
+          
+          <RulerGauge 
+            cents={noteData.cents} 
+            status={tunerStatus} 
           />
           
-          <StringVisualizer 
-            tuning={selectedTuning} 
-            pitch={pitch} 
-          />
-        </div>
-        
-        <RulerGauge 
-          cents={noteData.cents} 
-          status={tunerStatus} 
-        />
-        
-        <div className="tech-readout">
-          {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
+          <div className="tech-readout">
+            {tunerStatus === 'idle' ? 'Ready' : (tunerStatus === 'holding' ? 'Hold' : (pitch ? `${pitch.toFixed(1)} Hz` : 'Listening...'))}
+          </div>
         </div>
         
         <SEOFooter tuning={selectedTuning} />

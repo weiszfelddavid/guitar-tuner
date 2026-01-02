@@ -1,7 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#00E676" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#00E676" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- U-Shaped Fork -->
+  <path d="M35 10 L35 55 A 15 15 0 0 0 65 55 L65 10" />
   <!-- Handle -->
-  <line x1="50" y1="100" x2="50" y2="55" />
-  <!-- Fork Base -->
-  <path d="M50 55 Q50 35 30 35 L30 5" />
-  <path d="M50 55 Q50 35 70 35 L70 5" />
+  <line x1="50" y1="70" x2="50" y2="95" />
 </svg>

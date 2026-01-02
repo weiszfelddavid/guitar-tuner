@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#00E676" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Handle -->
-  <line x1="50" y1="100" x2="50" y2="55" />
-  <!-- Fork Base -->
-  <path d="M50 55 Q50 35 30 35 L30 5" />
-  <path d="M50 55 Q50 35 70 35 L70 5" />
-</svg>

@@ -56,6 +56,14 @@
   z-index: 5;
 }
 
+.tuner-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* 1. Sparkline (Background) */
 .sparkline-container {
   position: absolute;
