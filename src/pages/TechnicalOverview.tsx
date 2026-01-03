@@ -146,6 +146,21 @@ const effectiveSampleRate = sampleRate / 2;
             This allows me to process a massive 4096-sample buffer—essential for tracking a Low B on a 
             5-string bass—while keeping the CPU load light enough for any smartphone.
           </p>
+
+          <h3>Addressing Pitch Detection Flaws</h3>
+          <p>
+            Despite initial success with basic pitch detection, a critical bug emerged: the tuner would react to sound (volume meter active) but consistently fail to detect any pitch. The root cause was traced to an incorrect implementation of the ring buffer within the <code>AudioWorkletProcessor</code>. Audio samples were being fed to the YIN algorithm in a jumbled, non-contiguous order, rendering accurate pitch detection impossible.
+          </p>
+          <p>
+            The fix involved two key changes:
+            <ol>
+              <li>**Corrected Ring Buffer Logic:** The ring buffer was updated to properly "unroll" its contents into a contiguous array, ensuring the YIN algorithm receives a clean, continuous stream of audio data.</li>
+              <li>**Refined YIN Threshold:** The YIN algorithm's internal confidence threshold was adjusted from an overly lenient <code>0.1</code> to a more appropriate and robust <code>0.85</code>, improving detection accuracy and reducing false positives.</li>
+            </ol>
+          </p>
+          <p>
+            Crucially, this bug highlighted a gap in the testing strategy. The existing unit test for the audio processor, while passing, was not adequately simulating real-world chunked audio input. It processed a single, large sine wave, which inadvertently bypassed the faulty ring buffer logic. To address this, the test was significantly enhanced to process audio in small, continuous chunks, thereby accurately mimicking the browser's audio pipeline and thoroughly validating the corrected ring buffer implementation.
+          </p>
         </section>
 
         <section>
@@ -229,6 +244,28 @@ const effectiveSampleRate = sampleRate / 2;
             to help me refactor code, manage Git, and run shell commands. It's an incredibly fluid way to build 
             software—I can fix a bug in the audio engine while sitting in a cafe with just my phone in my hand.
           </p>
+
+          <h3>A Real-World Example: Fixing the Pitch Bug</h3>
+          <p>
+            The recent pitch detection failure is a perfect example of this workflow in action. Here’s a condensed look at the commands I used via the Gemini CLI to resolve the issue:
+          </p>
+          <div className="code-block">
+            <pre>{`# 1. Investigate: Find the relevant files
+> glob '**/processor.ts'
+> read_file src/audio/engine/processor.ts
+
+# 2. Fix: Apply the code change (conceptual)
+> replace --file 'src/audio/engine/processor.ts' ...
+
+# 3. Verify: Run the updated unit test
+> npm test
+
+# 4. Deploy: Commit and push the fix
+> git status
+> git add .
+> git commit -m "fix(audio): resolve critical pitch detection failure"
+> git push`}</pre>
+          </div>
         </section>
 
         <section>
