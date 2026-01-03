@@ -12,9 +12,8 @@ import { AccuracyArrows } from './tuner/AccuracyArrows';
 import { Sparkline } from './tuner/Sparkline';
 
 export const Tuner: React.FC<{ 
-  initialTuning?: Tuning,
-  onTuningChange?: (t: Tuning) => void
-}> = ({ initialTuning, onTuningChange }) => {
+  initialTuning?: Tuning
+}> = ({ initialTuning }) => {
   const { t } = useTranslation();
   const [selectedTuning, setSelectedTuning] = useState<Tuning>(initialTuning || TUNINGS[0]);
   
@@ -32,11 +31,6 @@ export const Tuner: React.FC<{
       setSelectedTuning(initialTuning);
     }
   }, [initialTuning]);
-
-  const handleTuningSelect = (tData: Tuning) => {
-    setSelectedTuning(tData);
-    onTuningChange?.(tData);
-  };
 
   return (
     <div className="tuner-wrapper">
@@ -57,7 +51,6 @@ export const Tuner: React.FC<{
 
       <TuningSelector 
         selected={selectedTuning} 
-        onSelect={handleTuningSelect} 
       />
 
       <div className="tuner-main-display">
