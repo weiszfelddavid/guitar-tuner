@@ -221,7 +221,45 @@ const pitch = effectiveSampleRate / betterTau;
         </section>
 
         <section>
-          <h2>7. "Exotic" Development Environment</h2>
+          <h2>7. Programmatic SEO & Internationalization</h2>
+          <p>
+            Unlike typical "Single Page Apps" that are invisible to search engines, our architecture 
+            is designed for maximum discoverability.
+          </p>
+          <ul className="tech-list">
+            <li>
+              <strong>Hub & Spoke Model:</strong> We don't just have one homepage. The <code>TUNINGS</code> 
+              database acts as a headless CMS, allowing us to generate thousands of unique landing pages 
+              (e.g., <code>/en/ukulele/low-g</code>) with specific metadata, titles, and instructions 
+              programmatically.
+            </li>
+            <li>
+              <strong>I18n Routing:</strong> Language state is stored in the URL (<code>/:lang/</code>), 
+              not local storage. This ensures that a link shared by a user in Germany (<code>/de/...</code>) 
+              opens in German for the recipient, while canonical tags prevent duplicate content penalties.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>8. Privacy & Observability</h2>
+          <p>
+            We optimize for user trust and debugging data.
+          </p>
+          <ul className="tech-list">
+            <li>
+              <strong>Cloudflare Web Analytics:</strong> Privacy-first analytics that don't use cookies 
+              or track personal data, giving us simple "visitor count" metrics.
+            </li>
+            <li>
+              <strong>Microsoft Clarity:</strong> Provides heatmaps and session recordings (scrubbing sensitive text), 
+              allowing us to see if users are struggling with the UI on specific devices.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>9. "Exotic" Development Environment</h2>
           <p>
             This entire project is built and maintained in a non-traditional environment. 
             There is no VS Code, no MacBook.
