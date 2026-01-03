@@ -34,26 +34,27 @@ export const Tuner: React.FC<{
 
   return (
     <div className="tuner-wrapper">
-      {tunerStatus === 'idle' && !isPaused && (
-        <div className="start-overlay" onClick={startTuner}>
-          <div className="start-message">{t('common.tap_to_enable')}</div>
-        </div>
-      )}
-
-      {isPaused && (
-        <div className="start-overlay" onClick={startTuner}>
-          <div className="start-message">
-            <div>Tuner Paused</div>
-            <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>Tap to Resume</div>
-          </div>
-        </div>
-      )}
-
       <TuningSelector 
         selected={selectedTuning} 
+        onActivate={startTuner}
       />
 
       <div className="tuner-main-display">
+        {tunerStatus === 'idle' && !isPaused && (
+          <div className="start-overlay" onClick={startTuner}>
+            <div className="start-message">{t('common.tap_to_enable')}</div>
+          </div>
+        )}
+
+        {isPaused && (
+          <div className="start-overlay" onClick={startTuner}>
+            <div className="start-message">
+              <div>Tuner Paused</div>
+              <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>Tap to Resume</div>
+            </div>
+          </div>
+        )}
+
         <Sparkline history={centsHistory} />
         
         <NoteDisplay 

@@ -3,7 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { TUNINGS, type Tuning } from '../../utils/tunings';
 import { useTranslation } from '../../hooks/useTranslation';
 
-export const TuningSelector: React.FC<{ selected: Tuning }> = ({ selected }) => {
+interface TuningSelectorProps {
+  selected: Tuning;
+  onActivate: () => void;
+}
+
+export const TuningSelector: React.FC<TuningSelectorProps> = ({ selected, onActivate }) => {
   const { t } = useTranslation();
   const { lang } = useParams();
 
@@ -24,6 +29,7 @@ export const TuningSelector: React.FC<{ selected: Tuning }> = ({ selected }) => 
             <Link
               key={inst}
               to={`/${lang}/${inst}/${firstTuning?.slug || 'standard'}`}
+              onClick={onActivate}
               className={`pill instrument-pill ${selected.instrument === inst ? 'active' : ''}`}
             >
               {inst.charAt(0).toUpperCase() + inst.slice(1).toLowerCase()}
@@ -38,6 +44,7 @@ export const TuningSelector: React.FC<{ selected: Tuning }> = ({ selected }) => 
             <Link 
               key={`${tData.instrument}-${tData.slug}`}
               to={`/${lang}/${tData.instrument}/${tData.slug}`}
+              onClick={onActivate}
               className={`pill tuning-pill ${selected.slug === tData.slug ? 'active' : ''}`}
             >
               {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name).replace(/.*\((.*)\)/, '$1')} 
