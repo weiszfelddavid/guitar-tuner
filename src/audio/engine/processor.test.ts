@@ -21,6 +21,7 @@ describe('PitchProcessor', () => {
 
     vi.stubGlobal('AudioWorkletProcessor', MockAudioWorkletProcessor);
     vi.stubGlobal('registerProcessor', vi.fn());
+    vi.stubGlobal('sampleRate', 44100);
 
     // 2. LOAD THE FILE DYNAMICALLY (Wait for globals to be ready)
     // This prevents the "ReferenceError" crash
@@ -29,7 +30,8 @@ describe('PitchProcessor', () => {
 
     // 3. GENERATE SOUND (440Hz Sine Wave)
     const SAMPLE_RATE = 44100;
-    const BUFFER_SIZE = 2048;
+    // Provide enough data to fill the internal 4096 ring buffer completely
+    const BUFFER_SIZE = 4096; 
     const buffer = new Float32Array(BUFFER_SIZE);
     for (let i = 0; i < BUFFER_SIZE; i++) {
         buffer[i] = Math.sin((2 * Math.PI * 440 * i) / SAMPLE_RATE);
@@ -50,7 +52,9 @@ describe('PitchProcessor', () => {
 
     // 5. VERIFY
     expect(postMessage).toHaveBeenCalled();
-    const result = postMessage.mock.calls[0][0];
+    // Get the last call which likely has the most accurate detection after buffer fill
+    const lastCall = postMessage.mock.calls[postMessage.mock.calls.length - 1];
+    const result = lastCall[0];
     
     console.log('Detected Pitch:', result.pitch);
     expect(result.pitch).toBeGreaterThan(435);
