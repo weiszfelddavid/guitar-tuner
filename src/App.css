@@ -354,10 +354,12 @@
 }
 
 /* --- Technical Overview Page --- */
+/* Isolated layout context for the article to prevent global leakage */
 .tech-overview-container {
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem 1rem;
+  padding: 2rem 1rem 6rem 1rem; /* Extra bottom padding for scroll */
   color: #ddd;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
@@ -385,9 +387,10 @@
 }
 
 .tech-header h1 {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 8vw, 2.5rem); /* Fluid font size */
   margin-bottom: 0.5rem;
   color: #fff;
+  line-height: 1.2;
 }
 
 .tech-header .subtitle {
@@ -420,23 +423,28 @@
 
 /* Diagrams */
 .diagram-wrapper {
+  width: 100%;
   background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   padding: 1rem;
   margin: 2rem 0;
-  overflow-x: auto;
+  overflow-x: auto; /* Enable horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 }
 
 .tech-diagram {
-  width: 100%;
-  height: auto;
-  min-width: 600px; /* Ensure diagram is readable on mobile scroll */
   display: block;
+  height: auto;
+  /* Min-width ensures the SVG text remains readable. 
+     The wrapper handles the overflow. */
+  min-width: 600px; 
 }
 
 /* Code Blocks */
 .code-block {
+  width: 100%;
   background: #111;
   padding: 1rem;
   border-radius: 6px;
@@ -450,6 +458,7 @@
   font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 0.85rem;
   color: #a5d6ff;
+  white-space: pre; /* Force scrolling for long lines */
 }
 
 /* List */
