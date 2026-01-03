@@ -65,6 +65,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
       pitchProcessor.port.onmessage = (event) => {
+        console.log('Received from worklet:', event.data);
         const { pitch, clarity, bufferrms } = event.data as TunerUpdate;
         const now = Date.now();
         const isVoice = instrumentRef.current === 'voice';

@@ -10,54 +10,57 @@ interface MockProcessor {
 }
 
 describe('PitchProcessor', () => {
-  it('should correctly detect 440Hz', async () => {
-    // 1. DEFINE BROWSER GLOBALS (Before loading the file)
+  it('should correctly detect 440Hz when audio is processed in chunks', async () => {
+    // 1. DEFINE BROWSER GLOBALS
     const MockAudioWorkletProcessor = class {
       port: MockPort;
       constructor() {
         this.port = { postMessage: vi.fn() };
       }
     };
-
     vi.stubGlobal('AudioWorkletProcessor', MockAudioWorkletProcessor);
     vi.stubGlobal('registerProcessor', vi.fn());
-    vi.stubGlobal('sampleRate', 44100);
+    vi.stubGlobal('sampleRate', 48000); // More realistic sample rate
 
-    // 2. LOAD THE FILE DYNAMICALLY (Wait for globals to be ready)
-    // This prevents the "ReferenceError" crash
+    // 2. LOAD THE FILE DYNAMICALLY
     const module = await import('./processor');
     const PitchProcessor = module.default;
 
     // 3. GENERATE SOUND (440Hz Sine Wave)
-    const SAMPLE_RATE = 44100;
-    // Provide enough data to fill the internal 4096 ring buffer completely
-    const BUFFER_SIZE = 4096; 
-    const buffer = new Float32Array(BUFFER_SIZE);
+    const SAMPLE_RATE = 48000;
+    const BUFFER_SIZE = 4096; // Internal buffer size of the processor
+    const CHUNK_SIZE = 128;   // Realistic chunk size from the browser
+    const sineWave = new Float32Array(BUFFER_SIZE);
     for (let i = 0; i < BUFFER_SIZE; i++) {
-        buffer[i] = Math.sin((2 * Math.PI * 440 * i) / SAMPLE_RATE);
+      sineWave[i] = Math.sin((2 * Math.PI * 440 * i) / SAMPLE_RATE);
     }
 
     // 4. RUN THE ENGINE
-    const processor = new PitchProcessor({
-        processorOptions: { bufferSize: BUFFER_SIZE }
-    });
-    
-    // Type cast to access the mocked port
+    const processor = new PitchProcessor();
     const mockProcessor = processor as unknown as MockProcessor;
     const postMessage = vi.fn();
     mockProcessor.port = { postMessage };
 
-    // Process the audio buffer
-    processor.process([[buffer]], [], {});
+    // Process the audio buffer in chunks
+    for (let i = 0; i < BUFFER_SIZE; i += CHUNK_SIZE) {
+      const chunk = sineWave.subarray(i, i + CHUNK_SIZE);
+      processor.process([[chunk]], [], {});
+    }
 
     // 5. VERIFY
     expect(postMessage).toHaveBeenCalled();
-    // Get the last call which likely has the most accurate detection after buffer fill
+    
+    // The pitch detection runs every 256 frames. 
+    // The last few calls should have a stable pitch.
     const lastCall = postMessage.mock.calls[postMessage.mock.calls.length - 1];
     const result = lastCall[0];
     
+    // Add debug logging to see the test output
     console.log('Detected Pitch:', result.pitch);
+    console.log('Detected Clarity:', result.clarity);
+
     expect(result.pitch).toBeGreaterThan(435);
     expect(result.pitch).toBeLessThan(445);
+    expect(result.clarity).toBeGreaterThan(0.9); // Expect high clarity for a pure sine wave
   });
 });

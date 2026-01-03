@@ -11,15 +11,16 @@ class PitchProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array;
   private bufferIndex: number = 0;
   private framesSinceLastDetect: number = 0;
-  private threshold: number = 0.1;
+  private threshold: number = 0.8;
   private readonly BUFFER_SIZE = 4096;
   private readonly PROCESSING_INTERVAL = 256;
 
   constructor(options?: AudioWorkletNodeOptions) {
     super();
+    console.log('AudioWorklet sampleRate:', sampleRate);
     // Use fixed 4096 buffer for better bass resolution (approx 85ms window at 48kHz)
     this.buffer = new Float32Array(this.BUFFER_SIZE);
-    this.threshold = options?.processorOptions?.threshold || 0.1;
+    this.threshold = options?.processorOptions?.threshold || 0.85;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,8 +47,16 @@ class PitchProcessor extends AudioWorkletProcessor {
   }
 
   private detectPitch() {
-    // 1. Unroll Ring Buffer & Downsample (2x)
-    // We downsample 4096 samples -> 2048 samples.
+    // 1. Unroll Ring Buffer to a temporary contiguous buffer
+    const unrolledBuffer = new Float32Array(this.BUFFER_SIZE);
+    const part1Length = this.BUFFER_SIZE - this.bufferIndex;
+    // Copy the older part
+    unrolledBuffer.set(this.buffer.subarray(this.bufferIndex), 0);
+    // Copy the newer part
+    unrolledBuffer.set(this.buffer.subarray(0, this.bufferIndex), part1Length);
+
+
+    // 2. Downsample (2x) the unrolled buffer
     // This effectively gives us a sample rate of ~24kHz for detection.
     // Advantages: 
     // - Half the CPU load for YIN algorithm
@@ -55,20 +64,13 @@ class PitchProcessor extends AudioWorkletProcessor {
     // - Keeps array sizes manageable (2048)
     const downsampledSize = this.BUFFER_SIZE / 2;
     const downsampledBuffer = new Float32Array(downsampledSize);
-    
-    // We want the *last* 4096 samples. 
-    // Since bufferIndex points to the *next* write, the oldest sample is at bufferIndex.
-    let readIndex = this.bufferIndex; 
-    
+        
     // Compute RMS of the full resolution signal for the noise gate
     let sumOfSquares = 0;
     
     for (let i = 0; i < downsampledSize; i++) {
-      // Read two samples from the circular buffer
-      const s1 = this.buffer[readIndex];
-      readIndex = (readIndex + 1) % this.BUFFER_SIZE;
-      const s2 = this.buffer[readIndex];
-      readIndex = (readIndex + 1) % this.BUFFER_SIZE;
+      const s1 = unrolledBuffer[i * 2];
+      const s2 = unrolledBuffer[i * 2 + 1];
 
       // Simple averaging for downsampling
       downsampledBuffer[i] = (s1 + s2) / 2;
@@ -133,13 +135,17 @@ class PitchProcessor extends AudioWorkletProcessor {
       this.port.postMessage({
         pitch: pitch,
         clarity: 1 - yinBuffer[tauEstimate],
-        bufferrms: bufferrms
+        bufferrms: bufferrms,
+        tauEstimate: tauEstimate, // for debugging
+        yinBufferAtEstimate: yinBuffer[tauEstimate] // for debugging
       });
     } else {
       this.port.postMessage({
         pitch: null,
         clarity: 0,
-        bufferrms: bufferrms
+        bufferrms: bufferrms,
+        tauEstimate: -1, // for debugging
+        yinBufferAtEstimate: -1 // for debugging
       });
     }
   }
