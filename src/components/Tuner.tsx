@@ -45,23 +45,25 @@ const TuningSelector: React.FC<{
               to={`/${lang}/${inst}/${firstTuning?.slug || 'standard'}`}
               className={`pill instrument-pill ${selected.instrument === inst ? 'active' : ''}`}
             >
-              {inst.charAt(0).toUpperCase() + inst.slice(1)}
+              {inst.charAt(0).toUpperCase() + inst.slice(1).toLowerCase()}
             </Link>
           );
         })}
       </div>
 
       {/* Row 2: Tunings */}
-      <div className="tuning-row">
-        {currentInstrumentTunings.map(tData => (
-          <Link 
-            key={`${tData.instrument}-${tData.slug}`}
-            to={`/${lang}/${tData.instrument}/${tData.slug}`}
-            className={`pill tuning-pill ${selected.slug === tData.slug ? 'active' : ''}`}
-          >
-            {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name).replace(/.*\((.*)\)/, '$1')} 
-          </Link>
-        ))}
+      <div className="tuning-row-mask">
+        <div className="tuning-row">
+          {currentInstrumentTunings.map(tData => (
+            <Link 
+              key={`${tData.instrument}-${tData.slug}`}
+              to={`/${lang}/${tData.instrument}/${tData.slug}`}
+              className={`pill tuning-pill ${selected.slug === tData.slug ? 'active' : ''}`}
+            >
+              {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name).replace(/.*\((.*)\)/, '$1')} 
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
