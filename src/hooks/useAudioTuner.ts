@@ -47,6 +47,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
   };
 
   const startTuner = async () => {
+    
     if (audioContextRef.current) return;
 
     try {
@@ -54,6 +55,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
       setTunerStatus('listening');
       const AudioContextConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = new AudioContextConstructor();
+      await audioContext.resume();
       await audioContext.audioWorklet.addModule(processorUrl);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -148,25 +150,17 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    const checkPermissions = async () => {
-      try {
-        if (navigator.permissions && navigator.permissions.query) {
-          const result = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-          if (result.state === 'granted') {
-            startTuner();
-          }
-        }
-      } catch (e) {
-        console.debug('Permission check failed', e);
-      }
-    };
-    checkPermissions();
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       stopTuner();
     };
   }, []);
+
+  const resumeTuner = async () => {
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
+  };
 
   return {
     tunerStatus,
@@ -176,6 +170,8 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     centsHistory,
     volume,
     startTuner,
-    stopTuner
+    stopTuner,
+    resumeTuner,
+    audioContextRef
   };
 };
