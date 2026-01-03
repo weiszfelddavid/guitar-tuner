@@ -98,90 +98,88 @@ export const TechnicalOverview: React.FC = () => {
 
       <header className="tech-header">
         <h1>Under the Hood</h1>
-        <p className="subtitle">Architecture, Signal Processing, and the "Exotic" Stack.</p>
+        <p className="subtitle">How I built a pro-grade tuner entirely on my phone.</p>
       </header>
 
       <div className="tech-content">
         <section>
-          <h2>1. The Goal: "Absolute Zero" Latency</h2>
+          <h2>1. The Challenge: A Mobile-First "Lab"</h2>
           <p>
-            Most online tuners suffer from "jitter"—the needle jumps around because the pitch detection logic 
-            fights with the browser's main thread (UI rendering). We wanted to build a tuner that feels 
-            native, with the responsiveness of an analog pedal.
+            I decided to try something a bit crazy: building a professional-grade, high-precision guitar tuner 
+            without ever touching a laptop. This entire project—from the first <code>npm init</code> to the 
+            final CSS tweak—was built on my phone using <strong>Termux</strong>, <strong>Gemini CLI</strong>, and a lot of persistence.
           </p>
           <p>
-            To achieve this, we bypassed standard libraries and wrote a custom 
-            <strong> AudioWorklet</strong> implementation of the YIN algorithm in TypeScript.
+            The goal wasn't just to make it work; it was to make it the most accurate tuner on the web, 
+            optimized specifically for the devices we actually use at home or in the studio.
           </p>
         </section>
 
         <section>
-          <h2>2. Audio Engine Architecture</h2>
+          <h2>2. The Audio Engine (Signal Processing)</h2>
           <p>
-            The core logic lives in a separate thread (AudioWorklet) to prevent UI blocking. 
-            We use a <strong>Ring Buffer</strong> (Circular Buffer) strategy to handle continuous audio streams.
+            I knew I needed absolute zero latency. Most web tuners feel "laggy" because they fight with the 
+            browser's UI thread. To solve this, I wrote a custom <strong>AudioWorklet</strong> implementation 
+            of the YIN algorithm in TypeScript.
           </p>
           
           <div className="diagram-wrapper">
             <AudioEngineDiagram />
           </div>
 
-          <h3>The "48kHz Problem" & The Solution</h3>
+          <h3>The "48kHz Mobile Bug"</h3>
           <p>
-            During development, we discovered a critical bug: the tuner was consistently flat on mobile devices. 
-            <strong> The Diagnosis:</strong> Hardcoded sample rates (44.1kHz) clashed with modern hardware defaults (48kHz). 
-            If the math expects 44,100 samples/sec but the hardware delivers 48,000, the calculated pitch drops by ~8%.
+            Early on, I noticed my Low E string was registering as a D#. I realized that while most desktop 
+            audio defaults to 44.1kHz, modern mobile microphones often run at <strong>48kHz</strong>. 
+            If your math expects 44,100 samples but gets 48,000, your pitch calculation is off by ~8%.
           </p>
           <div className="code-block">
-            <pre>{`// The Fix: Dynamic Sample Rate & Parabolic Interpolation
-const effectiveSampleRate = sampleRate / 2; // Downsampled
-const pitch = effectiveSampleRate / betterTau;
+            <pre>{`// My fix: Dynamic Sample Rate + Parabolic Interpolation
+// I pull the actual hardware sample rate from the context
+const effectiveSampleRate = sampleRate / 2; 
 
-// "BetterTau" uses parabolic interpolation to find the
-// true peak *between* two digital samples.`}</pre>
+// I use parabolic interpolation to find the peak *between* 
+// digital samples, giving me sub-cent accuracy.`}</pre>
           </div>
           <p>
-            We implemented <strong>2x Downsampling</strong> and <strong>Parabolic Interpolation</strong>. 
-            This allows us to process a massive 4096-sample buffer (great for Bass accuracy) 
-            while keeping CPU usage low enough for mobile browsers.
+            I implemented <strong>2x Downsampling</strong> and <strong>Parabolic Interpolation</strong>. 
+            This allows me to process a massive 4096-sample buffer—essential for tracking a Low B on a 
+            5-string bass—while keeping the CPU load light enough for any smartphone.
           </p>
         </section>
 
         <section>
-          <h2>3. The Tech Stack</h2>
+          <h2>3. My Core Stack</h2>
           <ul className="tech-list">
             <li>
-              <strong>Frontend:</strong> React 19 + TypeScript. We use React not for the audio, but for the 
-              60fps canvas-less DOM rendering of the UI.
+              <strong>React 19 + TypeScript:</strong> I chose React for the UI because I wanted 60fps 
+              responsiveness and a clean, declarative way to handle complex tuning states.
             </li>
             <li>
-              <strong>State:</strong> Zustand. Minimalist state management to bridge the gap between 
-              the high-frequency AudioWorklet events and the React UI.
+              <strong>Zustand:</strong> I needed a minimalist way to bridge the gap between high-frequency 
+              audio events and the React rendering tree without the overhead of Redux.
             </li>
             <li>
-              <strong>Build Tool:</strong> Vite. Instant HMR is crucial when tweaking audio algorithms.
+              <strong>Vite:</strong> Instant HMR (Hot Module Replacement) was a lifesaver when I was 
+              live-tweaking the "Diamond Gauge" visuals on my phone screen.
             </li>
           </ul>
         </section>
 
         <section>
-          <h2>4. Quality Assurance & Testing</h2>
+          <h2>4. Quality & Verification</h2>
           <p>
-            Precision is paramount. We don't just "hope" the math works; we verify it.
+            Building on a phone doesn't mean skipping best practices. I integrated a full suite of tools 
+            to ensure every commit is rock solid.
           </p>
           <ul className="tech-list">
             <li>
-              <strong>Vitest:</strong> Unit testing the audio logic. We feed known frequency buffers 
-              into the <code>PitchProcessor</code> to verify it calculates 440Hz as exactly 440Hz 
-              (within 0.1 cent tolerance).
+              <strong>Vitest:</strong> I use this to unit-test my audio logic. I feed known frequency 
+              buffers into my processor to verify it locks onto 440Hz with 0.1 cent tolerance.
             </li>
             <li>
-              <strong>Playwright:</strong> End-to-End (E2E) testing to ensure the application loads, 
-              routes correctly, and permissions are handled gracefully across different browser engines.
-            </li>
-            <li>
-              <strong>ESLint + TypeScript:</strong> Strict type-checking preventing runtime errors 
-              before they happen.
+              <strong>Playwright:</strong> Cross-browser E2E testing. I need to know the mic permissions 
+              and routing work on Safari (iOS) just as well as Chrome (Android).
             </li>
           </ul>
         </section>
@@ -189,19 +187,17 @@ const pitch = effectiveSampleRate / betterTau;
         <section>
           <h2>5. Infrastructure & CI/CD</h2>
           <p>
-            We deploy directly from source control to the edge.
+            My deployment pipeline is fully automated. When I push code from my phone:
           </p>
           <ul className="tech-list">
             <li>
-              <strong>GitHub Actions:</strong> The pipeline triggers on every push to <code>main</code>. 
-              It executes a clean install, builds the production assets, and SSHs into the server.
+              <strong>GitHub Actions:</strong> My workflow triggers a build, runs tests, and SSHs 
+              into my <strong>DigitalOcean Droplet</strong>.
             </li>
             <li>
-              <strong>DigitalOcean Droplet:</strong> A lightweight Linux VPS hosting the static assets.
-            </li>
-            <li>
-              <strong>Caddy Server:</strong> Serves the site with automatic HTTPS (Let's Encrypt) and 
-              handles Single Page Application (SPA) routing (rewriting 404s to <code>index.html</code>).
+              <strong>Caddy Server:</strong> I use Caddy to handle automatic HTTPS and SPA routing. 
+              I even added a custom <code>try_files</code> rule to ensure deep links (like <code>/en/guitar/drop-d</code>) 
+              don't 404.
             </li>
           </ul>
         </section>
@@ -221,75 +217,31 @@ const pitch = effectiveSampleRate / betterTau;
         </section>
 
         <section>
-          <h2>7. Programmatic SEO & Internationalization</h2>
+          <h2>7. My "Exotic" Development Setup</h2>
           <p>
-            Unlike typical "Single Page Apps" that are invisible to search engines, our architecture 
-            is designed for maximum discoverability.
-          </p>
-          <ul className="tech-list">
-            <li>
-              <strong>Hub & Spoke Model:</strong> We don't just have one homepage. The <code>TUNINGS</code> 
-              database acts as a headless CMS, allowing us to generate thousands of unique landing pages 
-              (e.g., <code>/en/ukulele/low-g</code>) with specific metadata, titles, and instructions 
-              programmatically.
-            </li>
-            <li>
-              <strong>I18n Routing:</strong> Language state is stored in the URL (<code>/:lang/</code>), 
-              not local storage. This ensures that a link shared by a user in Germany (<code>/de/...</code>) 
-              opens in German for the recipient, while canonical tags prevent duplicate content penalties.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h2>8. Privacy & Observability</h2>
-          <p>
-            We optimize for user trust and debugging data.
-          </p>
-          <ul className="tech-list">
-            <li>
-              <strong>Cloudflare Web Analytics:</strong> Privacy-first analytics that don't use cookies 
-              or track personal data, giving us simple "visitor count" metrics.
-            </li>
-            <li>
-              <strong>Microsoft Clarity:</strong> Provides heatmaps and session recordings (scrubbing sensitive text), 
-              allowing us to see if users are struggling with the UI on specific devices.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h2>9. "Exotic" Development Environment</h2>
-          <p>
-            This entire project is built and maintained in a non-traditional environment. 
-            There is no VS Code, no MacBook.
+            This is my favorite part of the story. I don't own a laptop for this project.
           </p>
           <div className="diagram-wrapper">
             <DevEnvDiagram />
           </div>
           <p>
-            <strong>The Rig:</strong>
+            I develop in <strong>Termux</strong> on my Android phone. I use a <strong>Gemini CLI Agent</strong> 
+            to help me refactor code, manage Git, and run shell commands. It's an incredibly fluid way to build 
+            software—I can fix a bug in the audio engine while sitting in a cafe with just my phone in my hand.
           </p>
-          <ul>
-            <li><strong>Hardware:</strong> Android Smartphone + Termux (Linux environment).</li>
-            <li><strong>Interface:</strong> Gemini CLI Agent.</li>
-            <li><strong>Workflow:</strong> The developer converses with the AI agent, which executes shell commands, 
-            edits files via `sed`/`cat`, and manages Git directly on the phone's filesystem. 
-            Testing is done via `curl` and local servers running on the device.</li>
-          </ul>
         </section>
 
         <section>
-          <h2>5. Why Open Source?</h2>
+          <h2>8. Privacy & Open Source</h2>
           <p>
-            We believe accurate tuning tools should be accessible to everyone. 
-            The code is auditable, free, and designed to respect user privacy (no audio data ever leaves your device).
+            I'm a big believer in privacy. That's why your audio never leaves your device. Everything—the 
+            pitch detection, the FFT analysis, the rendering—happens locally in your browser. 
           </p>
         </section>
       </div>
 
       <footer className="tech-footer">
-        <p>© 2026 Weiszfeld. Built with precision.</p>
+        <p>© 2026 David Weiszfeld. Built with precision (and a smartphone).</p>
       </footer>
     </div>
   );
