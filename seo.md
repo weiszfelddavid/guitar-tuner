@@ -67,20 +67,23 @@ The "Tuner" remains at the top. *Below* the fold, we inject 800-1200 words of se
 
 ## 5. Implementation Roadmap
 
-### Phase 1: The Root Upgrade (Immediate)
--   [ ] Inject "Global" SEO tags into `index.html`.
--   [ ] Add `sitemap.xml` and `robots.txt`.
--   [ ] Add a discreet "SEO Footer" to the root page with links to future landing pages (Internal Linking).
+### Phase 1: The Root Upgrade (Completed)
+-   [x] Inject "Global" SEO tags into `index.html`.
+-   [x] Add `sitemap.xml` and `robots.txt`.
+-   [x] Add a discreet "SEO Footer" to the root page with links to future landing pages (Internal Linking).
 
-### Phase 2: React Router & Dynamic Routes
--   [ ] Install `react-router-dom`.
--   [ ] Refactor `App.tsx` to handle routes (e.g., visiting `/bass` automatically sets `selectedTuning` to Bass).
--   [ ] Create a `ContentSection` component that renders text *below* the tuner based on the current route.
+### Phase 2: React Router & Dynamic Routes (Completed)
+-   [x] Install `react-router-dom`.
+-   [x] Refactor `App.tsx` to handle routes (e.g., visiting `/bass` automatically sets `selectedTuning` to Bass).
+-   [x] Create a `ContentSection` component (`SEOFooter.tsx`) that renders text *below* the tuner based on the current route.
+-   [x] Implement server-side routing fix (Caddy `try_files` or SPA fallback) to prevent 404s on deep links.
 
-### Phase 3: Content Generation
--   [ ] Generate high-quality copy for Guitar, Bass, Ukulele, and Drop D.
--   [ ] Create HTML tables for frequencies (Hz) for each instrument.
+### Phase 3: Content & Schema (Completed)
+-   [x] Generate high-quality copy for Guitar, Bass, Ukulele, and Drop D (Localized in `locales/*.json`).
+-   [x] Create HTML tables for frequencies (Hz) for each instrument.
+-   [x] **DONE:** Inject Dynamic JSON-LD Structured Data (`HowTo`, `FAQPage`) into `TuningPage.tsx` using `react-helmet-async`.
+    *   *Why:* Critical for "Featured Snippets" and "People Also Ask" boxes.
 
-### Phase 4: Verification
--   [ ] Verify using Google Search Console.
+### Phase 4: Verification (Pending)
+-   [ ] Verify using Google Search Console (External Action).
 -   [ ] Monitor "Impressions" vs "Clicks".
