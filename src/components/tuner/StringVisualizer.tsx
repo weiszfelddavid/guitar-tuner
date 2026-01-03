@@ -16,18 +16,19 @@ export const StringVisualizer: React.FC<{
         closestIndex = index;
       }
     });
-    if (minDiff > 0.2) closestIndex = -1; 
+    // Loosen tolerance for visual feedback (0.3 octaves ~ 4 semitones)
+    if (minDiff > 0.3) closestIndex = -1; 
   }
 
   return (
-    <div className="string-visualizer">
+    <div className="string-nav-bar">
       {tuning.notes.map((note, i) => (
         <div 
           key={`${tuning.name}-${note}-${i}`} 
-          className={`string-node ${closestIndex === i ? 'active' : ''}`}
+          className={`string-bubble ${closestIndex === i ? 'active' : ''}`}
         >
-          <span className="string-label">{note.replace(/[0-9]/g, '')}</span>
-          <span className="octave-label">{note.match(/[0-9]/g)}</span>
+          <span className="note-label">{note.replace(/[0-9]/g, '')}</span>
+          <span className="octave-sub">{note.match(/[0-9]/g)}</span>
         </div>
       ))}
     </div>

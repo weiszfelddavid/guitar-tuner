@@ -222,89 +222,124 @@
   letter-spacing: 0.3px;
 }
 
-/* 3. Ruler Gauge */
-.gauge-container {
-  position: relative;
-  width: 80%;
-  height: 60px; /* Taller for ticks */
-  margin-bottom: 4rem;
-  opacity: 0.3;
-  transition: opacity 0.3s ease;
+/* --- Accuracy Arrows --- */
+.accuracy-arrows-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: -1rem; /* Pull closer to note */
+  margin-bottom: 2rem;
+  height: 40px;
 }
 
-.gauge-container.visible {
+.arrow {
+  width: 40px;
+  height: 40px;
+  color: #444; /* Inactive color */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.3;
+}
+
+.arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+.arrow.flat {
+  color: var(--accent-flat); 
+  opacity: 1;
+  transform: translateX(-5px);
+}
+
+.arrow.sharp {
+  color: var(--accent-sharp); 
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.arrow.success {
+  color: var(--accent-locked);
   opacity: 1;
 }
 
-.gauge-container.holding {
-  opacity: 0.3;
+.arrow.pulsing {
+  animation: pulse-success 1.5s infinite;
 }
 
-.gauge-ruler {
-  width: 100%;
-  height: 2px;
-  background-color: rgba(255, 255, 255, 0.2);
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tick {
-  position: absolute;
-  background-color: rgba(255, 255, 255, 0.4);
-  width: 1px;
-  transform: translate(-50%, -50%);
-}
-
-.tick.major {
-  height: 20px;
-  top: 50%;
-  background-color: rgba(255, 255, 255, 0.6);
-}
-
-.tick.minor {
-  height: 10px;
-  top: 50%;
-}
-
-.tick.center {
-  height: 12px;
-  width: 12px;
-  top: 50%;
-  background-color: var(--accent-locked); /* Green center */
-  box-shadow: 0 0 10px var(--accent-locked);
-  transform: translate(-50%, -50%) rotate(45deg);
-  border-radius: 2px;
-}
-
-.gauge-indicator {
-  width: 16px;
-  height: 16px;
-  background-color: var(--accent-flat);
+.center-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #333;
   border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  transition: left 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s ease;
-  box-shadow: 0 0 10px rgba(255, 138, 101, 0.5);
-  z-index: 2;
-  border: 2px solid var(--bg-color); /* Cutout effect */
+  transition: all 0.3s ease;
 }
 
-.locked .gauge-indicator {
+.center-dot.success {
   background-color: var(--accent-locked);
-  box-shadow: 0 0 15px rgba(0, 230, 118, 0.8);
+  box-shadow: 0 0 15px var(--accent-locked);
+  transform: scale(1.5);
 }
 
-.cents-label {
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  top: 40px; /* Moved down */
+@keyframes pulse-success {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 20px var(--accent-locked); }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* --- String Navigation Bar --- */
+.string-nav-bar {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.string-bubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy spring */
   font-family: monospace;
-  font-size: 0.8rem;
-  color: #888;
-  letter-spacing: 1px;
+}
+
+.string-bubble.active {
+  background: var(--accent-locked);
+  color: #000;
+  border-color: var(--accent-locked);
+  transform: scale(1.3) translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 230, 118, 0.4);
+  font-weight: bold;
+}
+
+.string-bubble .note-label {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.string-bubble .octave-sub {
+  font-size: 0.6rem;
+  opacity: 0.7;
+}
+
+/* Layout Container */
+.tuner-main-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  flex-grow: 1; /* Take up available vertical space */
 }
 
 /* 4. Tech Readout */

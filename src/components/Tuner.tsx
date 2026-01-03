@@ -8,12 +8,13 @@ import { useAudioTuner } from '../hooks/useAudioTuner';
 import { TuningSelector } from './tuner/TuningSelector';
 import { StringVisualizer } from './tuner/StringVisualizer';
 import { NoteDisplay } from './tuner/NoteDisplay';
-import { RulerGauge } from './tuner/RulerGauge';
+import { AccuracyArrows } from './tuner/AccuracyArrows';
 import { Sparkline } from './tuner/Sparkline';
 
 export const Tuner: React.FC<{ 
-  initialTuning?: Tuning
-}> = ({ initialTuning }) => {
+  initialTuning?: Tuning,
+  onTuningChange?: (t: Tuning) => void
+}> = ({ initialTuning, onTuningChange }) => {
   const { t } = useTranslation();
   const [selectedTuning, setSelectedTuning] = useState<Tuning>(initialTuning || TUNINGS[0]);
   
@@ -32,6 +33,11 @@ export const Tuner: React.FC<{
     }
   }, [initialTuning]);
 
+  const handleTuningSelect = (tData: Tuning) => {
+    setSelectedTuning(tData);
+    onTuningChange?.(tData);
+  };
+
   return (
     <div className="tuner-wrapper">
       {tunerStatus === 'idle' && !isPaused && (
@@ -49,27 +55,30 @@ export const Tuner: React.FC<{
         </div>
       )}
 
-      <TuningSelector selected={selectedTuning} />
+      <TuningSelector 
+        selected={selectedTuning} 
+        onSelect={handleTuningSelect} 
+      />
 
-      <Sparkline history={centsHistory} />
-      
-      <div className="center-stack">
+      <div className="tuner-main-display">
+        <Sparkline history={centsHistory} />
+        
         <NoteDisplay 
           note={noteData.note} 
           status={tunerStatus}
           cents={noteData.cents}
         />
         
+        <AccuracyArrows 
+          cents={noteData.cents} 
+          status={tunerStatus} 
+        />
+
         <StringVisualizer 
           tuning={selectedTuning} 
           pitch={pitch} 
         />
       </div>
-      
-      <RulerGauge 
-        cents={noteData.cents} 
-        status={tunerStatus} 
-      />
       
       <div className="tech-readout">
         {tunerStatus === 'idle' ? t('common.ready') : (tunerStatus === 'holding' ? t('common.hold') : (pitch ? `${pitch.toFixed(1)} Hz` : t('common.listening')))}
