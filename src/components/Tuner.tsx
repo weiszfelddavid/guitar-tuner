@@ -10,6 +10,7 @@ import { StringVisualizer } from './tuner/StringVisualizer';
 import { NoteDisplay } from './tuner/NoteDisplay';
 import { AccuracyArrows } from './tuner/AccuracyArrows';
 import { Sparkline } from './tuner/Sparkline';
+import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
 
 export const Tuner: React.FC<{ 
   initialTuning?: Tuning
@@ -23,6 +24,7 @@ export const Tuner: React.FC<{
     pitch,
     noteData,
     centsHistory,
+    volume,
     startTuner
   } = useAudioTuner(t, selectedTuning.instrument);
 
@@ -72,6 +74,8 @@ export const Tuner: React.FC<{
           tuning={selectedTuning} 
           pitch={pitch} 
         />
+
+        <SoundLevelIndicator volume={volume} />
       </div>
       
       <div className="tech-readout">

@@ -15,6 +15,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
   const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
+  const [volume, setVolume] = useState<number>(0);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -42,6 +43,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     }
     setTunerStatus('idle');
     setPitch(null);
+    setVolume(0);
   };
 
   const startTuner = async () => {
@@ -65,6 +67,8 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
         const now = Date.now();
         const isVoice = instrumentRef.current === 'voice';
         
+        setVolume(bufferrms);
+
         // Voice Mode Parameters
         const SILENCE_THRESHOLD = 0.01; 
         const CLARITY_THRESHOLD = isVoice ? 0.75 : 0.90; // Lower clarity threshold for voice
@@ -170,6 +174,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     pitch,
     noteData,
     centsHistory,
+    volume,
     startTuner,
     stopTuner
   };

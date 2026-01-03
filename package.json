@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && CI=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:e2e": "playwright test"
+    "test": "CI=true vitest run",
+    "test:e2e": "CI=true playwright test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
