@@ -24,3 +24,4 @@ dist-ssr
 tsconfig.worker.tsbuildinfo
 playwright-report/
 test-results/
+debug-screenshots/
