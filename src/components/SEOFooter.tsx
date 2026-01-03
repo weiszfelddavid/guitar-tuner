@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link, useParams } from 'react-router-dom';
 import './SEOFooter.css';
-import { type Tuning, noteToFreq } from '../utils/tunings';
+import { type Tuning, noteToFreq, TUNINGS } from '../utils/tunings';
 import { useTranslation } from '../hooks/useTranslation';
 
 interface SEOFooterProps {
@@ -9,6 +10,7 @@ interface SEOFooterProps {
 
 export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
   const { t } = useTranslation();
+  const { lang } = useParams();
   
   const instrumentKey = tuning.instrument;
   const tuningKey = `${tuning.instrument}_${tuning.slug}`;
@@ -21,6 +23,9 @@ export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
   // Localized Instrument Info
   const instDesc = t(`instruments.${instrumentKey}.desc`);
   const instTips = t(`instruments.${instrumentKey}.tips`);
+
+  // Popular tunings for internal linking (limit to 6 for clean look)
+  const popularTunings = TUNINGS.filter(tn => tn.slug === 'standard' || tn.slug === 'drop-d').slice(0, 6);
 
   return (
     <article className="seo-content">
@@ -71,6 +76,21 @@ export const SEOFooter: React.FC<SEOFooterProps> = ({ tuning }) => {
           </li>
           <li><strong>{t('footer.step_diamond')}:</strong> {t('footer.step_diamond_desc')}</li>
         </ol>
+      </section>
+
+      <section className="seo-section">
+        <h2>Popular Tuners</h2>
+        <div className="internal-links" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
+          {popularTunings.map(tn => (
+            <Link 
+              key={`${tn.instrument}-${tn.slug}`} 
+              to={`/${lang}/${tn.instrument}/${tn.slug}`}
+              style={{ color: 'var(--accent-flat)', textDecoration: 'none', fontSize: '0.9rem' }}
+            >
+              {tn.name} Tuner
+            </Link>
+          ))}
+        </div>
       </section>
     </article>
   );

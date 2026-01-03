@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import '../App.css';
 import processorUrl from '../audio/engine/processor?worker&url';
 import { getNoteFromPitch, type NoteData } from '../utils/tuner';
@@ -18,9 +19,9 @@ type TunerStatus = 'idle' | 'listening' | 'detecting' | 'locked' | 'holding';
 
 const TuningSelector: React.FC<{ 
   selected: Tuning; 
-  onSelect: (t: Tuning) => void 
-}> = ({ selected, onSelect }) => {
+}> = ({ selected }) => {
   const { t } = useTranslation();
+  const { lang } = useParams();
 
   // 1. Derive unique instruments
   const instruments = useMemo(() => {
@@ -32,42 +33,34 @@ const TuningSelector: React.FC<{
     return TUNINGS.filter(tuning => tuning.instrument === selected.instrument);
   }, [selected.instrument]);
 
-  // 3. Handle Instrument Change (Row 1)
-  const handleInstrumentClick = (instrument: string) => {
-    // Find the first tuning for this new instrument
-    const defaultTuning = TUNINGS.find(tuning => tuning.instrument === instrument);
-    if (defaultTuning) {
-      onSelect(defaultTuning);
-    }
-  };
-
   return (
     <div className="tuning-control-panel">
       {/* Row 1: Instruments */}
       <div className="instrument-row">
-        {instruments.map(inst => (
-          <button
-            key={inst}
-            className={`pill instrument-pill ${selected.instrument === inst ? 'active' : ''}`}
-            onClick={() => handleInstrumentClick(inst)}
-          >
-            {/* Capitalize first letter for display */}
-            {inst.charAt(0).toUpperCase() + inst.slice(1)}
-          </button>
-        ))}
+        {instruments.map(inst => {
+          const firstTuning = TUNINGS.find(tuning => tuning.instrument === inst);
+          return (
+            <Link
+              key={inst}
+              to={`/${lang}/${inst}/${firstTuning?.slug || 'standard'}`}
+              className={`pill instrument-pill ${selected.instrument === inst ? 'active' : ''}`}
+            >
+              {inst.charAt(0).toUpperCase() + inst.slice(1)}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Row 2: Tunings */}
       <div className="tuning-row">
         {currentInstrumentTunings.map(tData => (
-          <button 
+          <Link 
             key={`${tData.instrument}-${tData.slug}`}
+            to={`/${lang}/${tData.instrument}/${tData.slug}`}
             className={`pill tuning-pill ${selected.slug === tData.slug ? 'active' : ''}`}
-            onClick={() => onSelect(tData)}
           >
-            {/* Display only the specific tuning name (e.g. "Drop D") not "Guitar (Drop D)" */}
             {t(`tunings.${tData.instrument}_${tData.slug}.name`, tData.name).replace(/.*\((.*)\)/, '$1')} 
-          </button>
+          </Link>
         ))}
       </div>
     </div>
@@ -191,9 +184,8 @@ const Sparkline: React.FC<{ history: number[] }> = ({ history }) => {
 // --- Main Tuner Component ---
 
 export const Tuner: React.FC<{ 
-  initialTuning?: Tuning,
-  onTuningChange?: (t: Tuning) => void 
-}> = ({ initialTuning, onTuningChange }) => {
+  initialTuning?: Tuning
+}> = ({ initialTuning }) => {
   const { t } = useTranslation();
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [isPaused, setIsPaused] = useState(false);
@@ -349,11 +341,6 @@ export const Tuner: React.FC<{
     }
   }, [initialTuning]);
 
-  const handleTuningSelect = (tData: Tuning) => {
-    setSelectedTuning(tData);
-    onTuningChange?.(tData);
-  };
-
   return (
     <div className="tuner-wrapper">
       {tunerStatus === 'idle' && !isPaused && (
@@ -373,7 +360,6 @@ export const Tuner: React.FC<{
 
       <TuningSelector 
         selected={selectedTuning} 
-        onSelect={handleTuningSelect} 
       />
 
       <Sparkline history={centsHistory} />

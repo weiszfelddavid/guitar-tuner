@@ -1,23 +1,17 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Tuner } from '../components/Tuner';
-import { TUNINGS, type Tuning, noteToFreq } from '../utils/tunings';
+import { TUNINGS, noteToFreq } from '../utils/tunings';
 import { useTranslation } from '../hooks/useTranslation';
 
 export const TuningPage: React.FC = () => {
   const { lang, instrument, tuning } = useParams();
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   // Find the matching tuning from the URL
   const selectedTuning = TUNINGS.find(t => t.instrument === instrument && t.slug === tuning) || TUNINGS[0];
   const tuningKey = `${selectedTuning.instrument}_${selectedTuning.slug}`;
-
-  // Logic to handle tuning changes via chips (update URL)
-  const handleTuningChange = (tData: Tuning) => {
-    navigate(`/${lang}/${tData.instrument}/${tData.slug}`);
-  };
 
   // SEO Content Generation
   const pageTitle = t(`tunings.${tuningKey}.seoTitle`);
@@ -107,7 +101,6 @@ export const TuningPage: React.FC = () => {
 
       <Tuner 
         initialTuning={selectedTuning} 
-        onTuningChange={handleTuningChange}
       />
     </>
   );

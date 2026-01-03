@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, Link } from 'react-router-dom';
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -15,12 +15,10 @@ const LANGUAGES = [
 ];
 
 export const LanguageSwitcher: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useParams();
 
-  const handleLanguageChange = (newLang: string) => {
-    // Replace the language segment in the current path
+  const getLanguagePath = (newLang: string) => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     
     if (pathSegments.length > 0 && LANGUAGES.some(l => l.code === pathSegments[0])) {
@@ -29,19 +27,19 @@ export const LanguageSwitcher: React.FC = () => {
       pathSegments.unshift(newLang);
     }
 
-    navigate(`/${pathSegments.join('/')}`);
+    return `/${pathSegments.join('/')}`;
   };
 
   return (
     <div className="language-switcher">
       {LANGUAGES.map((l, index) => (
         <React.Fragment key={l.code}>
-          <button 
+          <Link 
+            to={getLanguagePath(l.code)}
             className={`lang-link ${lang === l.code ? 'active' : ''}`}
-            onClick={() => handleLanguageChange(l.code)}
           >
             {l.name}
-          </button>
+          </Link>
           {index < LANGUAGES.length - 1 && <span className="separator">|</span>}
         </React.Fragment>
       ))}
