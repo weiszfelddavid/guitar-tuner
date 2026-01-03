@@ -1,0 +1,5 @@
+tuner.weiszfeld.com {
+    root * /var/www/tuner
+    file_server
+    try_files {path} /index.html
+}
