@@ -10,7 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html', { open: 'never' }]],
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
@@ -18,7 +18,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+      },
+      launchOptions: {
+        args: [
+          '--use-fake-ui-for-media-stream',
+          '--use-file-for-fake-audio-capture=tests/e2e/fixtures/melody.wav'
+        ]
+      }
     },
   ],
   /* Run your local dev server before starting the tests */

@@ -60,12 +60,11 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
       const source = audioContext.createMediaStreamSource(stream);
+      
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
       pitchProcessor.port.onmessage = (event) => {
-        console.log('Received from worklet:', event.data);
         const { pitch, clarity, bufferrms } = event.data as TunerUpdate;
         const now = Date.now();
         const isVoice = instrumentRef.current === 'voice';
@@ -172,7 +171,6 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     volume,
     startTuner,
     stopTuner,
-    resumeTuner,
-    audioContextRef
+    resumeTuner
   };
 };

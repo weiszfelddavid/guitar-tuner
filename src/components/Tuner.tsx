@@ -34,22 +34,26 @@ export const Tuner: React.FC<{
     }
   }, [initialTuning]);
 
+  const handleStart = () => {
+    startTuner();
+  };
+
   return (
     <div className="tuner-wrapper">
       <TuningSelector 
         selected={selectedTuning} 
-        onActivate={startTuner}
+        onActivate={handleStart}
       />
 
       <div className="tuner-main-display">
         {tunerStatus === 'idle' && !isPaused && (
-          <div className="start-overlay" onClick={startTuner}>
+          <div className="start-overlay" onClick={handleStart}>
             <div className="start-message">{t('common.tap_to_enable')}</div>
           </div>
         )}
 
         {isPaused && (
-          <div className="start-overlay" onClick={startTuner}>
+          <div className="start-overlay" onClick={handleStart}>
             <div className="start-message">
               <div>Tuner Paused</div>
               <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>Tap to Resume</div>
