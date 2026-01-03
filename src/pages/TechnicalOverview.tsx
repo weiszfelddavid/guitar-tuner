@@ -155,20 +155,73 @@ const pitch = effectiveSampleRate / betterTau;
               60fps canvas-less DOM rendering of the UI.
             </li>
             <li>
-              <strong>Build Tool:</strong> Vite. Instant HMR is crucial when tweaking audio algorithms.
-            </li>
-            <li>
               <strong>State:</strong> Zustand. Minimalist state management to bridge the gap between 
               the high-frequency AudioWorklet events and the React UI.
             </li>
             <li>
-              <strong>Hosting:</strong> DigitalOcean Droplet + Caddy Server (for automatic HTTPS and SPA routing).
+              <strong>Build Tool:</strong> Vite. Instant HMR is crucial when tweaking audio algorithms.
             </li>
           </ul>
         </section>
 
         <section>
-          <h2>4. "Exotic" Development Environment</h2>
+          <h2>4. Quality Assurance & Testing</h2>
+          <p>
+            Precision is paramount. We don't just "hope" the math works; we verify it.
+          </p>
+          <ul className="tech-list">
+            <li>
+              <strong>Vitest:</strong> Unit testing the audio logic. We feed known frequency buffers 
+              into the <code>PitchProcessor</code> to verify it calculates 440Hz as exactly 440Hz 
+              (within 0.1 cent tolerance).
+            </li>
+            <li>
+              <strong>Playwright:</strong> End-to-End (E2E) testing to ensure the application loads, 
+              routes correctly, and permissions are handled gracefully across different browser engines.
+            </li>
+            <li>
+              <strong>ESLint + TypeScript:</strong> Strict type-checking preventing runtime errors 
+              before they happen.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. Infrastructure & CI/CD</h2>
+          <p>
+            We deploy directly from source control to the edge.
+          </p>
+          <ul className="tech-list">
+            <li>
+              <strong>GitHub Actions:</strong> The pipeline triggers on every push to <code>main</code>. 
+              It executes a clean install, builds the production assets, and SSHs into the server.
+            </li>
+            <li>
+              <strong>DigitalOcean Droplet:</strong> A lightweight Linux VPS hosting the static assets.
+            </li>
+            <li>
+              <strong>Caddy Server:</strong> Serves the site with automatic HTTPS (Let's Encrypt) and 
+              handles Single Page Application (SPA) routing (rewriting 404s to <code>index.html</code>).
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>6. Native Mobile Strategy</h2>
+          <p>
+            While the web version is our primary focus, the architecture is "App Ready".
+          </p>
+          <ul className="tech-list">
+            <li>
+              <strong>Capacitor:</strong> The project is configured with <code>@capacitor/core</code>. 
+              This allows us to wrap the existing React/Vite codebase into a native Android/iOS 
+              container, giving us access to native audio APIs if the Web Audio API falls short.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>7. "Exotic" Development Environment</h2>
           <p>
             This entire project is built and maintained in a non-traditional environment. 
             There is no VS Code, no MacBook.
