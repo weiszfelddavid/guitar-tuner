@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://tuner.weiszfeld.com/sitemap.xml

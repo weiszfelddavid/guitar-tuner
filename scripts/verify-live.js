@@ -1,6 +1,6 @@
 import { chromium, devices } from 'playwright';
 
-const URL = 'https://tuner.weiszfeld.com/';
+const URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://tuner.weiszfeld.com/';
 const OUTPUT_DIR = 'debug-screenshots';
 
 (async () => {
@@ -81,7 +81,8 @@ const OUTPUT_DIR = 'debug-screenshots';
 
   console.log(`Navigating to ${URL}...`);
   await page.goto(URL);
-  await page.waitForTimeout(2000); // Wait for load
+  // Wait for either the start overlay or the tech readout to appear, indicating the page has loaded.
+  await page.waitForSelector('.start-overlay, .tech-readout');
 
   // Check 1: Overlay exists OR Tuner is already listening
   const overlay = page.locator('.start-overlay');
@@ -102,7 +103,8 @@ const OUTPUT_DIR = 'debug-screenshots';
       // Action: Click Overlay
       console.log('Clicking "Tap to enable"...');
       await overlay.click();
-      await page.waitForTimeout(1000); // Allow state to update
+      // Wait for the overlay to disappear, indicating the tuner has started.
+      await overlay.waitFor({ state: 'hidden' });
       
       // Check 2: Overlay gone?
       isOverlayGone = !(await overlay.isVisible());
@@ -150,17 +152,17 @@ const OUTPUT_DIR = 'debug-screenshots';
 
   // 1. Simulate Low E (82.41 Hz)
   await page.evaluate(() => window.simulatePitch(82.41));
-  await page.waitForTimeout(500); // Allow React to render
+  await page.locator('.note-display').filter({ hasText: 'E' }).waitFor({state: 'visible'});
   await checkNote('E', '2', 'Low E (82.41 Hz)');
 
   // 2. Simulate A (110.00 Hz)
   await page.evaluate(() => window.simulatePitch(110.00));
-  await page.waitForTimeout(500);
+  await page.locator('.note-display').filter({ hasText: 'A' }).waitFor({state: 'visible'});
   await checkNote('A', '2', 'A String (110.00 Hz)');
 
   // 3. Simulate High E (329.63 Hz)
   await page.evaluate(() => window.simulatePitch(329.63));
-  await page.waitForTimeout(500);
+  await page.locator('.note-display').filter({ hasText: 'E' }).waitFor({state: 'visible'});
   await checkNote('E', '4', 'High E (329.63 Hz)');
 
   console.log('--- SIMULATION COMPLETE ---');
