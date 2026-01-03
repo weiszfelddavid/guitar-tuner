@@ -76,7 +76,22 @@ class PitchProcessor extends AudioWorkletProcessor {
 
     // 4. Report Results
     if (tauEstimate !== -1) {
-      const pitch = 44100 / tauEstimate;
+      // Parabolic Interpolation for higher precision
+      // Fits a parabola to the three points around the estimate: (x-1, y1), (x, y2), (x+1, y3)
+      let betterTau = tauEstimate;
+      if (tauEstimate > 0 && tauEstimate < (bufferSize / 2) - 1) {
+        const s0 = yinBuffer[tauEstimate - 1];
+        const s1 = yinBuffer[tauEstimate];
+        const s2 = yinBuffer[tauEstimate + 1];
+        let adjustment = (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+        // constrain adjustment to +/- 0.5 to prevent wild jumps
+        adjustment = Math.min(Math.max(adjustment, -0.5), 0.5);
+        betterTau += adjustment;
+      }
+
+      // USE GLOBAL sampleRate (defined in AudioWorkletGlobalScope)
+      // @ts-ignore - sampleRate is available in AudioWorkletGlobalScope
+      const pitch = sampleRate / betterTau;
       
       // Calculate RMS for bufferrms
       let sumOfSquares = 0;

@@ -32,3 +32,5 @@ declare function registerProcessor(
     parameterDescriptors?: AudioParamDescriptor[];
   }
 ): void;
+
+declare const sampleRate: number;
