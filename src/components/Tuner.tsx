@@ -245,7 +245,7 @@ export const Tuner: React.FC<{
       const CLARITY_THRESHOLD = 0.90; 
       const LOCK_TOLERANCE_CENTS = 4;
       const HOLD_TIME_MS = 1500;
-      const SMOOTHING_WINDOW = 4;
+      const SMOOTHING_WINDOW = 8;
 
       pitchProcessor.port.onmessage = (event) => {
         const { pitch, clarity, bufferrms } = event.data as TunerUpdate;

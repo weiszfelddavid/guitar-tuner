@@ -10,13 +10,15 @@ interface AudioWorkletNodeOptions {
 class PitchProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array;
   private bufferIndex: number = 0;
+  private framesSinceLastDetect: number = 0;
   private threshold: number = 0.1;
+  private readonly BUFFER_SIZE = 4096;
+  private readonly PROCESSING_INTERVAL = 256;
 
   constructor(options?: AudioWorkletNodeOptions) {
     super();
-    // Default 2048 buffer size for good bass resolution
-    const size = options?.processorOptions?.bufferSize || 2048;
-    this.buffer = new Float32Array(size);
+    // Use fixed 4096 buffer for better bass resolution (approx 85ms window at 48kHz)
+    this.buffer = new Float32Array(this.BUFFER_SIZE);
     this.threshold = options?.processorOptions?.threshold || 0.1;
   }
 
@@ -26,13 +28,17 @@ class PitchProcessor extends AudioWorkletProcessor {
     if (!input || !input.length) return true;
     
     const channel = input[0];
-    // Simple ring buffer filling
+    
+    // Fill Ring Buffer
     for (let i = 0; i < channel.length; i++) {
       this.buffer[this.bufferIndex] = channel[i];
-      this.bufferIndex++;
+      this.bufferIndex = (this.bufferIndex + 1) % this.BUFFER_SIZE;
       
-      if (this.bufferIndex >= this.buffer.length) {
-        this.bufferIndex = 0;
+      this.framesSinceLastDetect++;
+      
+      // Run detection every PROCESSING_INTERVAL samples (overlap processing)
+      if (this.framesSinceLastDetect >= this.PROCESSING_INTERVAL) {
+        this.framesSinceLastDetect = 0;
         this.detectPitch();
       }
     }
@@ -40,16 +46,48 @@ class PitchProcessor extends AudioWorkletProcessor {
   }
 
   private detectPitch() {
-    // YIN Algorithm Implementation
-    const buffer = this.buffer;
-    const bufferSize = buffer.length;
+    // 1. Unroll Ring Buffer & Downsample (2x)
+    // We downsample 4096 samples -> 2048 samples.
+    // This effectively gives us a sample rate of ~24kHz for detection.
+    // Advantages: 
+    // - Half the CPU load for YIN algorithm
+    // - Filters out very high frequencies (>12kHz) automatically
+    // - Keeps array sizes manageable (2048)
+    const downsampledSize = this.BUFFER_SIZE / 2;
+    const downsampledBuffer = new Float32Array(downsampledSize);
+    
+    // We want the *last* 4096 samples. 
+    // Since bufferIndex points to the *next* write, the oldest sample is at bufferIndex.
+    let readIndex = this.bufferIndex; 
+    
+    // Compute RMS of the full resolution signal for the noise gate
+    let sumOfSquares = 0;
+    
+    for (let i = 0; i < downsampledSize; i++) {
+      // Read two samples from the circular buffer
+      const s1 = this.buffer[readIndex];
+      readIndex = (readIndex + 1) % this.BUFFER_SIZE;
+      const s2 = this.buffer[readIndex];
+      readIndex = (readIndex + 1) % this.BUFFER_SIZE;
+
+      // Simple averaging for downsampling
+      downsampledBuffer[i] = (s1 + s2) / 2;
+      
+      // Accumulate RMS energy (from original samples)
+      sumOfSquares += s1 * s1 + s2 * s2;
+    }
+    
+    const bufferrms = Math.sqrt(sumOfSquares / this.BUFFER_SIZE);
+
+    // --- YIN Algorithm on Downsampled Buffer ---
+    const bufferSize = downsampledSize; // 2048
     const yinBuffer = new Float32Array(bufferSize / 2);
     
     // 1. Difference Function
     for (let tau = 0; tau < bufferSize / 2; tau++) {
       yinBuffer[tau] = 0;
       for (let i = 0; i < bufferSize / 2; i++) {
-        const delta = buffer[i] - buffer[i + tau];
+        const delta = downsampledBuffer[i] - downsampledBuffer[i + tau];
         yinBuffer[tau] += delta * delta;
       }
     }
@@ -76,43 +114,29 @@ class PitchProcessor extends AudioWorkletProcessor {
 
     // 4. Report Results
     if (tauEstimate !== -1) {
-      // Parabolic Interpolation for higher precision
-      // Fits a parabola to the three points around the estimate: (x-1, y1), (x, y2), (x+1, y3)
+      // Parabolic Interpolation
       let betterTau = tauEstimate;
       if (tauEstimate > 0 && tauEstimate < (bufferSize / 2) - 1) {
         const s0 = yinBuffer[tauEstimate - 1];
         const s1 = yinBuffer[tauEstimate];
         const s2 = yinBuffer[tauEstimate + 1];
         let adjustment = (s2 - s0) / (2 * (2 * s1 - s2 - s0));
-        // constrain adjustment to +/- 0.5 to prevent wild jumps
         adjustment = Math.min(Math.max(adjustment, -0.5), 0.5);
         betterTau += adjustment;
       }
 
-      // USE GLOBAL sampleRate (defined in AudioWorkletGlobalScope)
-      // @ts-ignore - sampleRate is available in AudioWorkletGlobalScope
-      const pitch = sampleRate / betterTau;
+      // Calculate Pitch
+      // IMPORTANT: We downsampled by 2, so the effective sample rate is halved.
+      // @ts-ignore - sampleRate is global
+      const effectiveSampleRate = sampleRate / 2;
+      const pitch = effectiveSampleRate / betterTau;
       
-      // Calculate RMS for bufferrms
-      let sumOfSquares = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        sumOfSquares += buffer[i] * buffer[i];
-      }
-      const bufferrms = Math.sqrt(sumOfSquares / bufferSize);
-
       this.port.postMessage({
         pitch: pitch,
         clarity: 1 - yinBuffer[tauEstimate],
         bufferrms: bufferrms
       });
     } else {
-      // If no pitch is detected, still send bufferrms for silence gate
-      let sumOfSquares = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        sumOfSquares += buffer[i] * buffer[i];
-      }
-      const bufferrms = Math.sqrt(sumOfSquares / bufferSize);
-
       this.port.postMessage({
         pitch: null,
         clarity: 0,
