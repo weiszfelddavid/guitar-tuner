@@ -352,3 +352,130 @@
 .separator {
   opacity: 0.3;
 }
+
+/* --- Technical Overview Page --- */
+.tech-overview-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem 1rem;
+  color: #ddd;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+}
+
+.tech-nav {
+  margin-bottom: 2rem;
+}
+
+.back-link {
+  color: var(--accent-flat);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.tech-header {
+  margin-bottom: 3rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 1rem;
+}
+
+.tech-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.tech-header .subtitle {
+  font-size: 1.1rem;
+  color: #888;
+  font-weight: 300;
+}
+
+.tech-content section {
+  margin-bottom: 4rem;
+}
+
+.tech-content h2 {
+  font-size: 1.8rem;
+  color: var(--accent-locked);
+  margin-bottom: 1.5rem;
+}
+
+.tech-content h3 {
+  font-size: 1.3rem;
+  color: #fff;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.tech-content p {
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+/* Diagrams */
+.diagram-wrapper {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.tech-diagram {
+  width: 100%;
+  height: auto;
+  min-width: 600px; /* Ensure diagram is readable on mobile scroll */
+  display: block;
+}
+
+/* Code Blocks */
+.code-block {
+  background: #111;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-flat);
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.code-block pre {
+  margin: 0;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #a5d6ff;
+}
+
+/* List */
+.tech-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tech-list li {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.tech-list li::before {
+  content: "▹";
+  position: absolute;
+  left: 0;
+  color: var(--accent-flat);
+}
+
+.tech-footer {
+  text-align: center;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.8rem;
+  color: #555;
+}
