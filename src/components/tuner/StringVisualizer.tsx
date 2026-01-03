@@ -1,10 +1,23 @@
 import React from 'react';
 import { noteToFreq, type Tuning } from '../../utils/tunings';
+import { getNoteDetails } from '../../utils/tuner';
 
 export const StringVisualizer: React.FC<{ 
   tuning: Tuning; 
   pitch: number | null;
 }> = ({ tuning, pitch }) => {
+  if (tuning.instrument === 'voice') {
+    const details = pitch ? getNoteDetails(pitch) : { note: '-', octave: '-' };
+    return (
+      <div className="string-nav-bar">
+        <div className={`string-bubble active`} style={{ width: 'auto', padding: '0 1.5rem', borderRadius: '30px' }}>
+          <span className="note-label">{details.note}</span>
+          <span className="octave-sub" style={{ fontSize: '1rem', marginLeft: '4px' }}>{details.octave}</span>
+        </div>
+      </div>
+    );
+  }
+
   let closestIndex = -1;
   if (pitch) {
     let minDiff = Infinity;

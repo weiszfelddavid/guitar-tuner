@@ -23,3 +23,14 @@ export function getNoteFromPitch(frequency: number): NoteData {
     cents
   };
 }
+
+export function getNoteDetails(frequency: number) {
+  const noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+  const roundedNote = Math.round(noteNum) + 69;
+  const noteIndex = roundedNote % 12;
+  const octave = Math.floor(roundedNote / 12) - 1;
+  return {
+    note: NOTE_STRINGS[noteIndex],
+    octave
+  };
+}

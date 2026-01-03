@@ -35,6 +35,11 @@
       "desc": "Precision tuning for Cello (A-D-G-C). Optimized for the rich harmonics of orchestral string instruments.",
       "tips": "Use long, steady bow strokes for the best detection. Ensure your bridge is properly aligned, as tension changes during tuning can occasionally cause it to lean."
     },
+    "voice": {
+      "title": "Vocal Pitch Monitor",
+      "desc": "Practice your singing accuracy with real-time feedback. Designed to handle vocal vibrato and overtones.",
+      "tips": "Hold a steady note to see the pitch lock. Try to keep the needle in the center for 'Perfect Pitch' training."
+    },
     "default": {
       "title": "Free Online Chromatic Tuner",
       "desc": "A universal tuner for any stringed instrument. Professional-grade accuracy using your device's microphone.",
@@ -112,6 +117,11 @@
       "name": "Cello (Standard)",
       "seoTitle": "Online Cello Tuner | Precision Tuning for Cellists",
       "description": "Fine-tune your cello to standard CGDA pitch. Works perfectly with long bow strokes or pizzicato plucking."
+    },
+    "voice_humming": {
+      "name": "Voice (Humming)",
+      "seoTitle": "Vocal Pitch Monitor | Perfect Pitch Training",
+      "description": "Practice your pitch accuracy with our Voice mode. Real-time feedback for singers to master perfect pitch."
     }
   }
 }

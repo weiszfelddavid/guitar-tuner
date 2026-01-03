@@ -9,7 +9,7 @@ interface TunerUpdate {
   bufferrms: number;
 }
 
-export const useAudioTuner = (t: (key: string) => string) => {
+export const useAudioTuner = (t: (key: string) => string, currentInstrument: string = 'guitar') => {
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [isPaused, setIsPaused] = useState(false);
   const [pitch, setPitch] = useState<number | null>(null);
@@ -21,6 +21,11 @@ export const useAudioTuner = (t: (key: string) => string) => {
   const centsBufferRef = useRef<number[]>([]);
   const lastValidTimeRef = useRef<number>(0);
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const instrumentRef = useRef(currentInstrument);
+
+  useEffect(() => {
+    instrumentRef.current = currentInstrument;
+  }, [currentInstrument]);
 
   const stopTuner = () => {
     if (audioContextRef.current) {
@@ -55,16 +60,18 @@ export const useAudioTuner = (t: (key: string) => string) => {
       const source = audioContext.createMediaStreamSource(stream);
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
-      const SILENCE_THRESHOLD = 0.01; 
-      const CLARITY_THRESHOLD = 0.90; 
-      const LOCK_TOLERANCE_CENTS = 4;
-      const HOLD_TIME_MS = 1500;
-      const SMOOTHING_WINDOW = 8;
-
       pitchProcessor.port.onmessage = (event) => {
         const { pitch, clarity, bufferrms } = event.data as TunerUpdate;
         const now = Date.now();
+        const isVoice = instrumentRef.current === 'voice';
         
+        // Voice Mode Parameters
+        const SILENCE_THRESHOLD = 0.01; 
+        const CLARITY_THRESHOLD = isVoice ? 0.75 : 0.90; // Lower clarity threshold for voice
+        const LOCK_TOLERANCE_CENTS = isVoice ? 15 : 4;   // Wider tolerance for voice
+        const HOLD_TIME_MS = 1500;
+        const SMOOTHING_WINDOW = isVoice ? 20 : 8;       // Smoother for voice
+
         if (bufferrms < SILENCE_THRESHOLD) {
           if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < HOLD_TIME_MS) {
             setTunerStatus('holding');
@@ -80,7 +87,7 @@ export const useAudioTuner = (t: (key: string) => string) => {
           return;
         }
 
-        if (pitch && clarity > 0.8) {
+        if (pitch && clarity > (isVoice ? 0.6 : 0.8)) { // Adjust base detection threshold
           if (holdTimeoutRef.current) {
             clearTimeout(holdTimeoutRef.current);
             holdTimeoutRef.current = null;

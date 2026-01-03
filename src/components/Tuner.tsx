@@ -24,7 +24,7 @@ export const Tuner: React.FC<{
     noteData,
     centsHistory,
     startTuner
-  } = useAudioTuner(t);
+  } = useAudioTuner(t, selectedTuning.instrument);
 
   useEffect(() => {
     if (initialTuning) {

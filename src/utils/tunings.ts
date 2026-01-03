@@ -103,6 +103,16 @@ export const TUNINGS: Tuning[] = [
     description: "Fine-tune your cello to standard CGDA pitch. Works perfectly with long bow strokes or pizzicato plucking.",
     keywords: ["cello tuner", "cgda", "orchestral tuner", "cello pitch"]
   },
+  // --- Voice ---
+  {
+    instrument: "voice",
+    slug: "humming",
+    name: "Voice (Humming)",
+    notes: [], // Dynamic range handling
+    seoTitle: "Vocal Pitch Monitor | Perfect Pitch Training",
+    description: "Practice your pitch accuracy with our Voice mode. Real-time feedback for singers to master perfect pitch.",
+    keywords: ["vocal tuner", "singing pitch", "perfect pitch", "voice training"]
+  }
 ];
 
 // Helper to convert note names (E2 or Eb2) to frequencies
