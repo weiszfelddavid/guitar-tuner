@@ -127,7 +127,6 @@ class PitchProcessor extends AudioWorkletProcessor {
 
       // Calculate Pitch
       // IMPORTANT: We downsampled by 2, so the effective sample rate is halved.
-      // @ts-ignore - sampleRate is global
       const effectiveSampleRate = sampleRate / 2;
       const pitch = effectiveSampleRate / betterTau;
       
