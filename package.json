@@ -8,8 +8,7 @@
     "build": "tsc -b && CI=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "CI=true vitest run",
-    "test:e2e": "CI=true playwright test"
+    "test": "CI=true vitest run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -17,14 +16,12 @@
     "react-dom": "^19.2.0",
     "react-helmet-async": "^2.0.5",
     "react-router-dom": "^7.11.0",
-    "wav": "^1.0.2",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@eslint/js": "^9.39.1",
-    "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
@@ -38,7 +35,6 @@
     "globals": "^16.5.0",
     "jsdom": "^27.0.1",
     "node-web-audio-api": "^1.0.7",
-    "playwright": "^1.57.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
