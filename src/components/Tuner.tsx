@@ -8,9 +8,10 @@ import { useAudioTuner } from '../hooks/useAudioTuner';
 import { TuningSelector } from './tuner/TuningSelector';
 import { StringVisualizer } from './tuner/StringVisualizer';
 import { AnalogMeter } from './tuner/AnalogMeter';
-import { NoteCarousel } from './tuner/NoteCarousel';
+import { NoteDisplay } from './tuner/NoteDisplay';
 import { Sparkline } from './tuner/Sparkline';
 import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
+import { noteToFreq } from '../utils/tunings';
 
 export const Tuner: React.FC<{ 
   initialTuning?: Tuning
@@ -28,6 +29,25 @@ export const Tuner: React.FC<{
     micError,
     startTuner
   } = useAudioTuner(selectedTuning.instrument);
+
+  // Calculate target note from the predefined tuning
+  const targetNote = React.useMemo(() => {
+    if (!pitch || selectedTuning.instrument === 'voice') return undefined;
+    
+    let closestNote = "";
+    let minDiff = Infinity;
+    
+    selectedTuning.notes.forEach(note => {
+      const freq = noteToFreq(note);
+      const diff = Math.abs(Math.log2(pitch / freq));
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestNote = note.replace(/[0-9]/g, '');
+      }
+    });
+    
+    return closestNote;
+  }, [pitch, selectedTuning]);
 
   useEffect(() => {
     if (initialTuning) {
@@ -78,9 +98,11 @@ export const Tuner: React.FC<{
           status={tunerStatus}
         />
         
-        <NoteCarousel 
+        <NoteDisplay 
           note={noteData.note}
           status={tunerStatus}
+          cents={noteData.cents}
+          targetNote={targetNote}
         />
 
         <StringVisualizer 

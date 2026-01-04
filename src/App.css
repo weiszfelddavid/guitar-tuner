@@ -96,6 +96,28 @@
   width: 100%;
 }
 
+.note-display-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.target-note-label {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.guidance-label {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .note-display {
   font-size: clamp(8rem, 30vw, 14rem); /* Significantly increased */
   font-weight: 800; /* Bolder */
