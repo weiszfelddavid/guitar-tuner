@@ -167,7 +167,7 @@
 .tuning-control-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem; /* 24px Spacing */
   width: 100%;
   margin-bottom: 2.5rem;
   align-items: center;
@@ -214,10 +214,8 @@
   }
 }
 
+/* Base Pill Layout (Structural) */
 .pill {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(224, 224, 224, 0.8);
   padding: 0.55rem 1.25rem;
   border-radius: 30px;
   font-size: 0.9rem;
@@ -228,16 +226,43 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   flex-shrink: 0;
+  border: 1px solid transparent; /* Reserve border space */
 }
 
-.pill:hover {
+/* 1. Instrument Tabs (Ghost Pills) */
+.instrument-pill {
+  color: #888; /* Grey text inactive */
+  background: transparent;
+}
+
+.instrument-pill:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.instrument-pill.active {
+  color: #fff;
+  background: rgba(0, 230, 118, 0.15); /* Soft low-opacity Green */
+  font-weight: 700; /* Bold */
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.2); /* Glow */
+  text-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+}
+
+/* 2. Tuning Chips (Solid/Bordered Pills) */
+.tuning-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(224, 224, 224, 0.8);
+}
+
+.tuning-pill:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.pill.active {
-  background: var(--accent-locked);
+.tuning-pill.active {
+  background: var(--accent-locked); /* Solid Green */
   color: #000;
   font-weight: 600;
   border-color: var(--accent-locked);
