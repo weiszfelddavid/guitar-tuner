@@ -176,10 +176,17 @@
 .instrument-row {
   display: flex;
   gap: 0.75rem;
-  justify-content: center;
+  overflow-x: auto;
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 1.5rem 0.5rem 1.5rem;
   box-sizing: border-box;
+  /* Hide scrollbar */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.instrument-row::-webkit-scrollbar {
+  display: none;
 }
 
 .tuning-row-mask.is-overflowing {
@@ -207,7 +214,7 @@
 
 /* On mobile, if few items, allow natural centering */
 @media (min-width: 601px) {
-  .tuning-row {
+  .instrument-row, .tuning-row {
     justify-content: center;
   }
 }

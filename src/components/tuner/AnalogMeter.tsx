@@ -35,12 +35,14 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
 
   // Unified Color Logic
   const absCents = Math.abs(cents);
-  let statusColor = "#ff1744"; // Red (Default/Out)
+  let statusColor = "#666"; // Grey (Idle/Listening)
   
-  if (absCents <= 3) {
-    statusColor = "#00e676"; // Bright Green (Perfect)
-  } else if (absCents <= 15) {
-    statusColor = "#ff9100"; // Orange/Yellow (Close)
+  if (status !== 'idle' && status !== 'listening') {
+    if (absCents <= 3) {
+      statusColor = "#00FF00"; // Bright Green (Perfect)
+    } else {
+      statusColor = "#ff9100"; // Orange (Out of Tune)
+    }
   }
 
   return (
