@@ -9,6 +9,7 @@ import { TuningSelector } from './tuner/TuningSelector';
 import { StringVisualizer } from './tuner/StringVisualizer';
 import { NoteDisplay } from './tuner/NoteDisplay';
 import { AccuracyArrows } from './tuner/AccuracyArrows';
+import { RulerGauge } from './tuner/RulerGauge';
 import { Sparkline } from './tuner/Sparkline';
 import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
 
@@ -70,6 +71,11 @@ export const Tuner: React.FC<{
         />
         
         <AccuracyArrows 
+          cents={noteData.cents} 
+          status={tunerStatus} 
+        />
+
+        <RulerGauge 
           cents={noteData.cents} 
           status={tunerStatus} 
         />
