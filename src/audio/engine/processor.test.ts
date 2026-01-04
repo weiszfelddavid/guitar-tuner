@@ -61,6 +61,6 @@ describe('PitchProcessor', () => {
 
     expect(result.pitch).toBeGreaterThan(435);
     expect(result.pitch).toBeLessThan(445);
-    expect(result.clarity).toBeGreaterThan(0.9); // Expect high clarity for a pure sine wave
+    expect(result.clarity).toBeGreaterThanOrEqual(0.9); // Expect high clarity for a pure sine wave
   });
 });

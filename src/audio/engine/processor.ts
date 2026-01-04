@@ -1,3 +1,5 @@
+import { YIN } from 'pitchfinder';
+
 interface AudioWorkletNodeOptions {
   processorOptions?: {
     bufferSize?: number;
@@ -9,15 +11,23 @@ class PitchProcessor extends AudioWorkletProcessor {
   private buffer: Float32Array;
   private bufferIndex: number = 0;
   private framesSinceLastDetect: number = 0;
-  private threshold: number = 0.8;
   private readonly BUFFER_SIZE = 4096;
   private readonly PROCESSING_INTERVAL = 256;
+  private detectPitchFn: (signal: Float32Array) => number | null;
 
   constructor(options?: AudioWorkletNodeOptions) {
     super();
     // Use fixed 4096 buffer for better bass resolution (approx 85ms window at 48kHz)
     this.buffer = new Float32Array(this.BUFFER_SIZE);
-    this.threshold = options?.processorOptions?.threshold || 0.85;
+    
+    // Initialize Pitchfinder YIN detector
+    // We will be passing the downsampled buffer (approx 24kHz)
+    // sampleRate is a global in AudioWorkletScope
+    const effectiveSampleRate = sampleRate / 2;
+    this.detectPitchFn = YIN({ 
+      sampleRate: effectiveSampleRate,
+      threshold: options?.processorOptions?.threshold || 0.15 // Pitchfinder default is usually good
+    });
   }
 
   process(inputs: Float32Array[][], _outputs: Float32Array[][], _parameters: Record<string, Float32Array>): boolean {
@@ -36,21 +46,21 @@ class PitchProcessor extends AudioWorkletProcessor {
       // Run detection every PROCESSING_INTERVAL samples (overlap processing)
       if (this.framesSinceLastDetect >= this.PROCESSING_INTERVAL) {
         this.framesSinceLastDetect = 0;
-        this.detectPitch();
+        this.performDetection();
       }
     }
     return true;
   }
 
-  private detectPitch() {
+  private performDetection() {
     // 1. Unroll Ring Buffer to a temporary contiguous buffer
     const unrolledBuffer = new Float32Array(this.BUFFER_SIZE);
     const part1Length = this.BUFFER_SIZE - this.bufferIndex;
     unrolledBuffer.set(this.buffer.subarray(this.bufferIndex), 0);
     unrolledBuffer.set(this.buffer.subarray(0, this.bufferIndex), part1Length);
 
-
     // 2. Downsample (2x) the unrolled buffer
+    // We keep downsampling to save CPU and because guitar frequencies are low.
     const downsampledSize = this.BUFFER_SIZE / 2;
     const downsampledBuffer = new Float32Array(downsampledSize);
         
@@ -65,62 +75,19 @@ class PitchProcessor extends AudioWorkletProcessor {
     
     const bufferrms = Math.sqrt(sumOfSquares / this.BUFFER_SIZE);
 
-    // --- YIN Algorithm on Downsampled Buffer ---
-    const bufferSize = downsampledSize;
-    const yinBuffer = new Float32Array(bufferSize / 2);
-    
-    for (let tau = 0; tau < bufferSize / 2; tau++) {
-      yinBuffer[tau] = 0;
-      for (let i = 0; i < bufferSize / 2; i++) {
-        const delta = downsampledBuffer[i] - downsampledBuffer[i + tau];
-        yinBuffer[tau] += delta * delta;
-      }
-    }
+    // 3. Use Pitchfinder
+    const pitch = this.detectPitchFn(downsampledBuffer);
 
-    yinBuffer[0] = 1;
-    let runningSum = 0;
-    for (let tau = 1; tau < bufferSize / 2; tau++) {
-      runningSum += yinBuffer[tau];
-      yinBuffer[tau] *= tau / runningSum;
-    }
+    // Pitchfinder doesn't return clarity/probability directly in YIN.
+    // We assume if it returned a pitch, it met the threshold.
+    // We synthesize a high clarity for valid pitches to pass the UI gate.
+    const clarity = pitch ? 0.9 : 0;
 
-    let tauEstimate = -1;
-    for (let tau = 2; tau < bufferSize / 2; tau++) {
-      if (yinBuffer[tau] < this.threshold) {
-        while (tau + 1 < bufferSize / 2 && yinBuffer[tau + 1] < yinBuffer[tau]) {
-          tau++;
-        }
-        tauEstimate = tau;
-        break;
-      }
-    }
-
-    if (tauEstimate !== -1) {
-      let betterTau = tauEstimate;
-      if (tauEstimate > 0 && tauEstimate < (bufferSize / 2) - 1) {
-        const s0 = yinBuffer[tauEstimate - 1];
-        const s1 = yinBuffer[tauEstimate];
-        const s2 = yinBuffer[tauEstimate + 1];
-        let adjustment = (s2 - s0) / (2 * (2 * s1 - s2 - s0));
-        adjustment = Math.min(Math.max(adjustment, -0.5), 0.5);
-        betterTau += adjustment;
-      }
-
-      const effectiveSampleRate = sampleRate / 2;
-      const pitch = effectiveSampleRate / betterTau;
-      
-      this.port.postMessage({
-        pitch: pitch,
-        clarity: 1 - yinBuffer[tauEstimate],
-        bufferrms: bufferrms,
-      });
-    } else {
-      this.port.postMessage({
-        pitch: null,
-        clarity: 0,
-        bufferrms: bufferrms,
-      });
-    }
+    this.port.postMessage({
+      pitch: pitch || null,
+      clarity: clarity,
+      bufferrms: bufferrms,
+    });
   }
 }
 

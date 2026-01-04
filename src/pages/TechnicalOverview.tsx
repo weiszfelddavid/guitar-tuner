@@ -119,47 +119,35 @@ export const TechnicalOverview: React.FC = () => {
           <h2>2. The Audio Engine (Signal Processing)</h2>
           <p>
             I knew I needed absolute zero latency. Most web tuners feel "laggy" because they fight with the 
-            browser's UI thread. To solve this, I wrote a custom <strong>AudioWorklet</strong> implementation 
-            of the YIN algorithm in TypeScript.
+            browser's UI thread. To solve this, I originally wrote a custom YIN implementation, but later 
+            refactored it to leverage the robust <strong>pitchfinder</strong> library within an <strong>AudioWorklet</strong>.
           </p>
           
           <div className="diagram-wrapper">
             <AudioEngineDiagram />
           </div>
 
-          <h3>The "48kHz Mobile Bug"</h3>
+          <h3>Why I Switched to Pitchfinder</h3>
           <p>
-            Early on, I noticed my Low E string was registering as a D#. I realized that while most desktop 
-            audio defaults to 44.1kHz, modern mobile microphones often run at <strong>48kHz</strong>. 
-            If your math expects 44,100 samples but gets 48,000, your pitch calculation is off by ~8%.
+             My initial custom implementation of the YIN algorithm was educational but prone to subtle edge-case 
+             bugs (like the threshold sensitivity issue I encountered). By switching to <strong>Pitchfinder</strong>, 
+             a battle-tested open-source library, I reduced my codebase by over 80 lines of complex DSP math 
+             while gaining the reliability of a community-maintained tool.
           </p>
           <div className="code-block">
-            <pre>{`// My fix: Dynamic Sample Rate + Parabolic Interpolation
-// I pull the actual hardware sample rate from the context
-const effectiveSampleRate = sampleRate / 2; 
+            <pre>{`// The new, simplified processor logic:
+import { YIN } from 'pitchfinder';
 
-// I use parabolic interpolation to find the peak *between* 
-// digital samples, giving me sub-cent accuracy.`}</pre>
+// Initialize the detector (factory pattern)
+const detectPitch = YIN({ sampleRate: effectiveSampleRate });
+
+// Inside the process loop:
+const pitch = detectPitch(downsampledBuffer);`}</pre>
           </div>
           <p>
-            I implemented <strong>2x Downsampling</strong> and <strong>Parabolic Interpolation</strong>. 
+            I still employ <strong>2x Downsampling</strong> before feeding the buffer to Pitchfinder. 
             This allows me to process a massive 4096-sample buffer—essential for tracking a Low B on a 
             5-string bass—while keeping the CPU load light enough for any smartphone.
-          </p>
-
-          <h3>Addressing Pitch Detection Flaws</h3>
-          <p>
-            Despite initial success with basic pitch detection, a critical bug emerged: the tuner would react to sound (volume meter active) but consistently fail to detect any pitch. The root cause was traced to an incorrect implementation of the ring buffer within the <code>AudioWorkletProcessor</code>. Audio samples were being fed to the YIN algorithm in a jumbled, non-contiguous order, rendering accurate pitch detection impossible.
-          </p>
-          <p>
-            The fix involved two key changes:
-            <ol>
-              <li>**Corrected Ring Buffer Logic:** The ring buffer was updated to properly "unroll" its contents into a contiguous array, ensuring the YIN algorithm receives a clean, continuous stream of audio data.</li>
-              <li>**Refined YIN Threshold:** The YIN algorithm's internal confidence threshold was adjusted from an overly lenient <code>0.1</code> to a more appropriate and robust <code>0.85</code>, improving detection accuracy and reducing false positives.</li>
-            </ol>
-          </p>
-          <p>
-            Crucially, this bug highlighted a gap in the testing strategy. The existing unit test for the audio processor, while passing, was not adequately simulating real-world chunked audio input. It processed a single, large sine wave, which inadvertently bypassed the faulty ring buffer logic. To address this, the test was significantly enhanced to process audio in small, continuous chunks, thereby accurately mimicking the browser's audio pipeline and thoroughly validating the corrected ring buffer implementation.
           </p>
         </section>
 

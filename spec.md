@@ -9,10 +9,10 @@
 - **State Management:** `Zustand` (Minimalist, handles high-frequency updates better than Context).
 
 ## 2. The Audio Engine (DSP)
-**Algorithm:** YIN (Step-based implementation).
+**Library:** `pitchfinder` (YIN Algorithm).
 - **Sample Rate:** Default to 44.1kHz (Resample if hardware differs).
 - **Buffer Size:** 2048 samples (approx 46ms latency, good balance).
-- **Threshold:** 0.10 (Standard YIN tolerance).
+- **Threshold:** 0.15 (Standard Pitchfinder tolerance).
 
 ### Threading Model
 DSP logic runs exclusively in an `AudioWorklet`. The Main Thread (UI) **never** touches raw audio data.
@@ -22,7 +22,7 @@ The Worklet posts a message **only when pitch is detected** (to save bridge traf
 ```typescript
 type TunerUpdate = {
   pitch: number;      // e.g., 440.0
-  clarity: number;    // 0.0 to 1.0 (Probability/Confidence)
+  clarity: number;    // 0.9 (Synthesized) or 0 (No pitch)
   bufferrms: number;  // Volume level (for UI silence gate)
 }
 ```
