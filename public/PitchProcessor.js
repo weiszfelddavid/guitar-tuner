@@ -2,11 +2,16 @@
 if (typeof self.location === 'undefined') {
   self.location = { href: '' };
 }
-if (typeof self.window === 'undefined') {
-    self.window = self;
-}
+
+// Emscripten might try to use XMLHttpRequest in worker environment. 
+// Polyfill it safely to avoid crashes.
 if (typeof self.XMLHttpRequest === 'undefined') {
-    self.XMLHttpRequest = function() {};
+    self.XMLHttpRequest = function() {
+        this.open = function() {};
+        this.send = function() {};
+        this.response = new ArrayBuffer(0);
+        this.responseType = '';
+    };
 }
 
 importScripts('aubio.js');
