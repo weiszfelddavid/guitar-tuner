@@ -12,7 +12,6 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
   const velocityRef = useRef<number>(0);
   
   const isVisible = status !== 'idle';
-  const isLocked = status === 'locked' || status === 'holding';
 
   // Physics-based needle damping
   useEffect(() => {
@@ -33,6 +32,16 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
   }, [cents, isVisible, displayCents]);
 
   const rotation = (displayCents / 50) * 45; // Max 45 degrees
+
+  // Unified Color Logic
+  const absCents = Math.abs(cents);
+  let statusColor = "#ff1744"; // Red (Default/Out)
+  
+  if (absCents <= 3) {
+    statusColor = "#00e676"; // Bright Green (Perfect)
+  } else if (absCents <= 15) {
+    statusColor = "#ff9100"; // Orange/Yellow (Close)
+  }
 
   return (
     <div className={`analog-meter-container ${isVisible ? 'visible' : ''}`}>
@@ -110,7 +119,8 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           {/* The Eye (Status Light) */}
           <circle 
             cx="100" cy="100" r="12" 
-            className={`status-eye ${isLocked ? 'locked' : (Math.abs(cents) < 5 ? 'near' : 'out')}`}
+            fill={statusColor}
+            style={{ filter: `drop-shadow(0 0 ${absCents <= 3 ? 10 : 0}px ${statusColor})`, transition: 'fill 0.2s ease' }}
           />
           <circle 
             cx="100" cy="100" r="12" 
@@ -121,13 +131,13 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           <g transform={`rotate(${rotation}, 100, 100)`}>
             <line 
               x1="100" y1="100" x2="100" y2="25" 
-              stroke={Math.abs(cents) < 5 ? "#00e676" : (Math.abs(cents) < 15 ? "#ff9100" : "#ff1744")} 
+              stroke={statusColor} 
               strokeWidth="2"
               strokeLinecap="round"
             />
             <circle 
                 cx="100" cy="100" r="4" 
-                fill={Math.abs(cents) < 5 ? "#00e676" : (Math.abs(cents) < 15 ? "#ff9100" : "#ff1744")} 
+                fill={statusColor} 
             />
           </g>
         </svg>
