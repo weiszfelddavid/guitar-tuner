@@ -7,9 +7,8 @@ import { useAudioTuner } from '../hooks/useAudioTuner';
 // Sub-components
 import { TuningSelector } from './tuner/TuningSelector';
 import { StringVisualizer } from './tuner/StringVisualizer';
-import { NoteDisplay } from './tuner/NoteDisplay';
-import { AccuracyArrows } from './tuner/AccuracyArrows';
-import { RulerGauge } from './tuner/RulerGauge';
+import { AnalogMeter } from './tuner/AnalogMeter';
+import { NoteCarousel } from './tuner/NoteCarousel';
 import { Sparkline } from './tuner/Sparkline';
 import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
 
@@ -64,20 +63,14 @@ export const Tuner: React.FC<{
 
         <Sparkline history={centsHistory} />
         
-        <NoteDisplay 
-          note={noteData.note} 
-          status={tunerStatus}
+        <AnalogMeter 
           cents={noteData.cents}
+          status={tunerStatus}
         />
         
-        <AccuracyArrows 
-          cents={noteData.cents} 
-          status={tunerStatus} 
-        />
-
-        <RulerGauge 
-          cents={noteData.cents} 
-          status={tunerStatus} 
+        <NoteCarousel 
+          note={noteData.note}
+          status={tunerStatus}
         />
 
         <StringVisualizer 
