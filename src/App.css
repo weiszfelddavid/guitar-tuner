@@ -195,50 +195,21 @@
   align-items: center;
 }
 
-.instrument-row {
+.instrument-row, .tuning-row {
   display: flex;
-  gap: 0.75rem;
   overflow-x: auto;
-  width: 100%;
-  padding: 0 1.5rem 0.5rem 1.5rem;
-  box-sizing: border-box;
-  /* Hide scrollbar */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.instrument-row::-webkit-scrollbar {
-  display: none;
-}
-
-.tuning-row-mask.is-overflowing {
-  /* Gradient mask to fade out content on the right for scroll cue */
-  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-  mask-image: linear-gradient(to right, black 85%, transparent 100%);
-}
-
-.tuning-row {
-  display: flex;
+  white-space: nowrap;
   gap: 0.75rem;
-  overflow-x: auto;
   width: 100%;
-  padding: 0 1.5rem 0.5rem 1.5rem; /* pb-2 and consistent start padding */
+  padding: 0 1rem;
   box-sizing: border-box;
-  
-  /* Hide scrollbar */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
 }
 
+.instrument-row::-webkit-scrollbar, 
 .tuning-row::-webkit-scrollbar {
-  display: none;
-}
-
-/* On mobile, if few items, allow natural centering */
-@media (min-width: 601px) {
-  .instrument-row, .tuning-row {
-    justify-content: center;
-  }
+  display: none; /* Chrome/Safari/Webkit */
 }
 
 /* Base Pill Layout (Structural) */
