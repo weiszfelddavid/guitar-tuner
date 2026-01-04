@@ -128,15 +128,13 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           />
 
           {/* Needle */}
-          <g transform={`rotate(${rotation}, 100, 100)`}>
-            <line 
-              x1="100" y1="100" x2="100" y2="25" 
-              stroke={statusColor} 
-              strokeWidth="2"
-              strokeLinecap="round"
+          <g transform={`rotate(${rotation}, 100, 100)`} style={{ filter: `drop-shadow(0 0 4px ${statusColor})` }}>
+            <polygon 
+              points="99,105 101,105 100,15" 
+              fill={statusColor}
             />
             <circle 
-                cx="100" cy="100" r="4" 
+                cx="100" cy="100" r="3" 
                 fill={statusColor} 
             />
           </g>
