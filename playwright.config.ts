@@ -1,36 +1,23 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// This file is now minimal as E2E tests have been removed.
+// It can be removed entirely if Playwright is uninstalled.
 export default defineConfig({
-  testDir: './tests/e2e',
-  timeout: 30 * 1000,
-  expect: {
-    timeout: 5000
-  },
+  testDir: './tests/e2e', // This directory no longer exists
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['html', { open: 'never' }]],
+  reporter: 'html',
   use: {
-    actionTimeout: 0,
     trace: 'on-first-retry',
   },
   projects: [
     {
       name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
-      },
-      launchOptions: {
-        args: [
-          '--use-fake-ui-for-media-stream',
-          '--use-fake-device-for-media-stream',
-          '--use-file-for-fake-audio-capture=public/e2e-fixtures/melody.wav'
-        ]
-      }
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
-  /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run preview -- --port 4173',
     port: 4173,

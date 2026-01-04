@@ -46,21 +46,27 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     setVolume(0);
   };
 
-  const startTuner = async () => {
+  const startTuner = async (sourceNode?: AudioNode) => {
     
     if (audioContextRef.current) return;
 
     try {
       setIsPaused(false);
       setTunerStatus('listening');
-      const AudioContextConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const audioContext = new AudioContextConstructor();
+      const AudioContextConstructor = sourceNode?.context.constructor as typeof AudioContext || window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = sourceNode?.context || new AudioContextConstructor();
       await audioContext.resume();
-      await audioContext.audioWorklet.addModule(processorUrl);
+      try {
+        await audioContext.audioWorklet.addModule(processorUrl);
+      } catch(e) {
+        console.error("Error adding AudioWorklet module in test:", e);
+        throw e; // re-throw to fail the test
+      }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      const source = audioContext.createMediaStreamSource(stream);
+      const source = sourceNode || audioContext.createMediaStreamSource(await navigator.mediaDevices.getUserMedia({ audio: true }));
+      if ('mediaStream' in source) {
+        streamRef.current = (source as MediaStreamAudioSourceNode).mediaStream;
+      }
       
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
