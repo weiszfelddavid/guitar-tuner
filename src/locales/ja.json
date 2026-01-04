@@ -5,6 +5,10 @@
     "hold": "ホールド",
     "listening": "聞き取り中...",
     "mic_required": "チューナーを使用するにはマイクへのアクセスが必要です。",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "低い (左)",
     "sharp": "高い (右)",
     "cents_label": "ct"

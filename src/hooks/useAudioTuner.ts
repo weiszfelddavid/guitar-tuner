@@ -9,13 +9,40 @@ interface TunerUpdate {
   bufferrms: number;
 }
 
-export const useAudioTuner = (t: (key: string) => string, currentInstrument: string = 'guitar') => {
+interface TunerConfig {
+  SILENCE_THRESHOLD: number;
+  CLARITY_THRESHOLD: number;
+  DETECTION_THRESHOLD: number;
+  LOCK_TOLERANCE_CENTS: number;
+  HOLD_TIME_MS: number;
+  SMOOTHING_WINDOW: number;
+}
+
+const DEFAULT_TUNER_CONFIG: TunerConfig = {
+  SILENCE_THRESHOLD: 0.005, // Lowered from 0.01 for better sensitivity
+  CLARITY_THRESHOLD: 0.85,
+  DETECTION_THRESHOLD: 0.6, // significantly lowered detection threshold from 0.8
+  LOCK_TOLERANCE_CENTS: 4,
+  HOLD_TIME_MS: 1500,
+  SMOOTHING_WINDOW: 8,
+};
+
+const VOICE_TUNER_CONFIG: TunerConfig = {
+  ...DEFAULT_TUNER_CONFIG,
+  CLARITY_THRESHOLD: 0.70, // Slightly easier lock
+  DETECTION_THRESHOLD: 0.5,
+  LOCK_TOLERANCE_CENTS: 15, // Wider tolerance for voice
+  SMOOTHING_WINDOW: 20,    // Smoother for voice
+};
+
+export const useAudioTuner = (currentInstrument: string = 'guitar') => {
   const [tunerStatus, setTunerStatus] = useState<TunerStatus>('idle');
   const [isPaused, setIsPaused] = useState(false);
   const [pitch, setPitch] = useState<number | null>(null);
   const [noteData, setNoteData] = useState<NoteData>({ note: '--', cents: 0 });
   const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
   const [volume, setVolume] = useState<number>(0);
+  const [micError, setMicError] = useState<boolean>(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -44,6 +71,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     setTunerStatus('idle');
     setPitch(null);
     setVolume(0);
+    setMicError(false);
   };
 
   const startTuner = async (sourceNode?: AudioNode) => {
@@ -51,6 +79,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     if (audioContextRef.current) return;
 
     try {
+      setMicError(false);
       setIsPaused(false);
       setTunerStatus('listening');
       const AudioContextConstructor = sourceNode?.context.constructor as typeof AudioContext || window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -77,29 +106,31 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
         
         setVolume(bufferrms);
 
-        // Voice Mode Parameters
-        const SILENCE_THRESHOLD = 0.005; // Lowered from 0.01 for better sensitivity
-        const CLARITY_THRESHOLD = isVoice ? 0.70 : 0.85; // Slightly easier lock
-        const LOCK_TOLERANCE_CENTS = isVoice ? 15 : 4;   // Wider tolerance for voice
-        const HOLD_TIME_MS = 1500;
-        const SMOOTHING_WINDOW = isVoice ? 20 : 8;       // Smoother for voice
 
-        if (bufferrms < SILENCE_THRESHOLD) {
-          if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < HOLD_TIME_MS) {
+
+// ... inside the onmessage handler
+        const config = isVoice ? VOICE_TUNER_CONFIG : DEFAULT_TUNER_CONFIG;
+
+        const handleSilence = (now: number, config: TunerConfig) => {
+          if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < config.HOLD_TIME_MS) {
             setTunerStatus('holding');
             if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
             holdTimeoutRef.current = setTimeout(() => {
               setTunerStatus('listening');
               setPitch(null);
-            }, HOLD_TIME_MS - (now - lastValidTimeRef.current));
-          } else if (now - lastValidTimeRef.current >= HOLD_TIME_MS) {
+            }, config.HOLD_TIME_MS - (now - lastValidTimeRef.current));
+          } else if (now - lastValidTimeRef.current >= config.HOLD_TIME_MS) {
             setTunerStatus('listening');
             setPitch(null);
           }
+        };
+
+        if (bufferrms < config.SILENCE_THRESHOLD) {
+          handleSilence(now, config);
           return;
         }
 
-        if (pitch && clarity > (isVoice ? 0.5 : 0.6)) { // significantly lowered detection threshold from 0.8
+        const handlePitchDetection = (pitch: number, clarity: number, now: number, config: TunerConfig) => {
           if (holdTimeoutRef.current) {
             clearTimeout(holdTimeoutRef.current);
             holdTimeoutRef.current = null;
@@ -109,7 +140,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
           const rawData = getNoteFromPitch(pitch);
           const buffer = centsBufferRef.current;
           buffer.push(rawData.cents);
-          if (buffer.length > SMOOTHING_WINDOW) buffer.shift();
+          if (buffer.length > config.SMOOTHING_WINDOW) buffer.shift();
           const smoothedCents = buffer.reduce((a, b) => a + b, 0) / buffer.length;
           
           setNoteData({ note: rawData.note, cents: smoothedCents });
@@ -118,13 +149,17 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
             return newHistory.slice(Math.max(newHistory.length - 100, 0));
           });
 
-          if (clarity > CLARITY_THRESHOLD && Math.abs(smoothedCents) < LOCK_TOLERANCE_CENTS) {
+          if (clarity > config.CLARITY_THRESHOLD && Math.abs(smoothedCents) < config.LOCK_TOLERANCE_CENTS) {
             setTunerStatus('locked');
           } else {
             setTunerStatus('detecting');
           }
+        };
+
+        if (pitch && clarity > config.DETECTION_THRESHOLD) {
+          handlePitchDetection(pitch, clarity, now, config);
         } else {
-           if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < HOLD_TIME_MS) {
+           if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < config.HOLD_TIME_MS) {
              setTunerStatus('holding');
            } else {
              setTunerStatus('listening');
@@ -139,7 +174,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     } catch (error) {
       console.error('Error starting tuner:', error);
       setTunerStatus('idle');
-      alert(t('common.mic_required'));
+      setMicError(true);
     }
   };
 
@@ -175,6 +210,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
     noteData,
     centsHistory,
     volume,
+    micError,
     startTuner,
     stopTuner,
     resumeTuner

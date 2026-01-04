@@ -74,7 +74,7 @@ describe('useAudioTuner Integration', () => {
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useAudioTuner((k) => k));
+    const { result } = renderHook(() => useAudioTuner());
     
     expect(result.current.tunerStatus).toBe('idle');
     expect(result.current.pitch).toBeNull();
@@ -82,7 +82,7 @@ describe('useAudioTuner Integration', () => {
   });
 
   it('should start tuner and update state on pitch detection', async () => {
-    const { result } = renderHook(() => useAudioTuner((k) => k));
+    const { result } = renderHook(() => useAudioTuner());
 
     // 1. Start Tuner with injected source
     await act(async () => {
@@ -114,7 +114,7 @@ describe('useAudioTuner Integration', () => {
   });
 
   it('should handle "holding" state when signal is lost', async () => {
-    const { result } = renderHook(() => useAudioTuner((k) => k));
+    const { result } = renderHook(() => useAudioTuner());
 
     await act(async () => {
       await result.current.startTuner(mockSourceNode);
@@ -140,7 +140,7 @@ describe('useAudioTuner Integration', () => {
   });
 
   it('should correctly tune E2 string (Low E)', async () => {
-    const { result } = renderHook(() => useAudioTuner((k) => k));
+    const { result } = renderHook(() => useAudioTuner());
 
     await act(async () => {
       await result.current.startTuner(mockSourceNode);
@@ -162,7 +162,7 @@ describe('useAudioTuner Integration', () => {
   });
 
   it('should detect notes with lower clarity (weak signal)', async () => {
-    const { result } = renderHook(() => useAudioTuner((k) => k));
+    const { result } = renderHook(() => useAudioTuner());
 
     await act(async () => {
       await result.current.startTuner(mockSourceNode);

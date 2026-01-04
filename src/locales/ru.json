@@ -5,6 +5,10 @@
     "hold": "Удержание",
     "listening": "Слушаю...",
     "mic_required": "Для использования тюнера необходим доступ к микрофону.",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "Низко (Влево)",
     "sharp": "Высоко (Вправо)",
     "cents_label": "ц"

@@ -25,8 +25,9 @@ export const Tuner: React.FC<{
     noteData,
     centsHistory,
     volume,
+    micError,
     startTuner
-  } = useAudioTuner(t, selectedTuning.instrument);
+  } = useAudioTuner(selectedTuning.instrument);
 
   useEffect(() => {
     if (initialTuning) {
@@ -46,7 +47,16 @@ export const Tuner: React.FC<{
       />
 
       <div className="tuner-main-display">
-        {tunerStatus === 'idle' && !isPaused && (
+        {micError && (
+          <div className="start-overlay" onClick={handleStart}>
+            <div className="start-message">
+              <div>{t('common.mic_denied')}</div>
+              <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>{t('common.tap_to_retry')}</div>
+            </div>
+          </div>
+        )}
+
+        {tunerStatus === 'idle' && !isPaused && !micError && (
           <div className="start-overlay" onClick={handleStart}>
             <div className="start-message">{t('common.tap_to_enable')}</div>
           </div>
@@ -55,8 +65,8 @@ export const Tuner: React.FC<{
         {isPaused && (
           <div className="start-overlay" onClick={handleStart}>
             <div className="start-message">
-              <div>Tuner Paused</div>
-              <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>Tap to Resume</div>
+              <div>{t('common.tuner_paused')}</div>
+              <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.5rem' }}>{t('common.tap_to_resume')}</div>
             </div>
           </div>
         )}

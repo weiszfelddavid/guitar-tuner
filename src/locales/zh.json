@@ -5,6 +5,10 @@
     "hold": "保持",
     "listening": "监听中...",
     "mic_required": "使用调音器需要麦克风权限。",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "偏低 (左)",
     "sharp": "偏高 (右)",
     "cents_label": "音分"

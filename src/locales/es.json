@@ -5,6 +5,10 @@
     "hold": "Mantener",
     "listening": "Escuchando...",
     "mic_required": "Se requiere acceso al micrófono para usar el afinador.",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "Bemol (Izquierda)",
     "sharp": "Sostenido (Derecha)",
     "cents_label": "ct"

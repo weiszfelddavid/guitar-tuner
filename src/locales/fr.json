@@ -5,6 +5,10 @@
     "hold": "Maintien",
     "listening": "Écoute...",
     "mic_required": "L'accès au microphone est requis pour utiliser l'accordeur.",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "Bémol (Gauche)",
     "sharp": "Dièse (Droite)",
     "cents_label": "ct"

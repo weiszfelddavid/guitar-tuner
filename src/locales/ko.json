@@ -5,6 +5,10 @@
     "hold": "유지",
     "listening": "듣는 중...",
     "mic_required": "튜너를 사용하려면 마이크 권한이 필요합니다.",
+    "mic_denied": "Microphone access denied.",
+    "tap_to_retry": "Tap to retry.",
+    "tuner_paused": "Tuner Paused",
+    "tap_to_resume": "Tap to Resume",
     "flat": "플랫 (낮음)",
     "sharp": "샵 (높음)",
     "cents_label": "ct"
