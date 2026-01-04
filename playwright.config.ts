@@ -24,7 +24,8 @@ export default defineConfig({
       launchOptions: {
         args: [
           '--use-fake-ui-for-media-stream',
-          '--use-file-for-fake-audio-capture=tests/e2e/fixtures/melody.wav'
+          '--use-fake-device-for-media-stream',
+          '--use-file-for-fake-audio-capture=public/e2e-fixtures/melody.wav'
         ]
       }
     },

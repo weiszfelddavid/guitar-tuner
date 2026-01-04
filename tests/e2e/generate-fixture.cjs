@@ -5,7 +5,7 @@ const wav = require('wav');
 const SAMPLE_RATE = 48000;
 const DURATION_SEC = 1.5; // Duration for each note
 const SILENCE_SEC = 0.5;   // Silence between notes
-const FILENAME = 'tests/e2e/fixtures/melody.wav';
+const FILENAME = 'public/e2e-fixtures/melody.wav';
 
 // --- Notes (Hz) ---
 const FREQUENCIES = {

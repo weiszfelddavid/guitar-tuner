@@ -1,5 +1,3 @@
-
-
 interface AudioWorkletNodeOptions {
   processorOptions?: {
     bufferSize?: number;
@@ -17,13 +15,11 @@ class PitchProcessor extends AudioWorkletProcessor {
 
   constructor(options?: AudioWorkletNodeOptions) {
     super();
-    console.log('AudioWorklet sampleRate:', sampleRate);
     // Use fixed 4096 buffer for better bass resolution (approx 85ms window at 48kHz)
     this.buffer = new Float32Array(this.BUFFER_SIZE);
     this.threshold = options?.processorOptions?.threshold || 0.85;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   process(inputs: Float32Array[][], _outputs: Float32Array[][], _parameters: Record<string, Float32Array>): boolean {
     const input = inputs[0];
     if (!input || !input.length) return true;
@@ -50,42 +46,29 @@ class PitchProcessor extends AudioWorkletProcessor {
     // 1. Unroll Ring Buffer to a temporary contiguous buffer
     const unrolledBuffer = new Float32Array(this.BUFFER_SIZE);
     const part1Length = this.BUFFER_SIZE - this.bufferIndex;
-    // Copy the older part
     unrolledBuffer.set(this.buffer.subarray(this.bufferIndex), 0);
-    // Copy the newer part
     unrolledBuffer.set(this.buffer.subarray(0, this.bufferIndex), part1Length);
 
 
     // 2. Downsample (2x) the unrolled buffer
-    // This effectively gives us a sample rate of ~24kHz for detection.
-    // Advantages: 
-    // - Half the CPU load for YIN algorithm
-    // - Filters out very high frequencies (>12kHz) automatically
-    // - Keeps array sizes manageable (2048)
     const downsampledSize = this.BUFFER_SIZE / 2;
     const downsampledBuffer = new Float32Array(downsampledSize);
         
-    // Compute RMS of the full resolution signal for the noise gate
     let sumOfSquares = 0;
     
     for (let i = 0; i < downsampledSize; i++) {
       const s1 = unrolledBuffer[i * 2];
       const s2 = unrolledBuffer[i * 2 + 1];
-
-      // Simple averaging for downsampling
       downsampledBuffer[i] = (s1 + s2) / 2;
-      
-      // Accumulate RMS energy (from original samples)
       sumOfSquares += s1 * s1 + s2 * s2;
     }
     
     const bufferrms = Math.sqrt(sumOfSquares / this.BUFFER_SIZE);
 
     // --- YIN Algorithm on Downsampled Buffer ---
-    const bufferSize = downsampledSize; // 2048
+    const bufferSize = downsampledSize;
     const yinBuffer = new Float32Array(bufferSize / 2);
     
-    // 1. Difference Function
     for (let tau = 0; tau < bufferSize / 2; tau++) {
       yinBuffer[tau] = 0;
       for (let i = 0; i < bufferSize / 2; i++) {
@@ -94,7 +77,6 @@ class PitchProcessor extends AudioWorkletProcessor {
       }
     }
 
-    // 2. Cumulative Mean Normalized Difference
     yinBuffer[0] = 1;
     let runningSum = 0;
     for (let tau = 1; tau < bufferSize / 2; tau++) {
@@ -102,7 +84,6 @@ class PitchProcessor extends AudioWorkletProcessor {
       yinBuffer[tau] *= tau / runningSum;
     }
 
-    // 3. Absolute Threshold
     let tauEstimate = -1;
     for (let tau = 2; tau < bufferSize / 2; tau++) {
       if (yinBuffer[tau] < this.threshold) {
@@ -114,9 +95,7 @@ class PitchProcessor extends AudioWorkletProcessor {
       }
     }
 
-    // 4. Report Results
     if (tauEstimate !== -1) {
-      // Parabolic Interpolation
       let betterTau = tauEstimate;
       if (tauEstimate > 0 && tauEstimate < (bufferSize / 2) - 1) {
         const s0 = yinBuffer[tauEstimate - 1];
@@ -127,8 +106,6 @@ class PitchProcessor extends AudioWorkletProcessor {
         betterTau += adjustment;
       }
 
-      // Calculate Pitch
-      // IMPORTANT: We downsampled by 2, so the effective sample rate is halved.
       const effectiveSampleRate = sampleRate / 2;
       const pitch = effectiveSampleRate / betterTau;
       
@@ -136,21 +113,16 @@ class PitchProcessor extends AudioWorkletProcessor {
         pitch: pitch,
         clarity: 1 - yinBuffer[tauEstimate],
         bufferrms: bufferrms,
-        tauEstimate: tauEstimate, // for debugging
-        yinBufferAtEstimate: yinBuffer[tauEstimate] // for debugging
       });
     } else {
       this.port.postMessage({
         pitch: null,
         clarity: 0,
         bufferrms: bufferrms,
-        tauEstimate: -1, // for debugging
-        yinBufferAtEstimate: -1 // for debugging
       });
     }
   }
 }
 
-// Register logic
 registerProcessor('pitch-processor', PitchProcessor);
 export default PitchProcessor;
