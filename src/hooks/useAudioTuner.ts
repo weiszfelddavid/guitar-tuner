@@ -246,10 +246,18 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       
       rafRef.current = requestAnimationFrame(animate);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting tuner:', error);
       setTunerStatus('idle');
-      setMicError(true);
+      
+      // Distinguish between Permission errors and System errors
+      if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+        setMicError(true);
+      } else {
+        alert(`Tuner Initialization Failed: ${error.message || error}. Try refreshing.`);
+        // Don't show "Mic Denied" for technical errors
+        setMicError(false); 
+      }
     }
   };
 

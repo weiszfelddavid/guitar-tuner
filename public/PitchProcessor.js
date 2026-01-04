@@ -2,6 +2,12 @@
 if (typeof self.location === 'undefined') {
   self.location = { href: '' };
 }
+if (typeof self.window === 'undefined') {
+    self.window = self;
+}
+if (typeof self.XMLHttpRequest === 'undefined') {
+    self.XMLHttpRequest = function() {};
+}
 
 importScripts('aubio.js');
 
