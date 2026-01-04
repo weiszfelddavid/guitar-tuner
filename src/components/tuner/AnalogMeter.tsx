@@ -31,7 +31,7 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
     return () => cancelAnimationFrame(requestRef.current);
   }, [cents, isVisible, displayCents]);
 
-  const rotation = (displayCents / 50) * 45; // Max 45 degrees
+  const rotation = (displayCents / 50) * 80; // Max 80 degrees
 
   // Unified Color Logic
   const absCents = Math.abs(cents);
@@ -47,9 +47,9 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
     <div className={`analog-meter-container ${isVisible ? 'visible' : ''}`}>
       <div className="meter-face">
         <svg viewBox="0 0 200 120" className="meter-svg">
-          {/* Cent Scale Arc */}
+          {/* Cent Scale Arc: 160 degrees (-80 to +80 from top) */}
           <path 
-            d="M 20 100 A 80 80 0 0 1 180 100" 
+            d="M 21.2 86.1 A 80 80 0 0 1 178.8 86.1" 
             fill="none" 
             stroke="#444" 
             strokeWidth="1" 
@@ -58,7 +58,7 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           {/* Ticks */}
           {Array.from({ length: 101 }).map((_, i) => {
             const cent = i - 50; // -50 to 50
-            const angle = (cent / 50) * 45;
+            const angle = (cent / 50) * 80;
             const rad = (angle - 90) * (Math.PI / 180);
             const x1 = 100 + Math.cos(rad) * 80;
             const y1 = 100 + Math.sin(rad) * 80;
@@ -98,7 +98,7 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
 
           {/* Scale Labels */}
           {[-50, -25, 0, 25, 50].map(val => {
-            const angle = (val / 50) * 45;
+            const angle = (val / 50) * 80;
             const rad = (angle - 90) * (Math.PI / 180);
             const x = 100 + Math.cos(rad) * 60;
             const y = 100 + Math.sin(rad) * 60;
