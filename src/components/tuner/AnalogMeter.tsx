@@ -47,16 +47,32 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           />
           
           {/* Ticks */}
-          {Array.from({ length: 51 }).map((_, i) => {
-            const cent = (i - 25) * 2;
+          {Array.from({ length: 101 }).map((_, i) => {
+            const cent = i - 50; // -50 to 50
             const angle = (cent / 50) * 45;
             const rad = (angle - 90) * (Math.PI / 180);
             const x1 = 100 + Math.cos(rad) * 80;
             const y1 = 100 + Math.sin(rad) * 80;
             
-            let length = 3; // default minor
-            if (i % 5 === 0) length = 10; // every 10 cents
-            if (i % 25 === 0) length = 15; // 0 and +/- 50
+            let length = 2; // default sub-minor
+            let width = 0.5;
+            let color = "#555";
+
+            if (i % 5 === 0) { // Every 5 cents
+                length = 6; 
+                width = 1;
+                color = "#888";
+            }
+            if (i % 10 === 0) { // Every 10 cents
+                length = 10;
+                width = 1.5;
+                color = "#bbb";
+            }
+            if (i === 50) { // Center 0
+                length = 15;
+                width = 2;
+                color = "#fff";
+            }
 
             const x2 = 100 + Math.cos(rad) * (80 - length);
             const y2 = 100 + Math.sin(rad) * (80 - length);
@@ -65,8 +81,8 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
               <line 
                 key={cent}
                 x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke={i === 25 ? "#fff" : (i % 5 === 0 ? "#bbb" : "#666")}
-                strokeWidth={i % 5 === 0 ? "1.5" : "1"}
+                stroke={color}
+                strokeWidth={width}
               />
             );
           })}
@@ -105,11 +121,14 @@ export const AnalogMeter: React.FC<AnalogMeterProps> = ({ cents, status }) => {
           <g transform={`rotate(${rotation}, 100, 100)`}>
             <line 
               x1="100" y1="100" x2="100" y2="25" 
-              stroke="#e53935" 
-              strokeWidth="1.5"
+              stroke={Math.abs(cents) < 5 ? "#00e676" : (Math.abs(cents) < 15 ? "#ff9100" : "#ff1744")} 
+              strokeWidth="2"
               strokeLinecap="round"
             />
-            <circle cx="100" cy="100" r="3" fill="#e53935" />
+            <circle 
+                cx="100" cy="100" r="4" 
+                fill={Math.abs(cents) < 5 ? "#00e676" : (Math.abs(cents) < 15 ? "#ff9100" : "#ff1744")} 
+            />
           </g>
         </svg>
       </div>
