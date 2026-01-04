@@ -160,4 +160,27 @@ describe('useAudioTuner Integration', () => {
     expect(result.current.noteData.note).toBe('E');
     expect(result.current.pitch).toBeCloseTo(82.41);
   });
+
+  it('should detect notes with lower clarity (weak signal)', async () => {
+    const { result } = renderHook(() => useAudioTuner((k) => k));
+
+    await act(async () => {
+      await result.current.startTuner(mockSourceNode);
+    });
+
+    // Clarity 0.65 would have failed before (threshold was 0.8)
+    // Now it should succeed (threshold is 0.6)
+    await act(async () => {
+      mockPort.onmessage({ 
+        data: { 
+          pitch: 196.00, // G3
+          clarity: 0.65, 
+          bufferrms: 0.05 
+        } 
+      });
+    });
+
+    expect(result.current.noteData.note).toBe('G');
+    expect(result.current.tunerStatus).toBe('detecting'); // Not locked (needs 0.85), but detecting
+  });
 });

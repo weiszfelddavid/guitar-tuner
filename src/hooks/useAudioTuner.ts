@@ -78,8 +78,8 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
         setVolume(bufferrms);
 
         // Voice Mode Parameters
-        const SILENCE_THRESHOLD = 0.01; 
-        const CLARITY_THRESHOLD = isVoice ? 0.75 : 0.90; // Lower clarity threshold for voice
+        const SILENCE_THRESHOLD = 0.005; // Lowered from 0.01 for better sensitivity
+        const CLARITY_THRESHOLD = isVoice ? 0.70 : 0.85; // Slightly easier lock
         const LOCK_TOLERANCE_CENTS = isVoice ? 15 : 4;   // Wider tolerance for voice
         const HOLD_TIME_MS = 1500;
         const SMOOTHING_WINDOW = isVoice ? 20 : 8;       // Smoother for voice
@@ -99,7 +99,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
           return;
         }
 
-        if (pitch && clarity > (isVoice ? 0.6 : 0.8)) { // Adjust base detection threshold
+        if (pitch && clarity > (isVoice ? 0.5 : 0.6)) { // significantly lowered detection threshold from 0.8
           if (holdTimeoutRef.current) {
             clearTimeout(holdTimeoutRef.current);
             holdTimeoutRef.current = null;
