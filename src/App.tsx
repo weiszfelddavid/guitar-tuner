@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
 import { MainLayout } from './layouts/MainLayout';
 import { TuningPage } from './pages/TuningPage';
 import TechnicalOverview from './pages/TechnicalOverview';
@@ -7,9 +6,8 @@ import './App.css';
 
 function App() {
   return (
-    <HelmetProvider>
-      <Router>
-        <Routes>
+    <Router>
+      <Routes>
           {/* Static Pages */}
           <Route path="/technical-overview" element={<TechnicalOverview />} />
 
@@ -28,7 +26,6 @@ function App() {
           <Route path="*" element={<Navigate to="/en/guitar/standard" replace />} />
         </Routes>
       </Router>
-    </HelmetProvider>
   );
 }
 

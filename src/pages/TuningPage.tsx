@@ -1,6 +1,5 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Tuner } from '../components/Tuner';
 import { TUNINGS } from '../utils/tunings';
 import { useTranslation } from '../hooks/useTranslation';
@@ -25,22 +24,20 @@ export const TuningPage: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
-        <link rel="alternate" hrefLang="en" href={`https://tuner.weiszfeld.com/en/${selectedTuning.instrument}/${selectedTuning.slug}`} />
-        <link rel="alternate" hrefLang="es" href={`https://tuner.weiszfeld.com/es/${selectedTuning.instrument}/${selectedTuning.slug}`} />
-        <link rel="alternate" hrefLang="fr" href={`https://tuner.weiszfeld.com/fr/${selectedTuning.instrument}/${selectedTuning.slug}`} />
-        <link rel="canonical" href={`https://tuner.weiszfeld.com/${lang}/${selectedTuning.instrument}/${selectedTuning.slug}`} />
-        
-        {/* Inject Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify(howToSchema)}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-      </Helmet>
+      <title>{pageTitle}</title>
+      <meta name="description" content={pageDesc} />
+      <link rel="alternate" hrefLang="en" href={`https://tuner.weiszfeld.com/en/${selectedTuning.instrument}/${selectedTuning.slug}`} />
+      <link rel="alternate" hrefLang="es" href={`https://tuner.weiszfeld.com/es/${selectedTuning.instrument}/${selectedTuning.slug}`} />
+      <link rel="alternate" hrefLang="fr" href={`https://tuner.weiszfeld.com/fr/${selectedTuning.instrument}/${selectedTuning.slug}`} />
+      <link rel="canonical" href={`https://tuner.weiszfeld.com/${lang}/${selectedTuning.instrument}/${selectedTuning.slug}`} />
+      
+      {/* Inject Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify(howToSchema)}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify(faqSchema)}
+      </script>
 
       <Tuner 
         initialTuning={selectedTuning} 
