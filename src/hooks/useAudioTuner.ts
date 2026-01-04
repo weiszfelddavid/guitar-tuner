@@ -54,7 +54,7 @@ export const useAudioTuner = (t: (key: string) => string, currentInstrument: str
       setIsPaused(false);
       setTunerStatus('listening');
       const AudioContextConstructor = sourceNode?.context.constructor as typeof AudioContext || window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const audioContext = sourceNode?.context || new AudioContextConstructor();
+      const audioContext = (sourceNode?.context || new AudioContextConstructor()) as AudioContext;
       await audioContext.resume();
       try {
         await audioContext.audioWorklet.addModule(processorUrl);
