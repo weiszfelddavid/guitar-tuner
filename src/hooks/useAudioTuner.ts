@@ -121,12 +121,11 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
 
       // 3. Load Worklet
       try {
-        await audioContext.audioWorklet.addModule('PitchProcessor.js');
+        const processorUrl = new URL('/PitchProcessor.js', import.meta.url).href;
+        await audioContext.audioWorklet.addModule(processorUrl);
       } catch(e) {
-        console.error("Error adding AudioWorklet module:", e);
-        // Do NOT set micError here. This is a system/network error.
-        // We might want to set a 'systemError' state in the future.
-        alert("Failed to load audio processor. Please check your connection.");
+        console.error("AudioWorklet Load Failed. Details:", e);
+        alert(`Error loading tuner engine. This usually happens if the processor file is missing or blocked. Details: ${e instanceof Error ? e.message : String(e)}`);
         setTunerStatus('idle');
         return; 
       }
