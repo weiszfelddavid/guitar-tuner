@@ -119,35 +119,37 @@ export const TechnicalOverview: React.FC = () => {
           <h2>2. The Audio Engine (Signal Processing)</h2>
           <p>
             I knew I needed absolute zero latency. Most web tuners feel "laggy" because they fight with the 
-            browser's UI thread. To solve this, I originally wrote a custom YIN implementation, but later 
-            refactored it to leverage the robust <strong>pitchfinder</strong> library within an <strong>AudioWorklet</strong>.
+            browser's UI thread. To solve this, I implemented a standalone **McLeod Pitch Method (MPM)** 
+            algorithm directly within an **AudioWorklet**.
           </p>
           
           <div className="diagram-wrapper">
             <AudioEngineDiagram />
           </div>
 
-          <h3>Why I Switched to Pitchfinder</h3>
+          <h3>The "Pure Engine" Refactor</h3>
           <p>
-             My initial custom implementation of the YIN algorithm was educational but prone to subtle edge-case 
-             bugs (like the threshold sensitivity issue I encountered). By switching to <strong>Pitchfinder</strong>, 
-             a battle-tested open-source library, I reduced my codebase by over 80 lines of complex DSP math 
-             while gaining the reliability of a community-maintained tool.
+             I originally refactored the engine to use external libraries, but discovered that specialized 
+             Worklet environments (especially on mobile) are sensitive to complex dependency trees. To 
+             guarantee reliability, I wrote a zero-dependency **MPM** detector in pure JavaScript. This 
+             algorithm is exceptionally robust against inharmonicity—making it perfect for the physical 
+             vibrations of guitar and bass strings.
           </p>
           <div className="code-block">
-            <pre>{`// The new, simplified processor logic:
-import { YIN } from 'pitchfinder';
-
-// Initialize the detector (factory pattern)
-const detectPitch = YIN({ sampleRate: effectiveSampleRate });
-
-// Inside the process loop:
-const pitch = detectPitch(downsampledBuffer);`}</pre>
+            <pre>{`// Standalone Zero-Dependency Logic (MPM):
+class PitchProcessor extends AudioWorkletProcessor {
+  // ... Ring Buffer Logic ...
+  detectPitch() {
+    // 1. Calculate Normalized Square Difference Function (NSDF)
+    // 2. Perform Peak Picking with Parabolic Interpolation
+    // 3. Post smoothed frequency to UI thread
+  }
+}`}</pre>
           </div>
           <p>
-            I still employ <strong>2x Downsampling</strong> before feeding the buffer to Pitchfinder. 
-            This allows me to process a massive 4096-sample buffer—essential for tracking a Low B on a 
-            5-string bass—while keeping the CPU load light enough for any smartphone.
+            I use a **4096-sample buffer** to ensure enough data is captured to identify low frequencies 
+            like the 31Hz of a 5-string bass's Low B, while maintaining high precision for the 329Hz 
+            High E of a guitar.
           </p>
         </section>
 

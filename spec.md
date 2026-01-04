@@ -9,10 +9,10 @@
 - **State Management:** `Zustand` (Minimalist, handles high-frequency updates better than Context).
 
 ## 2. The Audio Engine (DSP)
-**Library:** `pitchfinder` (YIN Algorithm).
-- **Sample Rate:** Default to 44.1kHz (Resample if hardware differs).
-- **Buffer Size:** 2048 samples (approx 46ms latency, good balance).
-- **Threshold:** 0.15 (Standard Pitchfinder tolerance).
+**Engine:** Standalone McLeod Pitch Method (MPM).
+- **Architecture:** Zero-dependency AudioWorklet.
+- **Precision:** Sub-sample interpolation (Parabolic).
+- **Buffer:** 4096 samples at 44.1/48kHz.
 
 ### Threading Model
 DSP logic runs exclusively in an `AudioWorklet`. The Main Thread (UI) **never** touches raw audio data.
