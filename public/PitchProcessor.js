@@ -1,3 +1,8 @@
+// Polyfill for AudioWorklet environment where self.location might be missing
+if (typeof self.location === 'undefined') {
+  self.location = { href: '' };
+}
+
 importScripts('aubio.js');
 
 class PitchProcessor extends AudioWorkletProcessor {
