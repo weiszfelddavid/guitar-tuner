@@ -47,8 +47,16 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
   const streamRef = useRef<MediaStream | null>(null);
   const centsBufferRef = useRef<number[]>([]);
   const lastValidTimeRef = useRef<number>(0);
-  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const instrumentRef = useRef(currentInstrument);
+  
+  // Smoothing Refs
+  const lastReadingsRef = useRef<number[]>([]);
+  const targetPitchRef = useRef<number | null>(null);
+  const currentPitchRef = useRef<number | null>(null);
+  const volumeRef = useRef<number>(0);
+  const rafRef = useRef<number>(0);
+  const statusRef = useRef<TunerStatus>('idle');
+  const noteDataRef = useRef<NoteData>({ note: '--', cents: 0 });
 
   useEffect(() => {
     instrumentRef.current = currentInstrument;
@@ -63,14 +71,20 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
-    if (holdTimeoutRef.current) {
-      clearTimeout(holdTimeoutRef.current);
-      holdTimeoutRef.current = null;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
     }
     setTunerStatus('idle');
     setPitch(null);
     setVolume(0);
     setMicError(false);
+    
+    // Reset refs
+    lastReadingsRef.current = [];
+    targetPitchRef.current = null;
+    currentPitchRef.current = null;
+    statusRef.current = 'idle';
   };
 
   const startTuner = async (sourceNode?: AudioNode) => {
@@ -81,6 +95,8 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       setMicError(false);
       setIsPaused(false);
       setTunerStatus('listening');
+      statusRef.current = 'listening';
+
       const AudioContextConstructor = sourceNode?.context.constructor as typeof AudioContext || window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = (sourceNode?.context || new AudioContextConstructor()) as AudioContext;
       await audioContext.resume();
@@ -99,69 +115,61 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
 
       pitchProcessor.port.onmessage = (event) => {
-        const { pitch, clarity, bufferrms } = event.data as TunerUpdate;
+        const { pitch: detectedPitch, clarity, bufferrms } = event.data as TunerUpdate;
         const now = Date.now();
         const isVoice = instrumentRef.current === 'voice';
         
-        setVolume(bufferrms);
-
-
-
-// ... inside the onmessage handler
+        volumeRef.current = bufferrms;
         const config = isVoice ? VOICE_TUNER_CONFIG : DEFAULT_TUNER_CONFIG;
 
-        const handleSilence = (now: number, config: TunerConfig) => {
-          if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < config.HOLD_TIME_MS) {
-            setTunerStatus('holding');
-            if (holdTimeoutRef.current) clearTimeout(holdTimeoutRef.current);
-            holdTimeoutRef.current = setTimeout(() => {
-              setTunerStatus('listening');
-              setPitch(null);
-            }, config.HOLD_TIME_MS - (now - lastValidTimeRef.current));
-          } else if (now - lastValidTimeRef.current >= config.HOLD_TIME_MS) {
-            setTunerStatus('listening');
-            setPitch(null);
-          }
-        };
-
+        // Silence Detection
         if (bufferrms < config.SILENCE_THRESHOLD) {
-          handleSilence(now, config);
+          if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < config.HOLD_TIME_MS) {
+            statusRef.current = 'holding';
+            // We don't clear pitch during hold yet, just update status
+          } else if (now - lastValidTimeRef.current >= config.HOLD_TIME_MS) {
+            statusRef.current = 'listening';
+            targetPitchRef.current = null;
+            lastReadingsRef.current = []; // Reset buffer on silence
+          }
           return;
         }
 
-        const handlePitchDetection = (pitch: number, clarity: number, now: number, config: TunerConfig) => {
-          if (holdTimeoutRef.current) {
-            clearTimeout(holdTimeoutRef.current);
-            holdTimeoutRef.current = null;
-          }
+        // Pitch Detection Logic
+        if (detectedPitch && clarity > config.DETECTION_THRESHOLD) {
           lastValidTimeRef.current = now;
-          setPitch(pitch);
-          const rawData = getNoteFromPitch(pitch);
+          
+          // Buffer Logic (Max 5 items)
+          lastReadingsRef.current.push(detectedPitch);
+          if (lastReadingsRef.current.length > 5) {
+            lastReadingsRef.current.shift();
+          }
+          
+          // Calculate Average
+          const averagePitch = lastReadingsRef.current.reduce((a, b) => a + b, 0) / lastReadingsRef.current.length;
+          targetPitchRef.current = averagePitch;
+
+          // Note Data Calculation (using smoothed pitch)
+          const rawData = getNoteFromPitch(averagePitch);
+          
+          // Cents Smoothing for Display
           const buffer = centsBufferRef.current;
           buffer.push(rawData.cents);
           if (buffer.length > config.SMOOTHING_WINDOW) buffer.shift();
           const smoothedCents = buffer.reduce((a, b) => a + b, 0) / buffer.length;
           
-          setNoteData({ note: rawData.note, cents: smoothedCents });
-          setCentsHistory(prev => {
-            const newHistory = [...prev, smoothedCents];
-            return newHistory.slice(Math.max(newHistory.length - 100, 0));
-          });
+          noteDataRef.current = { note: rawData.note, cents: smoothedCents };
 
           if (clarity > config.CLARITY_THRESHOLD && Math.abs(smoothedCents) < config.LOCK_TOLERANCE_CENTS) {
-            setTunerStatus('locked');
+            statusRef.current = 'locked';
           } else {
-            setTunerStatus('detecting');
+            statusRef.current = 'detecting';
           }
-        };
-
-        if (pitch && clarity > config.DETECTION_THRESHOLD) {
-          handlePitchDetection(pitch, clarity, now, config);
         } else {
            if (lastValidTimeRef.current > 0 && (now - lastValidTimeRef.current) < config.HOLD_TIME_MS) {
-             setTunerStatus('holding');
+             statusRef.current = 'holding';
            } else {
-             setTunerStatus('listening');
+             statusRef.current = 'listening';
            }
         }
       };
@@ -169,6 +177,46 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       source.connect(pitchProcessor);
       pitchProcessor.connect(audioContext.destination);
       audioContextRef.current = audioContext;
+
+      // Start Animation Loop
+      const animate = () => {
+        // Interpolate Pitch
+        if (targetPitchRef.current !== null) {
+          if (currentPitchRef.current === null) {
+            currentPitchRef.current = targetPitchRef.current;
+          } else {
+            // Lerp with factor 0.1
+            currentPitchRef.current += (targetPitchRef.current - currentPitchRef.current) * 0.1;
+          }
+        } else {
+          // If lost signal, maybe drift back to 0 or null?
+          // For now, if holding, we keep it. If listening, we null it.
+          if (statusRef.current === 'listening') {
+             currentPitchRef.current = null;
+          }
+        }
+
+        // Batch State Updates
+        setPitch(currentPitchRef.current);
+        setVolume(volumeRef.current);
+        setTunerStatus(statusRef.current);
+        setNoteData(noteDataRef.current); // Use the ref directly
+        
+        // Update Cents History (only if pitch exists)
+        if (currentPitchRef.current) {
+             // We can use the calculated smoothed cents from onmessage for the graph
+             // or derive it from the interpolated pitch. 
+             // Using noteDataRef is safer as it aligns with NoteDisplay.
+             setCentsHistory(prev => {
+                const newHistory = [...prev, noteDataRef.current.cents];
+                return newHistory.slice(Math.max(newHistory.length - 100, 0));
+             });
+        }
+
+        rafRef.current = requestAnimationFrame(animate);
+      };
+      
+      rafRef.current = requestAnimationFrame(animate);
 
     } catch (error) {
       console.error('Error starting tuner:', error);
