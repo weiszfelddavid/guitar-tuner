@@ -167,7 +167,7 @@
 .tuning-control-panel {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* 24px Spacing */
+  gap: 0.75rem; /* Reduced Spacing */
   width: 100%;
   margin-bottom: 2.5rem;
   align-items: center;
@@ -251,6 +251,7 @@
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.2);
   color: rgba(224, 224, 224, 0.8);
+  font-size: 0.8rem; /* Smaller Font */
 }
 
 .tuning-pill:hover {
