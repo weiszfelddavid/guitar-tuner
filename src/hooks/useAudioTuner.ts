@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { getNoteFromPitch, type NoteData } from '../utils/tuner';
-import processorUrl from '../audio/engine/processor?worker&url';
 import { type TunerStatus } from '../components/tuner/NoteDisplay';
 
 interface TunerUpdate {
@@ -86,7 +85,7 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       const audioContext = (sourceNode?.context || new AudioContextConstructor()) as AudioContext;
       await audioContext.resume();
       try {
-        await audioContext.audioWorklet.addModule(processorUrl);
+        await audioContext.audioWorklet.addModule('PitchProcessor.js');
       } catch(e) {
         console.error("Error adding AudioWorklet module in test:", e);
         throw e; // re-throw to fail the test
