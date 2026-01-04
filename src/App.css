@@ -182,9 +182,7 @@
   box-sizing: border-box;
 }
 
-.tuning-row-mask {
-  width: 100%;
-  position: relative;
+.tuning-row-mask.is-overflowing {
   /* Gradient mask to fade out content on the right for scroll cue */
   -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   mask-image: linear-gradient(to right, black 85%, transparent 100%);
