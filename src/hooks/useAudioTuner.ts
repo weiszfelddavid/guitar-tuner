@@ -97,19 +97,48 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       setTunerStatus('listening');
       statusRef.current = 'listening';
 
+      // 1. Get User Media FIRST to validate permissions
+      let stream: MediaStream | null = null;
+      let source: AudioNode;
+
+      if (sourceNode) {
+        source = sourceNode;
+      } else {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+            console.error('Microphone permission denied:', err);
+            setTunerStatus('idle');
+            setMicError(true);
+            return; // Stop here if no permission
+        }
+      }
+
+      // 2. Initialize Audio Context
       const AudioContextConstructor = sourceNode?.context.constructor as typeof AudioContext || window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = (sourceNode?.context || new AudioContextConstructor()) as AudioContext;
       await audioContext.resume();
+
+      // 3. Load Worklet
       try {
         await audioContext.audioWorklet.addModule('PitchProcessor.js');
       } catch(e) {
-        console.error("Error adding AudioWorklet module in test:", e);
-        throw e; // re-throw to fail the test
+        console.error("Error adding AudioWorklet module:", e);
+        // Do NOT set micError here. This is a system/network error.
+        // We might want to set a 'systemError' state in the future.
+        alert("Failed to load audio processor. Please check your connection.");
+        setTunerStatus('idle');
+        return; 
       }
 
-      const source = sourceNode || audioContext.createMediaStreamSource(await navigator.mediaDevices.getUserMedia({ audio: true }));
-      if ('mediaStream' in source) {
-        streamRef.current = (source as MediaStreamAudioSourceNode).mediaStream;
+      if (!sourceNode && stream) {
+          source = audioContext.createMediaStreamSource(stream);
+          streamRef.current = stream;
+      } else if (sourceNode) {
+          source = sourceNode;
+      } else {
+          // Should not happen if logic is correct
+          return;
       }
       
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
