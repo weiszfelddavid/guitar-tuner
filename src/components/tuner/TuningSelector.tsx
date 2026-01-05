@@ -16,10 +16,11 @@ export const TuningSelector: React.FC<TuningSelectorProps> = ({ selected, onActi
     return Array.from(new Set(TUNINGS.map(t => t.instrument)));
   }, []);
 
-  const currentInstrumentTunings = useMemo(() => {
-    return TUNINGS.filter(tuning => tuning.instrument === selected.instrument);
-  }, [selected.instrument]);
-  
+  useEffect(() => {
+    const activeElements = document.querySelectorAll('.pill.active');
+    activeElements.forEach(el => el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
+  }, [selected]);
+
   return (
     <div className="tuning-control-panel">
       <div className="instrument-row">
