@@ -6,6 +6,7 @@ interface TunerUpdate {
   pitch: number;
   clarity: number;
   bufferrms: number;
+  waveform: Float32Array; // Add waveform data
 }
 
 interface TunerConfig {
@@ -23,7 +24,7 @@ const DEFAULT_TUNER_CONFIG: TunerConfig = {
   DETECTION_THRESHOLD: 0.6, // significantly lowered detection threshold from 0.8
   LOCK_TOLERANCE_CENTS: 4,
   HOLD_TIME_MS: 1500,
-  SMOOTHING_WINDOW: 8,
+  SMOOTHING_WINDOW: 3, // Reduced from 8 for speed
 };
 
 const VOICE_TUNER_CONFIG: TunerConfig = {
@@ -31,7 +32,7 @@ const VOICE_TUNER_CONFIG: TunerConfig = {
   CLARITY_THRESHOLD: 0.70, // Slightly easier lock
   DETECTION_THRESHOLD: 0.5,
   LOCK_TOLERANCE_CENTS: 15, // Wider tolerance for voice
-  SMOOTHING_WINDOW: 20,    // Smoother for voice
+  SMOOTHING_WINDOW: 10,    // Smoother for voice
 };
 
 export const useAudioTuner = (currentInstrument: string = 'guitar') => {
@@ -42,6 +43,7 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
   const [centsHistory, setCentsHistory] = useState<number[]>(new Array(100).fill(0));
   const [volume, setVolume] = useState<number>(0);
   const [micError, setMicError] = useState<boolean>(false);
+  const [waveform, setWaveform] = useState<Float32Array>(new Float32Array(256));
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -54,12 +56,21 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
   const targetPitchRef = useRef<number | null>(null);
   const currentPitchRef = useRef<number | null>(null);
   const volumeRef = useRef<number>(0);
+  const waveformRef = useRef<Float32Array>(new Float32Array(256));
   const rafRef = useRef<number>(0);
   const statusRef = useRef<TunerStatus>('idle');
   const noteDataRef = useRef<NoteData>({ note: '--', cents: 0 });
+  const processorRef = useRef<AudioWorkletNode | null>(null); // Store processor for messages
 
   useEffect(() => {
     instrumentRef.current = currentInstrument;
+    
+    // Adaptive Buffer Sizing
+    if (processorRef.current) {
+        const isBass = currentInstrument === 'bass' || currentInstrument === 'cello';
+        const newSize = isBass ? 4096 : 2048;
+        processorRef.current.port.postMessage({ type: 'set-buffer-size', size: newSize });
+    }
   }, [currentInstrument]);
 
   const stopTuner = () => {
@@ -85,6 +96,7 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
     targetPitchRef.current = null;
     currentPitchRef.current = null;
     statusRef.current = 'idle';
+    processorRef.current = null;
   };
 
   const startTuner = async (sourceNode?: AudioNode) => {
@@ -141,13 +153,20 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
       }
       
       const pitchProcessor = new AudioWorkletNode(audioContext, 'pitch-processor');
+      processorRef.current = pitchProcessor;
+      
+      // Initial buffer size set
+      const isBass = instrumentRef.current === 'bass' || instrumentRef.current === 'cello';
+      pitchProcessor.port.postMessage({ type: 'set-buffer-size', size: isBass ? 4096 : 2048 });
 
       pitchProcessor.port.onmessage = (event) => {
-        const { pitch: detectedPitch, clarity, bufferrms } = event.data as TunerUpdate;
+        const { pitch: detectedPitch, clarity, bufferrms, waveform: rawWaveform } = event.data as TunerUpdate;
         const now = Date.now();
         const isVoice = instrumentRef.current === 'voice';
         
         volumeRef.current = bufferrms;
+        if (rawWaveform) waveformRef.current = rawWaveform;
+
         const config = isVoice ? VOICE_TUNER_CONFIG : DEFAULT_TUNER_CONFIG;
 
         // Silence Detection
@@ -208,13 +227,13 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
 
       // Start Animation Loop
       const animate = () => {
-        // Interpolate Pitch
+        // Interpolate Pitch (Faster response)
         if (targetPitchRef.current !== null) {
           if (currentPitchRef.current === null) {
             currentPitchRef.current = targetPitchRef.current;
           } else {
-            // Lerp with factor 0.1
-            currentPitchRef.current += (targetPitchRef.current - currentPitchRef.current) * 0.1;
+            // Lerp with factor 0.3 for snappier UI (was 0.1)
+            currentPitchRef.current += (targetPitchRef.current - currentPitchRef.current) * 0.3;
           }
         } else {
           // If lost signal, maybe drift back to 0 or null?
@@ -229,6 +248,7 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
         setVolume(volumeRef.current);
         setTunerStatus(statusRef.current);
         setNoteData(noteDataRef.current); // Use the ref directly
+        setWaveform(new Float32Array(waveformRef.current)); // Clone to trigger re-render
         
         // Update Cents History (only if pitch exists)
         if (currentPitchRef.current) {
@@ -293,6 +313,7 @@ export const useAudioTuner = (currentInstrument: string = 'guitar') => {
     noteData,
     centsHistory,
     volume,
+    waveform, // Export waveform
     micError,
     startTuner,
     stopTuner,

@@ -1,15 +1,33 @@
 /**
  * PitchProcessor.js
  * A standalone, zero-dependency AudioWorkletProcessor for pitch detection.
- * Implements the McLeod Pitch Method (MPM).
+ * Implements the McLeod Pitch Method (MPM) with adaptive buffering and visualization.
  */
 class PitchProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.bufferSize = 4096;
+    this.bufferSize = 2048; // Default to Guitar/Uke speed
     this.buffer = new Float32Array(this.bufferSize);
     this.bufferIndex = 0;
     this.sampleRate = sampleRate;
+    
+    // Visualization buffer (downsampled)
+    this.visualSize = 256;
+    this.visualBuffer = new Float32Array(this.visualSize);
+    
+    this.port.onmessage = (event) => {
+      if (event.data.type === 'set-buffer-size') {
+        this.setBufferSize(event.data.size);
+      }
+    };
+  }
+  
+  setBufferSize(newSize) {
+    if (newSize !== this.bufferSize) {
+      this.bufferSize = newSize;
+      this.buffer = new Float32Array(newSize);
+      this.bufferIndex = 0;
+    }
   }
 
   process(inputs, outputs, parameters) {
@@ -21,31 +39,39 @@ class PitchProcessor extends AudioWorkletProcessor {
 
     // Fill buffer
     for (let i = 0; i < inputLength; i++) {
-      this.buffer[this.bufferIndex] = channelData[i];
-      this.bufferIndex++;
+      if (this.bufferIndex < this.bufferSize) {
+        this.buffer[this.bufferIndex] = channelData[i];
+        this.bufferIndex++;
+      }
 
       if (this.bufferIndex >= this.bufferSize) {
-        this.detectPitch();
+        this.processBuffer();
         this.bufferIndex = 0;
       }
     }
 
     return true;
   }
-
-  detectPitch() {
+  
+  processBuffer() {
     const buffer = this.buffer;
     const size = this.bufferSize;
     
-    // 1. Calculate RMS (Volume) for silence detection
+    // 1. Generate Waveform for UI (Downsample to visualSize)
+    // Simple linear subsampling is sufficient for visualizer
+    const step = Math.floor(size / this.visualSize);
+    for (let i = 0; i < this.visualSize; i++) {
+      this.visualBuffer[i] = buffer[i * step];
+    }
+    
+    // 2. Calculate RMS (Volume)
     let sumSquares = 0;
     for (let i = 0; i < size; i++) {
       sumSquares += buffer[i] * buffer[i];
     }
     const rms = Math.sqrt(sumSquares / size);
 
-    // 2. McLeod Pitch Method (MPM) - Simplified NSDF
-    // We only compute NSDF for lags up to half buffer size
+    // 3. McLeod Pitch Method (MPM) - Simplified NSDF
     const maxLag = Math.floor(size / 2);
     const nsdf = new Float32Array(maxLag);
 
@@ -61,32 +87,13 @@ class PitchProcessor extends AudioWorkletProcessor {
       nsdf[tau] = 2 * acf / divisorM;
     }
 
-    // 3. Peak Picking
-    const peaks = [];
-    let pos = 0;
-    let curMaxPos = 0;
-    let nsdfMax = -1;
-    
-    // Find key maxima
-    for (let i = 1; i < maxLag - 1; i++) {
-        if (nsdf[i] > nsdf[i-1] && nsdf[i] >= nsdf[i+1]) {
-            if (pos === 0) {
-                 pos = i; // first peak
-            } 
-        }
-    }
-
-    // A simpler peak picking strategy for tuner accuracy:
-    // Find the highest peak after the first zero crossing or significant dip
-    // For MPM, we usually look for the first peak above a threshold (clarity).
-    
-    let cutoff = 0.90; // High confidence needed for tuner
+    // 4. Peak Picking
     let periodIndex = -1;
     let clarity = 0;
+    let cutoff = 0.90;
 
     // Search for first major peak
     for (let i = 1; i < maxLag - 1; i++) {
-        // Is it a local maximum?
         if (nsdf[i] > nsdf[i-1] && nsdf[i] >= nsdf[i+1]) {
              if (nsdf[i] > cutoff) {
                  periodIndex = i;
@@ -96,13 +103,12 @@ class PitchProcessor extends AudioWorkletProcessor {
         }
     }
 
-    // If no peak found with high cutoff, try lower, but report lower clarity
+    // Fallback search
     if (periodIndex === -1) {
         cutoff = 0.7;
         for (let i = 1; i < maxLag - 1; i++) {
             if (nsdf[i] > nsdf[i-1] && nsdf[i] >= nsdf[i+1]) {
                  if (nsdf[i] > cutoff) {
-                     // We take the highest peak overall if we drop standards
                      if (nsdf[i] > clarity) {
                          clarity = nsdf[i];
                          periodIndex = i;
@@ -115,7 +121,7 @@ class PitchProcessor extends AudioWorkletProcessor {
     let pitch = null;
 
     if (periodIndex !== -1) {
-      // 4. Parabolic Interpolation for precision
+      // 5. Parabolic Interpolation
       const y1 = nsdf[periodIndex - 1];
       const y2 = nsdf[periodIndex];
       const y3 = nsdf[periodIndex + 1];
@@ -124,11 +130,12 @@ class PitchProcessor extends AudioWorkletProcessor {
       pitch = this.sampleRate / refinedLag;
     }
 
-    // Post result
+    // Post result with waveform
     this.port.postMessage({
       pitch: pitch,
       clarity: clarity,
-      bufferrms: rms
+      bufferrms: rms,
+      waveform: this.visualBuffer // Send the visual data
     });
   }
 }

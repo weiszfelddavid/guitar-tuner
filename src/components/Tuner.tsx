@@ -11,6 +11,7 @@ import { AnalogMeter } from './tuner/AnalogMeter';
 import { NoteDisplay } from './tuner/NoteDisplay';
 import { Sparkline } from './tuner/Sparkline';
 import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
+import { WaveformScope } from './tuner/WaveformScope'; // Import Scope
 import { noteToFreq } from '../utils/tunings';
 
 export const Tuner: React.FC<{ 
@@ -25,6 +26,7 @@ export const Tuner: React.FC<{
     noteData,
     centsHistory,
     volume,
+    waveform, // Get waveform data
     micError,
     startTuner
   } = useAudioTuner(tuning.instrument);
@@ -83,6 +85,9 @@ export const Tuner: React.FC<{
             </div>
           </div>
         )}
+
+        {/* Oscilloscope Background Layer */}
+        <WaveformScope waveform={waveform} active={tunerStatus !== 'idle'} />
 
         <Sparkline history={centsHistory} />
         
