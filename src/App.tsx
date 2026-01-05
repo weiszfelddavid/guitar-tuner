@@ -2,11 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { MainLayout } from './layouts/MainLayout';
 import { TuningPage } from './pages/TuningPage';
 import TechnicalOverview from './pages/TechnicalOverview';
+import { ScrollToTop } from './components/ScrollToTop';
 import './App.css';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
           {/* Static Pages */}
           <Route path="/technical-overview" element={<TechnicalOverview />} />
