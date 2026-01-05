@@ -2,11 +2,11 @@
   max-width: 800px;
   margin: 4rem auto 2rem;
   padding: 0 1.5rem;
-  color: #888;
-  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--text-secondary);
+  font-family: var(--font-main);
   line-height: 1.6;
   text-align: left;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
   padding-top: 3rem;
 }
 
@@ -15,7 +15,7 @@
 }
 
 .seo-section h2 {
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.5rem;
   margin-bottom: 1rem;
   font-weight: 600;
@@ -27,7 +27,7 @@
 }
 
 .seo-section strong {
-  color: #ddd;
+  color: var(--text-primary);
 }
 
 .tuning-steps {
@@ -48,7 +48,7 @@
 .freq-table th, .freq-table td {
   text-align: left;
   padding: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .freq-table th {
