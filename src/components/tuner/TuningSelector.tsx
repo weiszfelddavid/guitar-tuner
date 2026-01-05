@@ -11,19 +11,27 @@ interface TuningSelectorProps {
 export const TuningSelector: React.FC<TuningSelectorProps> = ({ selected, onActivate }) => {
   const { t } = useTranslation();
   const { lang } = useParams();
+  const instrumentRowRef = useRef<HTMLDivElement>(null);
+  const tuningRowRef = useRef<HTMLDivElement>(null);
 
   const instruments = useMemo(() => {
     return Array.from(new Set(TUNINGS.map(t => t.instrument)));
   }, []);
 
+  const currentInstrumentTunings = useMemo(() => {
+    return TUNINGS.filter(tuning => tuning.instrument === selected.instrument);
+  }, [selected.instrument]);
+
   useEffect(() => {
-    const activeElements = document.querySelectorAll('.pill.active');
-    activeElements.forEach(el => el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }));
+    // Scoped search using refs to avoid global DOM queries
+    const scrollOptions: ScrollIntoViewOptions = { behavior: 'smooth', block: 'nearest', inline: 'center' };
+    instrumentRowRef.current?.querySelector('.active')?.scrollIntoView(scrollOptions);
+    tuningRowRef.current?.querySelector('.active')?.scrollIntoView(scrollOptions);
   }, [selected]);
 
   return (
     <div className="tuning-control-panel">
-      <div className="instrument-row">
+      <div className="instrument-row" ref={instrumentRowRef}>
         {instruments.map(inst => {
           const firstTuning = TUNINGS.find(tuning => tuning.instrument === inst);
           return (
@@ -39,7 +47,7 @@ export const TuningSelector: React.FC<TuningSelectorProps> = ({ selected, onActi
         })}
       </div>
 
-      <div className="tuning-row">
+      <div className="tuning-row" ref={tuningRowRef}>
         {currentInstrumentTunings.map(tData => (
           <Link 
             key={`${tData.instrument}-${tData.slug}`}
