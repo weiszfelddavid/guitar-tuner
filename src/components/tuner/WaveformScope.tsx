@@ -3,16 +3,26 @@ import React, { useEffect, useRef } from 'react';
 interface WaveformScopeProps {
   waveform: Float32Array;
   active: boolean;
+  resetKey?: string; // Trigger for clearing history
 }
 
-export const WaveformScope: React.FC<WaveformScopeProps> = ({ waveform, active }) => {
+export const WaveformScope: React.FC<WaveformScopeProps> = ({ waveform, active, resetKey }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Configuration
   const SCROLL_SPEED = 2; // Pixels per frame
-  // At 60fps, 2px/frame = 120px/sec. 
-  // For 10s history, we need ~1200px width, or adjust speed/width accordingly.
+
+  // Reset Handler
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }, [resetKey]);
   
   useEffect(() => {
     const canvas = canvasRef.current;

@@ -87,7 +87,11 @@ export const Tuner: React.FC<{
         )}
 
         {/* Oscilloscope Background Layer */}
-        <WaveformScope waveform={waveform} active={tunerStatus !== 'idle'} />
+        <WaveformScope 
+            waveform={waveform} 
+            active={tunerStatus !== 'idle'} 
+            resetKey={`${tuning.instrument}-${tuning.slug}`}
+        />
 
         <Sparkline history={centsHistory} />
         
