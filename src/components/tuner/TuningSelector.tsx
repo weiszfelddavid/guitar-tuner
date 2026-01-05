@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { TUNINGS, type Tuning } from '../../utils/tunings';
 import { useTranslation } from '../../hooks/useTranslation';

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import '../App.css';
-import { type Tuning, TUNINGS } from '../utils/tunings';
+import { type Tuning } from '../utils/tunings';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAudioTuner } from '../hooks/useAudioTuner';
 
