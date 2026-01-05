@@ -40,7 +40,7 @@ export const TuningPage: React.FC = () => {
       </script>
 
       <Tuner 
-        initialTuning={selectedTuning} 
+        tuning={selectedTuning} 
       />
     </>
   );

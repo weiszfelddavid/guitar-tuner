@@ -14,10 +14,9 @@ import { SoundLevelIndicator } from './tuner/SoundLevelIndicator';
 import { noteToFreq } from '../utils/tunings';
 
 export const Tuner: React.FC<{ 
-  initialTuning?: Tuning
-}> = ({ initialTuning }) => {
+  tuning: Tuning
+}> = ({ tuning }) => {
   const { t } = useTranslation();
-  const [selectedTuning, setSelectedTuning] = useState<Tuning>(initialTuning || TUNINGS[0]);
   
   const {
     tunerStatus,
@@ -28,16 +27,16 @@ export const Tuner: React.FC<{
     volume,
     micError,
     startTuner
-  } = useAudioTuner(selectedTuning.instrument);
+  } = useAudioTuner(tuning.instrument);
 
   // Calculate target note from the predefined tuning
   const targetNote = React.useMemo(() => {
-    if (!pitch || selectedTuning.instrument === 'voice') return undefined;
+    if (!pitch || tuning.instrument === 'voice') return undefined;
     
     let closestNote = "";
     let minDiff = Infinity;
     
-    selectedTuning.notes.forEach(note => {
+    tuning.notes.forEach(note => {
       const freq = noteToFreq(note);
       const diff = Math.abs(Math.log2(pitch / freq));
       if (diff < minDiff) {
@@ -47,13 +46,7 @@ export const Tuner: React.FC<{
     });
     
     return closestNote;
-  }, [pitch, selectedTuning]);
-
-  useEffect(() => {
-    if (initialTuning) {
-      setSelectedTuning(initialTuning);
-    }
-  }, [initialTuning]);
+  }, [pitch, tuning]);
 
   const handleStart = () => {
     startTuner();
@@ -62,7 +55,7 @@ export const Tuner: React.FC<{
   return (
     <div className="tuner-wrapper">
       <TuningSelector 
-        selected={selectedTuning} 
+        selected={tuning} 
         onActivate={handleStart}
       />
 
@@ -106,7 +99,7 @@ export const Tuner: React.FC<{
         />
 
         <StringVisualizer 
-          tuning={selectedTuning} 
+          tuning={tuning} 
           pitch={pitch} 
         />
 
