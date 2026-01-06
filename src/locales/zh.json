@@ -18,104 +18,36 @@
     "status_holding": "保持",
     "status_listening": "监听中..."
   },
-  "instruments": {
-    "guitar": {
-      "title": "免费在线吉他调音器",
-      "desc": "即时调音您的木吉他或电吉他。我们的精密麦克风调音器利用先进算法自动检测琴弦。",
-      "tips": "对于标准调音 (EADGBE)，从最粗的弦 (低音E) 开始，依次调至最细的弦 (高音E)。如果是新弦，请轻轻拉伸并多次微调。"
-    },
-    "bass": {
-      "title": "免费在线贝斯调音器",
-      "desc": "最精准的贝斯在线调音器。高精度捕捉低频基音，支持5弦贝斯的低音B。",
-      "tips": "笔记本麦克风可能难以捕捉低频。请用拇指或拨片用力拨弦，以提供清晰的信号。"
-    },
-    "ukulele": {
-      "title": "免费在线尤克里里调音器",
-      "desc": "几秒钟内调好您的尤克里里 (Soprano, Concert, Tenor)。支持标准GCEA和Low G定弦。",
-      "tips": "尤克里里的尼龙弦对温度敏感。如果在户外或舞台灯光下演奏，请更频繁地调音。"
-    },
-    "cello": {
-      "title": "在线大提琴调音器",
-      "desc": "大提琴 (A-D-G-C) 精密调音。专为管弦乐器的丰富泛音优化。",
-      "tips": "使用长而稳定的运弓以获得最佳检测效果。请确保琴码位置正中，张力变化可能导致其倾斜。"
-    },
-    "default": {
-      "title": "在线十二平均律调音器",
-      "desc": "适用于任何弦乐器的通用调音器。利用设备麦克风实现专业级精度。",
-      "tips": "清晰拨弦并让声音延续。调音器会自动检测最近的音符并显示音分偏差。"
-    }
-  },
-  "footer": {
-    "frequencies_title": "频率 (Hz)",
-    "frequencies_ref": "参考频率：",
-    "strings": "弦",
-    "pro_tips_title": "专业建议：",
-    "table_string": "琴弦",
-    "table_note": "音名",
-    "table_freq": "频率 (Hz)",
-    "step_mic": "启用麦克风",
-    "step_mic_desc": "点击屏幕允许访问您的麦克风。",
-    "step_inst": "选择乐器",
-    "step_inst_desc_prefix": "确保菜单中已选中",
-    "step_inst_desc_suffix": "。",
-    "step_pluck": "清晰拨弦",
-    "step_pluck_desc": "拨动单根琴弦。调音器会高亮显示最近的音符。",
-    "step_needle": "检查指针",
-    "step_needle_flat": "音高偏低。拧紧弦轴。",
-    "step_needle_sharp": "音高偏高。放松弦轴。",
-    "step_diamond": "钻石模式",
-    "step_diamond_desc": "当中心菱形亮起绿色时，音准完美 (误差±4音分以内)。"
-  },
   "tunings": {
     "guitar_standard": {
-      "name": "吉他 (标准)",
-      "seoTitle": "吉他标准调音器 | 精准在线音高检测",
-      "description": "即刻将吉他调至标准EADGBE。我们的专业级调音器直接在浏览器中运行。"
+      "name": "吉他 (标准)"
     },
     "guitar_drop-d": {
-      "name": "吉他 (Drop D)",
-      "seoTitle": "Drop D 调音器 | 摇滚金属吉他在线调音",
-      "description": "快速调至Drop D (DADGBE)。适合重型Riff和摇滚乐。精准、免费、易用。"
+      "name": "吉他 (Drop D)"
     },
     "guitar_open-g": {
-      "name": "吉他 (Open G)",
-      "seoTitle": "Open G 调音器 | 蓝调与滑棒吉他调音",
-      "description": "调至Open G (DGDGBD)。蓝调、滑棒吉他和滚石乐队风格的经典定弦。"
+      "name": "吉他 (Open G)"
     },
     "guitar_dadgad": {
-      "name": "吉他 (DADGAD)",
-      "seoTitle": "DADGAD 调音器 | 凯尔特与指弹吉他调音",
-      "description": "精准DADGAD调音。凯尔特音乐和指弹风格的理想选择。"
+      "name": "吉他 (DADGAD)"
     },
     "guitar_half-step-down": {
-      "name": "吉他 (降半音)",
-      "seoTitle": "降半音调音器 | Eb (降E) 标准定弦",
-      "description": "将吉他整体降半音至Eb标准。非常适合降低琴弦张力或配合人声。"
+      "name": "吉他 (降半音)"
     },
     "bass_standard": {
-      "name": "贝斯 (标准)",
-      "seoTitle": "在线贝斯调音器 | 低频精准检测",
-      "description": "最精准的4弦贝斯在线调音器。精确捕捉低音基频。"
+      "name": "贝斯 (标准)"
     },
     "bass_five-string": {
-      "name": "贝斯 (5弦)",
-      "seoTitle": "5弦贝斯调音器 | 低音B弦检测",
-      "description": "5弦贝斯精密调音，包含低音B弦 (Low B)。专为深沉超低音优化。"
+      "name": "贝斯 (5弦)"
     },
     "ukulele_standard": {
-      "name": "尤克里里 (标准)",
-      "seoTitle": "在线尤克里里调音器 | GCEA定弦",
-      "description": "瞬间将尤克里里调至GCEA。快速、免费、精准。"
+      "name": "尤克里里 (标准)"
     },
     "ukulele_low-g": {
-      "name": "尤克里里 (Low G)",
-      "seoTitle": "Low G 尤克里里调音器 | 线性GCEA定弦",
-      "description": "专为使用低音G弦的尤克里里设计。实现完美的线性调音。"
+      "name": "尤克里里 (Low G)"
     },
     "cello_standard": {
-      "name": "大提琴 (标准)",
-      "seoTitle": "在线大提琴调音器 | 大提琴手专用",
-      "description": "将大提琴调至CGDA。完美支持运弓和拨奏。"
+      "name": "大提琴 (标准)"
     }
   }
 }

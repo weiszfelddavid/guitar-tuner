@@ -18,104 +18,36 @@
     "status_holding": "Maintien",
     "status_listening": "Écoute..."
   },
-  "instruments": {
-    "guitar": {
-      "title": "Accordeur de Guitare en Ligne Gratuit",
-      "desc": "Accordez votre guitare acoustique ou électrique instantanément. Notre accordeur de précision détecte les cordes automatiquement via des algorithmes avancés.",
-      "tips": "Pour l'accordage standard (EADGBE), commencez par la corde la plus épaisse (Mi grave) vers la plus fine (Mi aigu). Si vos cordes sont neuves, étirez-les doucement et accordez plusieurs fois."
-    },
-    "bass": {
-      "title": "Accordeur de Basse en Ligne Gratuit",
-      "desc": "L'accordeur en ligne le plus précis pour basse. Capture les basses fréquences fondamentales avec haute précision, même pour les basses 5 cordes.",
-      "tips": "Les fréquences de basse peuvent être difficiles à capter pour certains micros intégrés. Jouez la corde fermement avec le pouce ou un médiator pour un signal clair."
-    },
-    "ukulele": {
-      "title": "Accordeur de Ukulélé en Ligne Gratuit",
-      "desc": "Accordez votre ukulélé soprano, concert ou ténor en quelques secondes. Supporte les configurations standard GCEA et Low G.",
-      "tips": "Les cordes de ukulélé sont en nylon et sensibles aux changements de température. Accordez plus fréquemment si vous jouez à l'extérieur."
-    },
-    "cello": {
-      "title": "Accordeur de Violoncelle en Ligne",
-      "desc": "Accordage de précision pour Violoncelle (A-D-G-C). Optimisé pour les riches harmoniques des instruments à cordes orchestrales.",
-      "tips": "Utilisez des coups d'archet longs et réguliers pour une meilleure détection. Vérifiez que votre chevalet est bien aligné."
-    },
-    "default": {
-      "title": "Accordeur Chromatique en Ligne",
-      "desc": "Un accordeur universel pour tout instrument à cordes. Précision de niveau professionnel via le micro de votre appareil.",
-      "tips": "Jouez la corde clairement. L'accordeur détectera automatiquement la note musicale la plus proche et affichera l'écart en cents."
-    }
-  },
-  "footer": {
-    "frequencies_title": "Fréquences (Hz)",
-    "frequencies_ref": "Fréquences de référence pour les cordes de",
-    "strings": "",
-    "pro_tips_title": "Conseils Pro pour",
-    "table_string": "Corde",
-    "table_note": "Note",
-    "table_freq": "Fréquence (Hz)",
-    "step_mic": "Activer le Micro",
-    "step_mic_desc": "Cliquez sur l'overlay pour autoriser l'accès à votre micro.",
-    "step_inst": "Choisir l'Instrument",
-    "step_inst_desc_prefix": "Assurez-vous que",
-    "step_inst_desc_suffix": "est actif dans le menu.",
-    "step_pluck": "Jouer Clairement",
-    "step_pluck_desc": "Faites sonner une seule corde. L'accordeur mettra en avant la note la plus proche.",
-    "step_needle": "Vérifier l'Aiguille",
-    "step_needle_flat": "Le ton est trop bas. Tendez la corde via la cheville.",
-    "step_needle_sharp": "Le ton est trop haut. Détendez la corde via la cheville.",
-    "step_diamond": "Mode Diamant",
-    "step_diamond_desc": "Quand le diamant central brille en vert, vous êtes parfaitement accordé (à ±4 cents)."
-  },
   "tunings": {
     "guitar_standard": {
-      "name": "Guitare (Standard)",
-      "seoTitle": "Accordeur de Guitare Standard | Détecteur de Note Précis",
-      "description": "Accordez votre guitare en EADGBE instantanément. Notre accordeur pro fonctionne directement dans votre navigateur."
+      "name": "Guitare (Standard)"
     },
     "guitar_drop-d": {
-      "name": "Guitare (Drop D)",
-      "seoTitle": "Accordeur de Guitare Drop D | Accordeur en Ligne Rock & Metal",
-      "description": "Accordez rapidement votre guitare en Drop D (DADGBE). Parfait pour les riffs lourds. Précis, gratuit et simple."
+      "name": "Guitare (Drop D)"
     },
     "guitar_open-g": {
-      "name": "Guitare (Open G)",
-      "seoTitle": "Accordeur de Guitare Open G | Accordeur Blues & Slide",
-      "description": "Accordez votre guitare en Open G (DGDGBD). L'accordage classique pour le blues et le slide."
+      "name": "Guitare (Open G)"
     },
     "guitar_dadgad": {
-      "name": "Guitare (DADGAD)",
-      "seoTitle": "Accordeur de Guitare DADGAD | Accordeur Celtique & Acoustique",
-      "description": "Accordage DADGAD de précision. Idéal pour la musique celtique et le fingerstyle."
+      "name": "Guitare (DADGAD)"
     },
     "guitar_half-step-down": {
-      "name": "Guitare (Demi-ton bas)",
-      "seoTitle": "Accordeur Demi-ton Bas | Accordage Eb Standard",
-      "description": "Accordez votre guitare un demi-ton plus bas (Eb Standard). Idéal pour réduire la tension des cordes."
+      "name": "Guitare (Demi-ton bas)"
     },
     "bass_standard": {
-      "name": "Basse (Standard)",
-      "seoTitle": "Accordeur de Basse en Ligne | Précision Basse Fréquence",
-      "description": "L'accordeur le plus précis pour basse 4 cordes. Capture les fréquences fondamentales avec précision."
+      "name": "Basse (Standard)"
     },
     "bass_five-string": {
-      "name": "Basse (5 Cordes)",
-      "seoTitle": "Accordeur de Basse 5 Cordes | Détecteur de Si Grave",
-      "description": "Accordage de précision pour basses 5 cordes, incluant le Si grave (Low B)."
+      "name": "Basse (5 Cordes)"
     },
     "ukulele_standard": {
-      "name": "Ukulélé (Standard)",
-      "seoTitle": "Accordeur de Ukulélé en Ligne | Accordage GCEA",
-      "description": "Accordez votre ukulélé en GCEA instantanément. Rapide, gratuit et précis."
+      "name": "Ukulélé (Standard)"
     },
     "ukulele_low-g": {
-      "name": "Ukulélé (Low G)",
-      "seoTitle": "Accordeur de Ukulélé Low G | Accordage GCEA Linéaire",
-      "description": "Conçu pour les ukulélés avec une corde de Sol grave. Accordage linéaire parfait."
+      "name": "Ukulélé (Low G)"
     },
     "cello_standard": {
-      "name": "Violoncelle (Standard)",
-      "seoTitle": "Accordeur de Violoncelle en Ligne | Précision pour Violoncellistes",
-      "description": "Accordez votre violoncelle en CGDA. Fonctionne parfaitement avec l'archet ou en pizzicato."
+      "name": "Violoncelle (Standard)"
     }
   }
 }

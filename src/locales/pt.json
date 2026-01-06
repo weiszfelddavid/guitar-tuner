@@ -18,104 +18,36 @@
     "status_holding": "Aguarde",
     "status_listening": "Ouvindo..."
   },
-  "instruments": {
-    "guitar": {
-      "title": "Afinador de Violão Online Grátis",
-      "desc": "Afine seu violão ou guitarra instantaneamente. Nosso afinador de precisão detecta cordas automaticamente usando algoritmos avançados.",
-      "tips": "Para a afinação padrão (EADGBE), comece com a corda mais grossa (Mizão) e vá até a mais fina (Mizinha). Se as cordas forem novas, estique-as suavemente."
-    },
-    "bass": {
-      "title": "Afinador de Baixo Online Grátis",
-      "desc": "O afinador online mais preciso para baixo. Captura frequências graves com alta precisão, até mesmo em baixos de 5 cordas.",
-      "tips": "Frequências graves podem ser difíceis para microfones de laptop. Toque a corda com firmeza usando o polegar ou palheta."
-    },
-    "ukulele": {
-      "title": "Afinador de Ukulele Online Grátis",
-      "desc": "Afine seu ukulele soprano, concerto ou tenor em segundos. Suporta GCEA padrão e Low G.",
-      "tips": "Cordas de ukulele são de nylon e sensíveis ao calor. Afine com frequência se estiver tocando ao ar livre."
-    },
-    "cello": {
-      "title": "Afinador de Violoncelo Online",
-      "desc": "Afinação precisa para Violoncelo (A-D-G-C). Otimizado para harmônicos ricos de orquestra.",
-      "tips": "Use arcadas longas e firmes para a melhor detecção. Verifique se o cavalete está alinhado."
-    },
-    "default": {
-      "title": "Afinador Cromático Online",
-      "desc": "Um afinador universal para qualquer instrumento de corda. Precisão profissional usando seu microfone.",
-      "tips": "Toque a corda claramente. O afinador detectará a nota mais próxima e mostrará o desvio em cents."
-    }
-  },
-  "footer": {
-    "frequencies_title": "Frequências (Hz)",
-    "frequencies_ref": "Frequências de referência para cordas de",
-    "strings": "",
-    "pro_tips_title": "Dicas Pro para",
-    "table_string": "Corda",
-    "table_note": "Nota",
-    "table_freq": "Frequência (Hz)",
-    "step_mic": "Ativar Microfone",
-    "step_mic_desc": "Clique na tela para permitir o acesso ao microfone.",
-    "step_inst": "Selecionar Instrumento",
-    "step_inst_desc_prefix": "Certifique-se de que",
-    "step_inst_desc_suffix": "está ativo no menu.",
-    "step_pluck": "Tocar Claramente",
-    "step_pluck_desc": "Toque uma única corda. O afinador destacará a nota mais próxima.",
-    "step_needle": "Verificar Agulha",
-    "step_needle_flat": "O tom está baixo. Aperte a tarraxa.",
-    "step_needle_sharp": "O tom está alto. Solte a tarraxa.",
-    "step_diamond": "Modo Diamante",
-    "step_diamond_desc": "Quando o diamante central brilha em verde, você está perfeitamente afinado."
-  },
   "tunings": {
     "guitar_standard": {
-      "name": "Violão (Padrão)",
-      "seoTitle": "Afinador de Violão Padrão | Detector de Tom Online",
-      "description": "Afine seu violão em EADGBE instantaneamente. Nosso afinador pro funciona direto no navegador."
+      "name": "Violão (Padrão)"
     },
     "guitar_drop-d": {
-      "name": "Guitarra (Drop D)",
-      "seoTitle": "Afinador Drop D | Afinador Online para Rock e Metal",
-      "description": "Afine rapidamente em Drop D (DADGBE). Perfeito para riffs pesados. Preciso e grátis."
+      "name": "Guitarra (Drop D)"
     },
     "guitar_open-g": {
-      "name": "Guitarra (Open G)",
-      "seoTitle": "Afinador Open G | Afinador Blues e Slide",
-      "description": "Afine em Open G (DGDGBD). A afinação clássica para blues e slide."
+      "name": "Guitarra (Open G)"
     },
     "guitar_dadgad": {
-      "name": "Guitarra (DADGAD)",
-      "seoTitle": "Afinador DADGAD | Afinador Celta e Acústico",
-      "description": "Afinação DADGAD precisa. Ideal para música celta e fingerstyle."
+      "name": "Guitarra (DADGAD)"
     },
     "guitar_half-step-down": {
-      "name": "Guitarra (Meio Tom Abaixo)",
-      "seoTitle": "Afinador Meio Tom Abaixo | Afinação Eb",
-      "description": "Afine um meio tom abaixo (Eb Standard). Ótimo para reduzir a tensão das cordas."
+      "name": "Guitarra (Meio Tom Abaixo)"
     },
     "bass_standard": {
-      "name": "Baixo (Padrão)",
-      "seoTitle": "Afinador de Baixo Online | Precisão Grave",
-      "description": "O afinador mais preciso para baixo de 4 cordas. Captura fundamentais com precisão."
+      "name": "Baixo (Padrão)"
     },
     "bass_five-string": {
-      "name": "Baixo (5 Cordas)",
-      "seoTitle": "Afinador de Baixo 5 Cordas | Detector Low B",
-      "description": "Afinação precisa para baixos de 5 cordas, incluindo o Si grave (Low B)."
+      "name": "Baixo (5 Cordas)"
     },
     "ukulele_standard": {
-      "name": "Ukulele (Padrão)",
-      "seoTitle": "Afinador de Ukulele Online | Afinação GCEA",
-      "description": "Afine seu ukulele em GCEA instantaneamente. Rápido, grátis e preciso."
+      "name": "Ukulele (Padrão)"
     },
     "ukulele_low-g": {
-      "name": "Ukulele (Low G)",
-      "seoTitle": "Afinador Ukulele Low G | Afinação Linear GCEA",
-      "description": "Projetado para ukuleles com corda Sol grave (Low G). Afinação linear perfeita."
+      "name": "Ukulele (Low G)"
     },
     "cello_standard": {
-      "name": "Violoncelo (Padrão)",
-      "seoTitle": "Afinador de Violoncelo Online | Precisão para Celistas",
-      "description": "Afine seu violoncelo em CGDA. Funciona perfeitamente com arco ou pizzicato."
+      "name": "Violoncelo (Padrão)"
     }
   }
 }

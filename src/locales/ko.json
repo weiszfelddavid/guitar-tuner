@@ -18,104 +18,36 @@
     "status_holding": "유지",
     "status_listening": "듣는 중..."
   },
-  "instruments": {
-    "guitar": {
-      "title": "무료 온라인 기타 튜너",
-      "desc": "어쿠스틱 및 일렉트릭 기타를 즉시 튜닝하세요. 정밀 마이크 튜너가 고급 알고리즘으로 줄을 자동 감지합니다.",
-      "tips": "표준 튜닝(EADGBE)의 경우, 가장 굵은 줄(6번줄 E)부터 얇은 줄(1번줄 E) 순서로 맞추세요. 새 줄은 부드럽게 늘려주며 튜닝하세요."
-    },
-    "bass": {
-      "title": "무료 온라인 베이스 튜너",
-      "desc": "베이스 기타를 위한 가장 정확한 온라인 튜너. 5현 베이스의 Low B를 포함한 저음을 정밀하게 포착합니다.",
-      "tips": "노트북 마이크는 저음을 잘 잡지 못할 수 있습니다. 엄지나 피크로 줄을 강하게 튕겨 명확한 소리를 내세요."
-    },
-    "ukulele": {
-      "title": "무료 온라인 우쿨렐레 튜너",
-      "desc": "소프라노, 콘서트, 테너 우쿨렐레를 몇 초 만에 튜닝하세요. 표준 GCEA 및 Low G 지원.",
-      "tips": "우쿨렐레 나일론 줄은 온도에 민감합니다. 야외나 조명 아래에서는 더 자주 튜닝해야 합니다."
-    },
-    "cello": {
-      "title": "온라인 첼로 튜너",
-      "desc": "첼로(A-D-G-C)를 위한 정밀 튜닝. 오케스트라 현악기의 풍부한 배음에 최적화되었습니다.",
-      "tips": "길고 일정한 활 긋기(보잉)를 사용하면 감지 정확도가 높아집니다. 브릿지가 기울어지지 않았는지 확인하세요."
-    },
-    "default": {
-      "title": "온라인 크로매틱 튜너",
-      "desc": "모든 현악기를 위한 만능 튜너. 기기의 마이크를 사용하여 전문가급 정밀도를 제공합니다.",
-      "tips": "줄을 명확하게 튕기세요. 튜너가 가장 가까운 음을 감지하고 오차(센트)를 표시합니다."
-    }
-  },
-  "footer": {
-    "frequencies_title": "주파수 (Hz)",
-    "frequencies_ref": "기준 주파수:",
-    "strings": "번줄",
-    "pro_tips_title": "프로 팁:",
-    "table_string": "줄",
-    "table_note": "음",
-    "table_freq": "주파수 (Hz)",
-    "step_mic": "마이크 켜기",
-    "step_mic_desc": "화면을 탭하여 마이크 접근을 허용하세요.",
-    "step_inst": "악기 선택",
-    "step_inst_desc_prefix": "메뉴에서",
-    "step_inst_desc_suffix": "가 선택되었는지 확인하세요.",
-    "step_pluck": "명확하게 튕기기",
-    "step_pluck_desc": "한 번에 한 줄씩 튕기세요. 튜너가 가장 가까운 음을 표시합니다.",
-    "step_needle": "바늘 확인",
-    "step_needle_flat": "음이 낮습니다. 줄감개를 조이세요.",
-    "step_needle_sharp": "음이 높습니다. 줄감개를 푸세요.",
-    "step_diamond": "다이아몬드 모드",
-    "step_diamond_desc": "중앙의 다이아몬드가 녹색으로 빛나면 완벽하게 튜닝된 것입니다."
-  },
   "tunings": {
     "guitar_standard": {
-      "name": "기타 (표준)",
-      "seoTitle": "기타 표준 튜너 | 정밀 온라인 음정 감지",
-      "description": "기타를 표준 EADGBE로 즉시 튜닝하세요. 브라우저에서 바로 작동하는 프로급 튜너입니다."
+      "name": "기타 (표준)"
     },
     "guitar_drop-d": {
-      "name": "기타 (드롭 D)",
-      "seoTitle": "드롭 D 튜너 | 락 & 메탈용 온라인 튜너",
-      "description": "Drop D(DADGBE)로 빠르게 튜닝하세요. 헤비한 리프에 완벽합니다. 정확하고 무료입니다."
+      "name": "기타 (드롭 D)"
     },
     "guitar_open-g": {
-      "name": "기타 (오픈 G)",
-      "seoTitle": "오픈 G 튜너 | 블루스 & 슬라이드 기타 튜너",
-      "description": "Open G(DGDGBD)로 튜닝하세요. 블루스와 슬라이드 기타의 클래식 튜닝입니다."
+      "name": "기타 (오픈 G)"
     },
     "guitar_dadgad": {
-      "name": "기타 (DADGAD)",
-      "seoTitle": "DADGAD 튜너 | 켈틱 & 어쿠스틱 튜너",
-      "description": "정밀 DADGAD 튜닝. 켈틱 음악과 핑거스타일에 이상적입니다."
+      "name": "기타 (DADGAD)"
     },
     "guitar_half-step-down": {
-      "name": "기타 (반음 낮음)",
-      "seoTitle": "반음 낮음 튜너 | Eb (하프 스텝 다운)",
-      "description": "기타를 반음 낮춰 Eb로 튜닝하세요. 줄의 장력을 줄이는 데 좋습니다."
+      "name": "기타 (반음 낮음)"
     },
     "bass_standard": {
-      "name": "베이스 (표준)",
-      "seoTitle": "온라인 베이스 튜너 | 저음 정밀 감지",
-      "description": "4현 베이스를 위한 가장 정확한 온라인 튜너. 기본음을 정확하게 포착합니다."
+      "name": "베이스 (표준)"
     },
     "bass_five-string": {
-      "name": "베이스 (5현)",
-      "seoTitle": "5현 베이스 튜너 | Low B 감지",
-      "description": "Low B를 포함한 5현 베이스 정밀 튜닝. 깊은 저음에 최적화되었습니다."
+      "name": "베이스 (5현)"
     },
     "ukulele_standard": {
-      "name": "우쿨렐레 (표준)",
-      "seoTitle": "온라인 우쿨렐레 튜너 | GCEA 튜닝",
-      "description": "우쿨렐레를 GCEA로 즉시 튜닝하세요. 빠르고 정확하며 무료입니다."
+      "name": "우쿨렐레 (표준)"
     },
     "ukulele_low-g": {
-      "name": "우쿨렐레 (Low G)",
-      "seoTitle": "Low G 우쿨렐레 튜너 | 선형 GCEA 튜닝",
-      "description": "Low G 줄을 사용하는 우쿨렐레를 위해 설계되었습니다. 완벽한 선형 튜닝을 지원합니다."
+      "name": "우쿨렐레 (Low G)"
     },
     "cello_standard": {
-      "name": "첼로 (표준)",
-      "seoTitle": "온라인 첼로 튜너 | 첼리스트를 위한 정밀도",
-      "description": "첼로를 CGDA로 튜닝하세요. 활이나 피치카토 모두 완벽하게 작동합니다."
+      "name": "첼로 (표준)"
     }
   }
 }
