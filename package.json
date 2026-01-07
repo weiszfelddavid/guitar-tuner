@@ -1,0 +1,27 @@
+{
+  "name": "guitar-tuner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weiszfelddavid/guitar-tuner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/weiszfelddavid/guitar-tuner/issues"
+  },
+  "homepage": "https://github.com/weiszfelddavid/guitar-tuner#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/web": "^0.0.312",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.5.0"
+  }
+}

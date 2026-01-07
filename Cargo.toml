@@ -1,0 +1,17 @@
+[package]
+name = "pure-tone"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/dsp/lib.rs"
+
+[dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1

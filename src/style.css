@@ -1,0 +1,33 @@
+body, html { 
+  margin: 0; 
+  padding: 0; 
+  overflow: hidden; 
+  height: 100%; 
+  width: 100%; 
+  background: #1a1a1a; 
+  font-family: sans-serif; 
+}
+
+#start-btn:hover { 
+  background: #444; 
+}
+
+.start-container {
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  height: 100vh; 
+  background: #1a1a1a; 
+  color: white; 
+  flex-direction: column;
+}
+
+.start-button {
+  padding: 15px 30px; 
+  font-size: 1.2rem; 
+  cursor: pointer; 
+  background: #333; 
+  color: white; 
+  border: 1px solid #666; 
+  border-radius: 4px;
+}
