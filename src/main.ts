@@ -3,6 +3,10 @@ import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { getTunerState, KalmanFilter, TunerState } from './ui/tuner';
+import { initDebugConsole } from './ui/debug-console';
+
+// Enable on-screen debugging for mobile
+initDebugConsole();
 
 // State management
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
@@ -12,26 +16,32 @@ let smoothedCents = 0;
 
 async function startTuner() {
   try {
+    console.log("Starting Tuner...");
+    
     // 1. Setup Audio
     const context = await getAudioContext();
+    console.log("AudioContext created. State:", context.state);
     
     // FIX: Force resume AudioContext if it's suspended (Common on Android/iOS)
     if (context.state === 'suspended') {
       console.log("AudioContext suspended, resuming...");
       await context.resume();
     }
-    console.log("AudioContext State:", context.state);
-
+    
     const micStream = await getMicrophoneStream(context);
     
-    // FIX 2: Check resume AGAIN after permission prompt (which might have broken the user gesture chain)
-    if (context.state === 'suspended') {
-      console.log("AudioContext suspended after permission, resuming...");
-      await context.resume();
+    // Log active settings to debug "Silence" issue
+    const track = micStream.getAudioTracks()[0];
+    if (track) {
+        console.log("Mic Label:", track.label);
+        console.log("Mic Settings:", JSON.stringify(track.getSettings(), null, 2));
+        console.log("Mic Constraints:", JSON.stringify(track.getConstraints(), null, 2));
+    } else {
+        console.error("No audio track found in stream!");
     }
 
-    const source = context.createMediaStreamSource(micStream);
-    const tunerNode = await createTunerWorklet(context);
+    // FIX 2: Check resume AGAIN after permission prompt (which might have broken the user gesture chain)
+
     
     // 2. Setup UI
     document.body.innerHTML = '<canvas id="tuner-canvas"></canvas>';
