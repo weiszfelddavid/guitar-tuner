@@ -41,7 +41,13 @@ async function startTuner() {
     }
 
     // FIX 2: Check resume AGAIN after permission prompt (which might have broken the user gesture chain)
+    if (context.state === 'suspended') {
+      console.log("AudioContext suspended after permission, resuming...");
+      await context.resume();
+    }
 
+    const source = context.createMediaStreamSource(micStream);
+    const tunerNode = await createTunerWorklet(context);
     
     // 2. Setup UI
     document.body.innerHTML = '<canvas id="tuner-canvas"></canvas>';
