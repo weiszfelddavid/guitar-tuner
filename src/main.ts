@@ -5,7 +5,7 @@ import { TunerCanvas } from './ui/canvas';
 import { getTunerState, KalmanFilter, TunerState } from './ui/tuner';
 
 // State management
-let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, isLocked: false };
+let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
 const kalman = new KalmanFilter(0.1, 0.1); 
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
@@ -24,8 +24,8 @@ async function startTuner() {
     
     // 3. Audio Loop
     tunerNode.port.onmessage = (event) => {
-      const { pitch, clarity } = event.data;
-      currentState = getTunerState(pitch, clarity);
+      const { pitch, clarity, volume } = event.data;
+      currentState = getTunerState(pitch, clarity, volume || 0);
       
       // Reset filter if we lose signal or switch notes abruptly?
       // For now, we just feed the filter.

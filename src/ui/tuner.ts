@@ -28,6 +28,7 @@ export interface TunerState {
   noteName: string;
   cents: number;
   clarity: number;
+  volume: number;
   isLocked: boolean;
 }
 
@@ -62,9 +63,12 @@ export class KalmanFilter {
   }
 }
 
-export function getTunerState(pitch: number, clarity: number): TunerState {
-  if (clarity < 0.9 || pitch < 60 || pitch > 500) {
-    return { noteName: '--', cents: 0, clarity, isLocked: false };
+export function getTunerState(pitch: number, clarity: number, volume: number): TunerState {
+  // Thresholds:
+  // Clarity < 0.9 means uncertain pitch.
+  // Volume < 0.01 means silence/noise floor.
+  if (clarity < 0.9 || volume < 0.01 || pitch < 60 || pitch > 500) {
+    return { noteName: '--', cents: 0, clarity, volume, isLocked: false };
   }
 
   // Find closest string
@@ -87,6 +91,7 @@ export function getTunerState(pitch: number, clarity: number): TunerState {
     noteName: closestString.name.replace(/\d/, ''), // Remove octave number for display
     cents: cents,
     clarity: clarity,
+    volume: volume,
     isLocked: clarity > 0.95 && Math.abs(cents) < 2
   };
 }

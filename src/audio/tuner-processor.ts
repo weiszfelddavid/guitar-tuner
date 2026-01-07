@@ -70,13 +70,20 @@ class TunerProcessor extends AudioWorkletProcessor {
   processBuffer() {
     if (!this.detector) return;
     
+    // Calculate RMS Volume for visual feedback
+    let sum = 0;
+    for (let i = 0; i < this.buffer.length; i++) {
+        sum += this.buffer[i] * this.buffer[i];
+    }
+    const rms = Math.sqrt(sum / this.buffer.length);
+
     const result = this.detector.process(this.buffer);
     
     // Post result to main thread
-    // TunerResult { pitch: f32, clarity: f32 }
     this.port.postMessage({
       pitch: result.pitch,
-      clarity: result.clarity
+      clarity: result.clarity,
+      volume: rms
     });
   }
 }

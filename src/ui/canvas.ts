@@ -117,5 +117,21 @@ export class TunerCanvas {
          this.ctx.fillStyle = '#666';
          this.ctx.fillText("Listening...", centerX, pivotY);
     }
+    
+    // Draw Input Volume Meter (Debug/Feedback)
+    // A thin bar at the very bottom
+    const volumeHeight = 10;
+    const maxVolume = 0.5; // Arbitrary scale, RMS is usually low
+    const normalizedVol = Math.min(state.volume / maxVolume, 1.0);
+    const barWidth = this.width * 0.8;
+    const barLeft = (this.width - barWidth) / 2;
+    
+    // Background bar
+    this.ctx.fillStyle = '#333';
+    this.ctx.fillRect(barLeft, this.height - 30, barWidth, volumeHeight);
+    
+    // Active bar
+    this.ctx.fillStyle = '#00ff00';
+    this.ctx.fillRect(barLeft, this.height - 30, barWidth * normalizedVol, volumeHeight);
   }
 }
