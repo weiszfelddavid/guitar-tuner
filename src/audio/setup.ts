@@ -8,14 +8,17 @@ export async function getAudioContext(): Promise<AudioContext> {
 }
 
 export async function getMicrophoneStream(audioContext: AudioContext): Promise<MediaStream> {
+  // Relaxed constraints to fix "Silent Stream" on Android.
+  // Many Android devices FAIL to provide audio if EchoCancellation is forced to false.
+  // We prioritize 'latency' but accept default processing if needed.
   const constraints = {
     audio: {
-      echoCancellation: false,
-      autoGainControl: false,
-      noiseSuppression: false,
       channelCount: 1,
       latency: { ideal: 0 },
-      // Remove ideal sampleRate constraint to match Context
+      // We do NOT strictly force these to false anymore, as it breaks some Android hardware paths.
+      // echoCancellation: false, 
+      // autoGainControl: false, 
+      // noiseSuppression: false, 
     }
   };
 
