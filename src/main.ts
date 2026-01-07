@@ -23,12 +23,28 @@ async function startTuner() {
     console.log("AudioContext State:", context.state);
 
     const micStream = await getMicrophoneStream(context);
+    
+    // FIX 2: Check resume AGAIN after permission prompt (which might have broken the user gesture chain)
+    if (context.state === 'suspended') {
+      console.log("AudioContext suspended after permission, resuming...");
+      await context.resume();
+    }
+
     const source = context.createMediaStreamSource(micStream);
     const tunerNode = await createTunerWorklet(context);
     
     // 2. Setup UI
     document.body.innerHTML = '<canvas id="tuner-canvas"></canvas>';
     const canvas = new TunerCanvas('tuner-canvas');
+
+    // FIX 3: Global "Wake Up" listener
+    // If the context suspends later (e.g. screen off/on), resume it on next touch
+    document.addEventListener('touchstart', () => {
+        if (context.state === 'suspended') {
+            console.log("Touch resume triggered");
+            context.resume();
+        }
+    }, { passive: true });
     
     // 3. Audio Loop
     tunerNode.port.onmessage = (event) => {
