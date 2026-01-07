@@ -8,17 +8,16 @@ export async function getAudioContext(): Promise<AudioContext> {
 }
 
 export async function getMicrophoneStream(audioContext: AudioContext): Promise<MediaStream> {
-  // Relaxed constraints to fix "Silent Stream" on Android.
-  // Many Android devices FAIL to provide audio if EchoCancellation is forced to false.
-  // We prioritize 'latency' but accept default processing if needed.
+  // FIX: Force "Standard" Audio Path
+  // The "Low Latency / Raw" path (latency: 0, echoCancellation: false) is silent on this device.
+  // We explicitly request processing to force the robust WebRTC audio path.
   const constraints = {
     audio: {
       channelCount: 1,
-      latency: { ideal: 0 },
-      // We do NOT strictly force these to false anymore, as it breaks some Android hardware paths.
-      // echoCancellation: false, 
-      // autoGainControl: false, 
-      // noiseSuppression: false, 
+      echoCancellation: true,
+      autoGainControl: true,
+      noiseSuppression: true,
+      // latency: { ideal: 0 } // REMOVE latency constraint
     }
   };
 
