@@ -37,13 +37,39 @@ async function startTuner() {
     document.body.innerHTML = '<canvas id="tuner-canvas"></canvas>';
     const canvas = new TunerCanvas('tuner-canvas');
 
-    // FIX 3: Global "Wake Up" listener
-    // If the context suspends later (e.g. screen off/on), resume it on next touch
-    document.addEventListener('touchstart', () => {
+    // FIX 3: Global "Wake Up" listener & UI Overlay
+    const checkState = () => {
         if (context.state === 'suspended') {
-            console.log("Touch resume triggered");
-            context.resume();
+            // Show a visible overlay if we are suspended
+            let overlay = document.getElementById('resume-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'resume-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;justify-content:center;align-items:center;z-index:9999;font-size:24px;cursor:pointer;';
+                overlay.innerText = 'Tap to Activate Tuner';
+                document.body.appendChild(overlay);
+                
+                overlay.addEventListener('click', async () => {
+                    await context.resume();
+                    console.log("Overlay resume triggered");
+                    if (context.state === 'running') {
+                        overlay?.remove();
+                    }
+                });
+            }
+        } else {
+             const overlay = document.getElementById('resume-overlay');
+             if (overlay) overlay.remove();
         }
+    };
+
+    // Check periodically
+    setInterval(checkState, 1000);
+    
+    // Also check on touch
+    document.addEventListener('touchstart', async () => {
+        if (context.state === 'suspended') await context.resume();
+        checkState();
     }, { passive: true });
     
     // 3. Audio Loop
