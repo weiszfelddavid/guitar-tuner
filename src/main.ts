@@ -50,8 +50,23 @@ async function startTuner() {
     const tunerNode = await createTunerWorklet(context);
     
     // 2. Setup UI
-    document.body.innerHTML = '<canvas id="tuner-canvas"></canvas>';
+    // Remove start container instead of wiping body
+    document.querySelector('.start-container')?.remove();
+    
+    // Create canvas if it doesn't exist (it shouldn't)
+    let canvasEl = document.getElementById('tuner-canvas');
+    if (!canvasEl) {
+        canvasEl = document.createElement('canvas');
+        canvasEl.id = 'tuner-canvas';
+        document.body.appendChild(canvasEl);
+    }
     const canvas = new TunerCanvas('tuner-canvas');
+    
+    // Re-append debug console if it was wiped (just in case)
+    const debugConsole = document.getElementById('debug-console');
+    if (debugConsole) {
+        document.body.appendChild(debugConsole); // Move to end to ensure z-index
+    }
 
     // FIX 3: Global "Wake Up" listener & UI Overlay
     const checkState = () => {
