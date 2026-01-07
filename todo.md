@@ -1,0 +1,22 @@
+# Pro-Guitar Tuner Roadmap (Core Stability)
+
+- [ ] **Transient Masking (Pluck Detector):**
+  - [ ] **Implementation:** Refine `TransientMasker` into `PluckDetector`.
+    - Monitor AudioWorklet RMS volume.
+    - Trigger `isAttacking` state if volume increases >15dB within 20ms.
+    - During `isAttacking`: Heavily damp pitch updates (interpolate at 0.1 weight) to prevent "sharp" needle jumps.
+  - [ ] **Testing:** Use `generate_test_signals.ts`.
+    - Scenario: "Re-pluck" (Steady signal -> Loud Spike).
+    - Verify pitch output changes slowly during the spike.
+- **Outlier Rejection & Stabilization:**
+  - [ ] **Implementation:** Create `PitchStabilizer` class.
+    - maintain ring buffer (size 11).
+    - `getStablePitch()`: Calculate median.
+    - Remove outliers (>50 cents from median).
+    - Return weighted average of remaining "clean" samples.
+  - [ ] **Testing Infrastructure:** Create `scripts/generate_test_signals.ts`.
+    - Generate synthetic buffers: Attack (Sharp) -> Sustain (Stable) -> Noise (Jitter).
+    - Verify `PitchStabilizer` smooths noise but ignores transient spikes.
+- **String Locking:** Add "sticky" detection logic to prevent the UI from rapidly flipping between adjacent strings.
+- **Octave Priority:** Bias the algorithm to favor the fundamental frequency to prevent "octave jumping" (e.g., E2 vs E3).
+- **Dynamic Noise Gate:** Automatically adjust the detection threshold based on the ambient noise floor.

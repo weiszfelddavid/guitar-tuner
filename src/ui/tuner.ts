@@ -95,3 +95,27 @@ export function getTunerState(pitch: number, clarity: number, volume: number): T
     isLocked: clarity > 0.95 && Math.abs(cents) < 2
   };
 }
+
+export class TransientMasker {
+  private maskEndTime: number = 0;
+  private isMasking: boolean = false;
+  private lastVolume: number = 0;
+  private readonly threshold: number = 0.02; // Volume threshold to trigger mask
+  private readonly durationMs: number = 200; // 200ms mask
+
+  process(volume: number, now: number): boolean {
+    // If volume jumps significantly, it's a new pluck
+    if (volume > this.threshold && this.lastVolume < (this.threshold / 2)) {
+      this.maskEndTime = now + this.durationMs;
+      this.isMasking = true;
+    }
+
+    this.lastVolume = volume;
+
+    if (this.isMasking && now > this.maskEndTime) {
+      this.isMasking = false;
+    }
+
+    return this.isMasking;
+  }
+}

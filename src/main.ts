@@ -11,6 +11,7 @@ initDebugConsole();
 // State management
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
 const kalman = new KalmanFilter(0.1, 0.1); 
+const masker = new TransientMasker();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -133,6 +134,14 @@ async function startTuner() {
       const { pitch, clarity, volume } = data.type === 'result' ? data : data;
       
       if (pitch === undefined) return; // ignore unknown messages
+
+      const isMasked = masker.process(volume || 0, performance.now());
+      
+      if (isMasked) {
+          // Keep showing previous state or searching, but don't update with jittery pitch
+          currentState.volume = volume || 0;
+          return;
+      }
 
       currentState = getTunerState(pitch, clarity, volume || 0);
       
