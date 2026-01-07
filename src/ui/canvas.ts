@@ -22,12 +22,17 @@ export class TunerCanvas {
   private resize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
+    
+    // 1. Set Physical Resolution (High DPI)
     this.canvas.width = this.width * window.devicePixelRatio;
     this.canvas.height = this.height * window.devicePixelRatio;
+    
+    // 2. Set Logical Display Size (CSS)
+    this.canvas.style.width = `${this.width}px`;
+    this.canvas.style.height = `${this.height}px`;
+
+    // 3. Normalize Coordinate System
     this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    // Adjust logical width/height
-    this.width = this.width;
-    this.height = this.height;
   }
 
   public render(state: TunerState, smoothedCents: number) {

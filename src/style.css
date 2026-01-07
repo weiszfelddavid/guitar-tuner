@@ -8,8 +8,11 @@ body, html {
   font-family: sans-serif; 
 }
 
-#start-btn:hover { 
-  background: #444; 
+/* Ensure the canvas fills the screen exactly */
+#tuner-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .start-container {
@@ -30,4 +33,8 @@ body, html {
   color: white; 
   border: 1px solid #666; 
   border-radius: 4px;
+}
+
+#start-btn:hover { 
+  background: #444; 
 }
