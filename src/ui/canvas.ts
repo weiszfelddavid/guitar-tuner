@@ -8,6 +8,12 @@ export class TunerCanvas {
   private height: number;
   private needleAngle: number = 0; // Current smoothed angle in degrees
 
+  // Volume Meter State (Ballistics)
+  private displayedVolume: number = 0;
+  private peakVolume: number = 0;
+  private peakTimer: number = 0;
+  private lastFrameTime: number = 0;
+
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) throw new Error(`Canvas with id ${canvasId} not found`);
@@ -17,6 +23,8 @@ export class TunerCanvas {
     // Handle resizing
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    
+    this.lastFrameTime = performance.now();
   }
 
   private resize() {
@@ -36,6 +44,10 @@ export class TunerCanvas {
   }
 
   public render(state: TunerState, smoothedCents: number) {
+    const now = performance.now();
+    const dt = (now - this.lastFrameTime) / 1000; // Delta time in seconds
+    this.lastFrameTime = now;
+
     this.ctx.clearRect(0, 0, this.width, this.height);
     
     // Background
@@ -118,20 +130,82 @@ export class TunerCanvas {
          this.ctx.fillText("Listening...", centerX, pivotY);
     }
     
-    // Draw Input Volume Meter (Debug/Feedback)
-    // A thin bar at the very bottom
-    const volumeHeight = 10;
-    const maxVolume = 0.5; // Arbitrary scale, RMS is usually low
-    const normalizedVol = Math.min(state.volume / maxVolume, 1.0);
-    const barWidth = this.width * 0.8;
-    const barLeft = (this.width - barWidth) / 2;
+    // ---------------------------------------------------------
+    // "Input Health" Meter (Signal Quality)
+    // ---------------------------------------------------------
     
-    // Background bar
-    this.ctx.fillStyle = '#333';
-    this.ctx.fillRect(barLeft, this.height - 30, barWidth, volumeHeight);
-    
-    // Active bar
-    this.ctx.fillStyle = '#00ff00';
-    this.ctx.fillRect(barLeft, this.height - 30, barWidth * normalizedVol, volumeHeight);
+    // 1. Normalize Volume (0.0 to 1.0)
+    // RMS is typically small. We scale it up. 
+    // 0.3 RMS is treated as "Max/Clipping" for visualization.
+    const SENSITIVITY_SCALE = 0.3; 
+    const targetVolume = Math.min(state.volume / SENSITIVITY_SCALE, 1.0);
+
+    // 2. Ballistics: Instant Rise, Slow Decay
+    const DECAY_RATE = 0.5; // Units per second
+    if (targetVolume > this.displayedVolume) {
+        this.displayedVolume = targetVolume; // Instant rise
+    } else {
+        this.displayedVolume = Math.max(0, this.displayedVolume - (DECAY_RATE * dt)); // Slow decay
+    }
+
+    // 3. Peak Hold Logic
+    if (this.displayedVolume > this.peakVolume) {
+        this.peakVolume = this.displayedVolume;
+        this.peakTimer = 1.0; // Hold for 1 second
+    } else {
+        this.peakTimer -= dt;
+        if (this.peakTimer <= 0) {
+             // Drop peak slowly after hold
+             this.peakVolume = Math.max(this.displayedVolume, this.peakVolume - (DECAY_RATE * dt));
+        }
+    }
+
+    // 4. Draw The Meter
+    // Only draw if there is *some* signal history (prevent UI clutter in dead silence)
+    if (this.displayedVolume > 0.01 || this.peakVolume > 0.01) {
+        const barWidth = this.width * 0.6;
+        const barHeight = 4;
+        const barX = (this.width - barWidth) / 2;
+        const barY = this.height - 40;
+
+        // Background Track (Subtle)
+        this.ctx.fillStyle = '#333';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        // Determine Zone Color & Feedback Text
+        let zoneColor = '#666'; // Default Weak
+        let feedbackText = "";
+        
+        if (this.displayedVolume > 0.8) {
+            zoneColor = '#ff3333'; // Hot/Clip (Red)
+            feedbackText = "TOO LOUD / MOVE BACK";
+        } else if (this.displayedVolume > 0.15) {
+            zoneColor = '#00ff00'; // Good (Green)
+            feedbackText = ""; // Silence is Golden (Reward)
+        } else {
+            zoneColor = '#aaaaaa'; // Weak (Grey/White)
+            feedbackText = "MOVE CLOSER";
+        }
+
+        // Draw Active Volume Bar
+        this.ctx.fillStyle = zoneColor;
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = zoneColor;
+        this.ctx.fillRect(barX, barY, barWidth * this.displayedVolume, barHeight);
+        this.ctx.shadowBlur = 0; // Reset
+
+        // Draw Peak Marker (White Line)
+        const peakX = barX + (barWidth * this.peakVolume);
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(peakX, barY - 2, 2, barHeight + 4);
+
+        // Draw Feedback Text
+        if (feedbackText) {
+            this.ctx.font = `bold 12px sans-serif`;
+            this.ctx.fillStyle = zoneColor;
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(feedbackText, centerX, barY - 10);
+        }
+    }
   }
 }
