@@ -2,8 +2,7 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState, PluckDetector } from './ui/tuner';
-import { initDebugConsole } from './ui/debug-console';
+import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer } from './ui/tuner';
 
 // Enable on-screen debugging for mobile
 initDebugConsole();
@@ -12,6 +11,7 @@ initDebugConsole();
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
 const kalman = new KalmanFilter(0.1, 0.1); 
 const pluckDetector = new PluckDetector();
+const pitchStabilizer = new PitchStabilizer();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -135,9 +135,19 @@ async function startTuner() {
       
       if (pitch === undefined) return; // ignore unknown messages
 
+      // 1. Stabilize Pitch (Median Filter)
+      if (clarity > 0.9) {
+        pitchStabilizer.add(pitch);
+      } else {
+        pitchStabilizer.clear();
+      }
+      
+      const stablePitch = pitchStabilizer.getStablePitch();
+      if (stablePitch === 0) return; // Wait for buffer
+
       const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
       
-      const rawState = getTunerState(pitch, clarity, volume || 0);
+      const rawState = getTunerState(stablePitch, clarity, volume || 0);
 
       if (isAttacking) {
           // Heavy damping: Mix 10% new value, 90% old value (if old value exists)

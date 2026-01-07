@@ -60,4 +60,26 @@ fs.writeFileSync(
   JSON.stringify(Array.from(pluckBuffer))
 );
 
+function createTestScenario_NoisyPitch(): number[] {
+  // Simulate pitch values, not audio buffer
+  // 10 samples of stable 82.41
+  // 1 sample of OUTLIER 110.00
+  // 10 samples of stable 82.41
+  const pitches = [];
+  for(let i=0; i<30; i++) {
+      if (i === 15) {
+          pitches.push(110.00); // Random spike
+      } else {
+          pitches.push(82.41 + (Math.random() * 0.2 - 0.1)); // Tiny jitter
+      }
+  }
+  return pitches;
+}
+
+const noisyPitch = createTestScenario_NoisyPitch();
+fs.writeFileSync(
+  path.join(outDir, 'pitch_noisy.json'),
+  JSON.stringify(noisyPitch)
+);
+
 console.log('Generated test signals in tests/fixtures/');

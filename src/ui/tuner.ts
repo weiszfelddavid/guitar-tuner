@@ -136,3 +136,41 @@ export class PluckDetector {
     };
   }
 }
+
+export class PitchStabilizer {
+  private buffer: number[] = [];
+  private readonly bufferSize: number = 11;
+
+  add(pitch: number) {
+    this.buffer.push(pitch);
+    if (this.buffer.length > this.bufferSize) {
+      this.buffer.shift();
+    }
+  }
+
+  getStablePitch(): number {
+    if (this.buffer.length === 0) return 0;
+    if (this.buffer.length < 3) return this.buffer[this.buffer.length - 1];
+
+    // 1. Find Median
+    const sorted = [...this.buffer].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+
+    // 2. Filter Outliers (>50 cents away approx)
+    // Note: Frequency diff depends on pitch. 50 cents is approx 3% frequency change.
+    // Ratio for 50 cents = 2^(50/1200) ≈ 1.029
+    const validSamples = this.buffer.filter(p => {
+        const ratio = p / median;
+        return ratio > 0.97 && ratio < 1.03; 
+    });
+
+    // 3. Weighted Average (Bias towards most recent?)
+    // For now, simple average of valid samples to be smooth.
+    const sum = validSamples.reduce((a, b) => a + b, 0);
+    return sum / validSamples.length;
+  }
+  
+  clear() {
+      this.buffer = [];
+  }
+}

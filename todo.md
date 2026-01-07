@@ -8,13 +8,13 @@
   - [ ] **Testing:** Use `generate_test_signals.ts`.
     - Scenario: "Re-pluck" (Steady signal -> Loud Spike).
     - Verify pitch output changes slowly during the spike.
-- **Outlier Rejection & Stabilization:**
-  - [ ] **Implementation:** Create `PitchStabilizer` class.
+- [x] **Outlier Rejection & Stabilization:**
+  - [x] **Implementation:** Create `PitchStabilizer` class.
     - maintain ring buffer (size 11).
     - `getStablePitch()`: Calculate median.
     - Remove outliers (>50 cents from median).
     - Return weighted average of remaining "clean" samples.
-  - [ ] **Testing Infrastructure:** Create `scripts/generate_test_signals.ts`.
+  - [x] **Testing Infrastructure:** Create `scripts/generate_test_signals.ts`.
     - Generate synthetic buffers: Attack (Sharp) -> Sustain (Stable) -> Noise (Jitter).
     - Verify `PitchStabilizer` smooths noise but ignores transient spikes.
 - **String Locking:** Add "sticky" detection logic to prevent the UI from rapidly flipping between adjacent strings.
