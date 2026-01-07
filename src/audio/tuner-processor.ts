@@ -1,7 +1,8 @@
-import init, { PitchDetector } from '../../pkg/pure_tone.js';
+// import init, { PitchDetector } from '../../pkg/pure_tone.js';
+// We use dynamic import inside initWasm to avoid top-level module loading issues in AudioWorklet
 
 class TunerProcessor extends AudioWorkletProcessor {
-  private detector: PitchDetector | null = null;
+  private detector: any = null; // Type as any since we load dynamically
   private buffer: Float32Array;
   private samplesProcessed: number = 0;
   private readonly BUFFER_SIZE = 4096; // Window size for YIN
@@ -18,6 +19,12 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   async initWasm() {
     try {
+      // Dynamic import to decouple processor registration from WASM loading
+      // @ts-ignore
+      const module = await import('../../pkg/pure_tone.js');
+      const init = module.default;
+      const PitchDetector = module.PitchDetector;
+
       await init();
       // Sample rate is global in AudioWorkletGlobalScope
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
