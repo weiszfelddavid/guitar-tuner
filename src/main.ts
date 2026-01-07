@@ -48,6 +48,18 @@ async function startTuner() {
 
     const source = context.createMediaStreamSource(micStream);
     const tunerNode = await createTunerWorklet(context);
+
+    // Load WASM from main thread and pass to worklet
+    try {
+        console.log("Loading WASM from main thread...");
+        const wasmRes = await fetch('/pkg/pure_tone_bg.wasm');
+        if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.statusText}`);
+        const wasmBuffer = await wasmRes.arrayBuffer();
+        tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
+        console.log("WASM sent to worklet");
+    } catch (e) {
+        console.error("Main Thread WASM Load Error:", e);
+    }
     
     // 2. Setup UI
     // Remove start container instead of wiping body
@@ -105,7 +117,17 @@ async function startTuner() {
     
     // 3. Audio Loop
     tunerNode.port.onmessage = (event) => {
-      const { pitch, clarity, volume } = event.data;
+      const data = event.data;
+      if (data.type === 'log') {
+          console.log(data.message);
+          return;
+      }
+
+      // Backward compatibility or explicit type check
+      const { pitch, clarity, volume } = data.type === 'result' ? data : data;
+      
+      if (pitch === undefined) return; // ignore unknown messages
+
       currentState = getTunerState(pitch, clarity, volume || 0);
       
       // We only smooth valid readings.

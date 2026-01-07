@@ -1,40 +1,48 @@
-// import init, { PitchDetector } from '../../pkg/pure_tone.js';
-// We use dynamic import inside initWasm to avoid top-level module loading issues in AudioWorklet
+import init, { PitchDetector } from './pure_tone_lib.mjs';
 
 class TunerProcessor extends AudioWorkletProcessor {
-  private detector: any = null; // Type as any since we load dynamically
+  private detector: any = null; 
   private buffer: Float32Array;
   private samplesProcessed: number = 0;
-  private readonly BUFFER_SIZE = 4096; // Window size for YIN
-  private readonly UPDATE_INTERVAL = 800; // ~16.6ms at 48kHz (Target 60Hz update)
+  private readonly BUFFER_SIZE = 4096;
+  private readonly UPDATE_INTERVAL = 800;
   private initialized = false;
 
   constructor() {
     super();
     this.buffer = new Float32Array(this.BUFFER_SIZE);
     
-    // Initialize WASM
-    this.initWasm();
+    // this.port.postMessage({ type: 'log', message: '[Worklet] Constructor called' });
+    this.port.onmessage = this.handleMessage.bind(this);
   }
 
-  async initWasm() {
-    try {
-      // Dynamic import to decouple processor registration from WASM loading
-      // @ts-ignore
-      const module = await import('../../pkg/pure_tone.js');
-      const init = module.default;
-      const PitchDetector = module.PitchDetector;
+  async handleMessage(event: MessageEvent) {
+    if (event.data.type === 'load-wasm') {
+        this.port.postMessage({ type: 'log', message: '[Worklet] Received WASM bytes' });
+        await this.initWasm(event.data.wasmBytes);
+    }
+  }
 
-      await init();
-      // Sample rate is global in AudioWorkletGlobalScope
+  async initWasm(wasmBytes: ArrayBuffer) {
+    try {
+      // this.port.postMessage({ type: 'log', message: '[Worklet] initWasm started with buffer' });
+      
+      await init(wasmBytes);
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
+      this.port.postMessage({ type: 'log', message: '[Worklet] WASM initialized successfully' });
     } catch (e) {
-      console.error('Failed to initialize WASM in worklet', e);
+      this.port.postMessage({ type: 'log', message: `[Worklet] Failed to initialize WASM: ${e}` });
     }
   }
 
   process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>): boolean {
+    /*
+    if (this.samplesProcessed === 0 && Math.random() < 0.05) { 
+         this.port.postMessage({ type: 'log', message: `[Worklet] process() loop active. Input channels: ${inputs[0]?.length}` });
+    }
+    */
+
     if (!this.initialized || !this.detector) return true;
 
     const input = inputs[0];
@@ -44,19 +52,14 @@ class TunerProcessor extends AudioWorkletProcessor {
     const inputLength = channelData.length;
 
     // Sliding Window Logic
-    // 1. Shift the existing buffer to the left by the amount of new data
-    //    (Optimization: We could use a circular buffer, but copyWithin is fast for 4k elements)
     this.buffer.copyWithin(0, inputLength);
     
-    // 2. Append new data to the end
-    //    (Handle case where input is larger than buffer - rare but safe to just take last chunk)
     if (inputLength >= this.BUFFER_SIZE) {
         this.buffer.set(channelData.subarray(inputLength - this.BUFFER_SIZE));
     } else {
         this.buffer.set(channelData, this.BUFFER_SIZE - inputLength);
     }
 
-    // 3. Check if it's time to process (Throttling to ~60Hz)
     this.samplesProcessed += inputLength;
     
     if (this.samplesProcessed >= this.UPDATE_INTERVAL) {
@@ -77,14 +80,18 @@ class TunerProcessor extends AudioWorkletProcessor {
     }
     const rms = Math.sqrt(sum / this.buffer.length);
 
-    const result = this.detector.process(this.buffer);
-    
-    // Post result to main thread
-    this.port.postMessage({
-      pitch: result.pitch,
-      clarity: result.clarity,
-      volume: rms
-    });
+    try {
+        const result = this.detector.process(this.buffer);
+        // Post result to main thread
+        this.port.postMessage({
+            type: 'result',
+            pitch: result.pitch,
+            clarity: result.clarity,
+            volume: rms
+        });
+    } catch (e) {
+         this.port.postMessage({ type: 'log', message: `[Worklet] Error in processBuffer: ${e}` });
+    }
   }
 }
 
