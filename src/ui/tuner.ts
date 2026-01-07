@@ -96,26 +96,43 @@ export function getTunerState(pitch: number, clarity: number, volume: number): T
   };
 }
 
-export class TransientMasker {
-  private maskEndTime: number = 0;
-  private isMasking: boolean = false;
-  private lastVolume: number = 0;
-  private readonly threshold: number = 0.02; // Volume threshold to trigger mask
-  private readonly durationMs: number = 200; // 200ms mask
+export class PluckDetector {
+  private isAttacking: boolean = false;
+  private attackEndTime: number = 0;
+  private lastRms: number = 0;
+  private readonly dbThreshold: number = 15; // dB increase to trigger attack
+  private readonly timeWindow: number = 20;  // ms window for rise
+  private readonly attackDuration: number = 200; // ms to damp pitch
+  
+  // Convert linear amplitude to dB
+  private toDb(amp: number): number {
+    return 20 * Math.log10(Math.max(amp, 0.0001));
+  }
 
-  process(volume: number, now: number): boolean {
-    // If volume jumps significantly, it's a new pluck
-    if (volume > this.threshold && this.lastVolume < (this.threshold / 2)) {
-      this.maskEndTime = now + this.durationMs;
-      this.isMasking = true;
+  process(currentRms: number, now: number): { isAttacking: boolean; factor: number } {
+    const currentDb = this.toDb(currentRms);
+    const lastDb = this.toDb(this.lastRms);
+    const diff = currentDb - lastDb;
+
+    // Detect sharp rise
+    // Note: We are comparing frame-to-frame. 
+    // Assuming approx 60fps or audio callback rate, a 15dB jump is HUGE.
+    if (diff > this.dbThreshold && !this.isAttacking) {
+      this.isAttacking = true;
+      this.attackEndTime = now + this.attackDuration;
     }
 
-    this.lastVolume = volume;
-
-    if (this.isMasking && now > this.maskEndTime) {
-      this.isMasking = false;
+    if (this.isAttacking) {
+      if (now > this.attackEndTime) {
+        this.isAttacking = false;
+      }
     }
 
-    return this.isMasking;
+    this.lastRms = currentRms;
+
+    return { 
+      isAttacking: this.isAttacking,
+      factor: this.isAttacking ? 0.1 : 1.0 // 0.1 weight during attack (heavy damping)
+    };
   }
 }

@@ -2,7 +2,7 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState } from './ui/tuner';
+import { getTunerState, KalmanFilter, TunerState, PluckDetector } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
 
 // Enable on-screen debugging for mobile
@@ -11,7 +11,7 @@ initDebugConsole();
 // State management
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
 const kalman = new KalmanFilter(0.1, 0.1); 
-const masker = new TransientMasker();
+const pluckDetector = new PluckDetector();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -135,15 +135,31 @@ async function startTuner() {
       
       if (pitch === undefined) return; // ignore unknown messages
 
-      const isMasked = masker.process(volume || 0, performance.now());
+      const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
       
-      if (isMasked) {
-          // Keep showing previous state or searching, but don't update with jittery pitch
-          currentState.volume = volume || 0;
-          return;
-      }
+      const rawState = getTunerState(pitch, clarity, volume || 0);
 
-      currentState = getTunerState(pitch, clarity, volume || 0);
+      if (isAttacking) {
+          // Heavy damping: Mix 10% new value, 90% old value (if old value exists)
+          // Actually, 'damped' usually means we slow down the UPDATE of the cents.
+          // But getTunerState calculates a snapshot.
+          // We will apply the factor to the Kalman filter or just interpolation here.
+          
+          if (currentState.noteName !== '--') {
+             // If we already have a note, hold it or move very slowly
+             currentState.cents = currentState.cents + (rawState.cents - currentState.cents) * factor;
+             currentState.volume = rawState.volume;
+             // Don't update note name during attack if possible to avoid flickering
+          } else {
+             // If we were silent, we have to accept the new value, but maybe wait?
+             // For now, let's just accept it if we were silent.
+             currentState = rawState;
+          }
+      } else {
+          currentState = rawState;
+      }
+      
+      // We only smooth valid readings.
       
       // We only smooth valid readings.
       if (currentState.noteName !== '--') {

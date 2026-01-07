@@ -1,7 +1,7 @@
 # Pro-Guitar Tuner Roadmap (Core Stability)
 
-- [ ] **Transient Masking (Pluck Detector):**
-  - [ ] **Implementation:** Refine `TransientMasker` into `PluckDetector`.
+- [x] **Transient Masking (Pluck Detector):**
+  - [x] **Implementation:** Refine `TransientMasker` into `PluckDetector`.
     - Monitor AudioWorklet RMS volume.
     - Trigger `isAttacking` state if volume increases >15dB within 20ms.
     - During `isAttacking`: Heavily damp pitch updates (interpolate at 0.1 weight) to prevent "sharp" needle jumps.
