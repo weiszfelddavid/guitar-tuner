@@ -52,8 +52,14 @@ async function startTuner() {
     // Load WASM from main thread and pass to worklet
     try {
         console.log("Loading WASM from main thread...");
-        const wasmRes = await fetch('/pkg/pure_tone_bg.wasm');
-        if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.statusText}`);
+        const wasmRes = await fetch('/pure_tone_bg.wasm');
+        if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
+        
+        const contentType = wasmRes.headers.get('Content-Type');
+        if (contentType && !contentType.includes('wasm')) {
+            throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
+        }
+
         const wasmBuffer = await wasmRes.arrayBuffer();
         tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
         console.log("WASM sent to worklet");
