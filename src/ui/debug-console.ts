@@ -19,6 +19,31 @@ export function initDebugConsole() {
     `;
     document.body.appendChild(debugDiv);
 
+    const copyBtn = document.createElement('button');
+    copyBtn.innerText = 'Copy Logs';
+    copyBtn.style.cssText = `
+        position: fixed;
+        top: 5px;
+        right: 5px;
+        z-index: 10001;
+        padding: 5px 10px;
+        background: #333;
+        color: white;
+        border: 1px solid #666;
+        cursor: pointer;
+    `;
+    copyBtn.onclick = () => {
+        const text = debugDiv.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            copyBtn.innerText = 'Copied!';
+            setTimeout(() => copyBtn.innerText = 'Copy Logs', 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            copyBtn.innerText = 'Error';
+        });
+    };
+    document.body.appendChild(copyBtn);
+
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
