@@ -14,6 +14,14 @@ async function startTuner() {
   try {
     // 1. Setup Audio
     const context = await getAudioContext();
+    
+    // FIX: Force resume AudioContext if it's suspended (Common on Android/iOS)
+    if (context.state === 'suspended') {
+      console.log("AudioContext suspended, resuming...");
+      await context.resume();
+    }
+    console.log("AudioContext State:", context.state);
+
     const micStream = await getMicrophoneStream(context);
     const source = context.createMediaStreamSource(micStream);
     const tunerNode = await createTunerWorklet(context);
@@ -27,28 +35,21 @@ async function startTuner() {
       const { pitch, clarity, volume } = event.data;
       currentState = getTunerState(pitch, clarity, volume || 0);
       
-      // Reset filter if we lose signal or switch notes abruptly?
-      // For now, we just feed the filter.
-      // If note changes, the cents jump. The filter will smooth the jump. 
-      // This is desirable for "fluidity", but maybe too slow?
-      // Let's refine: if note changes, reset filter?
-      // Actually, if note changes, cents might wrap around or jump large values.
-      // But getTunerState handles note logic. 
-      // If we go from E to A, cents recalculates based on A.
-      
       // We only smooth valid readings.
       if (currentState.noteName !== '--') {
           smoothedCents = kalman.filter(currentState.cents);
       } else {
-          // Decay to 0 or hold?
-          // Let's reset needle to 0 slowly or just keep last known?
-          // For UX, dropping to 0 when silence is good.
+          // Decay needle to 0
           smoothedCents = kalman.filter(0);
       }
     };
 
     source.connect(tunerNode);
+    // Keep connection to destination to prevent Garbage Collection, 
+    // but typically we don't want feedback. 
+    // If TunerProcessor doesn't output audio to output buffer, this is safe.
     tunerNode.connect(context.destination); 
+ 
 
     // 4. Render Loop
     const render = () => {
