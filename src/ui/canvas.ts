@@ -39,6 +39,9 @@ export class TunerCanvas {
 
     const centerX = this.width / 2;
     const centerY = this.height / 2;
+    const radius = Math.min(this.width, this.height) * 0.4;
+    const fontSize = Math.floor(radius * 0.75);
+    const verticalOffset = radius * 0.6; // Push text up and needle down
 
     // Determine Color
     let color = '#ffffff'; // White (Searching)
@@ -53,29 +56,30 @@ export class TunerCanvas {
     }
 
     // Draw Note Name
-    this.ctx.font = 'bold 120px sans-serif';
+    this.ctx.font = `bold ${fontSize}px sans-serif`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillStyle = color;
-    this.ctx.fillText(state.noteName, centerX, centerY - 50);
+    this.ctx.fillText(state.noteName, centerX, centerY - verticalOffset);
 
     // Draw Needle (Arc Meter)
-    const radius = Math.min(this.width, this.height) * 0.4;
+    // Pivot point
+    const pivotY = centerY + verticalOffset;
     
     // Draw Scale
     this.ctx.beginPath();
     this.ctx.strokeStyle = '#444';
     this.ctx.lineWidth = 4;
     // Arc from -45 to +45 degrees
-    this.ctx.arc(centerX, centerY + 100, radius, Math.PI * 1.25, Math.PI * 1.75); 
+    this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75); 
     this.ctx.stroke();
     
     // Draw Center Marker
     this.ctx.beginPath();
     this.ctx.strokeStyle = '#666';
     this.ctx.lineWidth = 2;
-    this.ctx.moveTo(centerX, centerY + 100 - radius - 10);
-    this.ctx.lineTo(centerX, centerY + 100 - radius + 10);
+    this.ctx.moveTo(centerX, pivotY - radius - 10);
+    this.ctx.lineTo(centerX, pivotY - radius + 10);
     this.ctx.stroke();
 
     if (state.noteName !== '--') {
@@ -85,33 +89,28 @@ export class TunerCanvas {
         const angleDeg = (clampedCents / 50) * 45; 
         
         // Convert to radians for math (0 is up, -PI/2 is left)
-        // Our arc center is (centerX, centerY+100).
-        // 0 degrees is "up" (1.5 PI). 
-        // We want angle relative to vertical.
-        
         const angleRad = (angleDeg - 90) * (Math.PI / 180); 
         
         // Calculate needle tip
-        // Pivot is at centerY + 100
         const tipX = centerX + radius * Math.cos(angleRad);
-        const tipY = (centerY + 100) + radius * Math.sin(angleRad);
+        const tipY = pivotY + radius * Math.sin(angleRad);
 
         this.ctx.beginPath();
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 6;
-        this.ctx.moveTo(centerX, centerY + 100);
+        this.ctx.moveTo(centerX, pivotY);
         this.ctx.lineTo(tipX, tipY);
         this.ctx.stroke();
         
         // Text for Cents
-        this.ctx.font = '20px sans-serif';
+        this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
         this.ctx.fillStyle = '#888';
-        this.ctx.fillText(`${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)} ¢`, centerX, centerY + 150);
+        this.ctx.fillText(`${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)} ¢`, centerX, pivotY + 50);
     } else {
         // Draw "Listening" text
-         this.ctx.font = '20px sans-serif';
+         this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
          this.ctx.fillStyle = '#666';
-         this.ctx.fillText("Listening...", centerX, centerY + 100);
+         this.ctx.fillText("Listening...", centerX, pivotY);
     }
   }
 }
