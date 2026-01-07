@@ -26,5 +26,8 @@
     "vite": "^7.3.0",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.57.0"
   }
 }
