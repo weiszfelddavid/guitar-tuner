@@ -3,5 +3,4 @@ dist/
 target/
 pkg/
 Cargo.lock
-package-lock.json
 .DS_Store
