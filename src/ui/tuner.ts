@@ -16,6 +16,7 @@ export interface TunerState {
   clarity: number;
   volume: number;
   isLocked: boolean;
+  frequency: number; // Raw detected frequency in Hz
 }
 
 export type TunerMode = 'strict' | 'forgiving';
@@ -80,7 +81,7 @@ export function getTunerState(pitch: number, clarity: number, volume: number, co
   const cfg = config || getDefaultConfig('strict');
 
   if (clarity < cfg.clarityThreshold || volume < 0.01 || pitch < 60 || pitch > 500) {
-    return { noteName: '--', cents: 0, clarity, volume, isLocked: false };
+    return { noteName: '--', cents: 0, clarity, volume, isLocked: false, frequency: pitch };
   }
 
   let closestString = GUITAR_STRINGS[0];
@@ -101,7 +102,8 @@ export function getTunerState(pitch: number, clarity: number, volume: number, co
     cents: cents,
     clarity: clarity,
     volume: volume,
-    isLocked: clarity > 0.95 && Math.abs(cents) < 2
+    isLocked: clarity > 0.95 && Math.abs(cents) < 2,
+    frequency: pitch
   };
 }
 

@@ -25,6 +25,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.5,
       isLocked: false,
+      frequency: 440,
     };
     canvas.render(state, 0);
     expect(ctx.fillText).toHaveBeenCalledWith('A', expect.any(Number), expect.any(Number));
@@ -37,6 +38,7 @@ describe('TunerCanvas', () => {
       clarity: 0,
       volume: 0,
       isLocked: false,
+      frequency: 0,
     };
     canvas.render(state, 0);
     expect(ctx.fillText).toHaveBeenCalledWith('--', expect.any(Number), expect.any(Number));
@@ -49,6 +51,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.5,
       isLocked: false,
+      frequency: 82.41,
     };
     canvas.render(state, 0);
 
@@ -73,6 +76,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.5,
       isLocked: false,
+      frequency: 85,
     };
     canvas.render(state, 25);
 
@@ -99,6 +103,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.5,
       isLocked: false,
+      frequency: 80,
     };
     canvas.render(state, -25);
 
@@ -125,6 +130,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.1, // This will be scaled
       isLocked: false,
+      frequency: 440,
     };
     canvas.render(state, 0);
 
@@ -152,6 +158,7 @@ describe('TunerCanvas', () => {
       clarity: 1,
       volume: 0.5,
       isLocked: false,
+      frequency: 450,
     };
     tunerCanvas.render(state, 15);
 

@@ -33,7 +33,7 @@ function updateModeToggle() {
 }
 
 // State management
-let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
+let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
 const kalman = new KalmanFilter(getDefaultConfig(currentMode).smoothingFactor, 0.1);
 const pluckDetector = new PluckDetector();
 const pitchStabilizer = new PitchStabilizer();
@@ -223,9 +223,9 @@ async function startTuner() {
 
       // 1. Noise Gate
       const isOpen = noiseGate.process(volume || 0, clarity);
-      
+
       if (!isOpen) {
-          currentState = { noteName: '--', cents: 0, clarity, volume: volume || 0, isLocked: false };
+          currentState = { noteName: '--', cents: 0, clarity, volume: volume || 0, isLocked: false, frequency: pitch };
           smoothedCents = kalman.filter(0);
           stringLocker.reset();
           return;
@@ -300,7 +300,7 @@ async function startTuner() {
           isConnected = false;
 
           // Reset state to show no note
-          currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
+          currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
           smoothedCents = 0;
           stringLocker.reset();
           octaveDiscriminator.setLastNote(null);

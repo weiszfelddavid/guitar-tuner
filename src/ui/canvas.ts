@@ -195,11 +195,16 @@ export class TunerCanvas {
         this.ctx.strokeStyle = '#000';
         this.ctx.lineWidth = 1;
         this.ctx.stroke();
-        
+
         // Text for Cents
         this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
         this.ctx.fillStyle = '#888';
         this.ctx.fillText(`${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)} ¢`, centerX, pivotY + 50);
+
+        // Text for Frequency (Hz)
+        this.ctx.font = `${Math.floor(fontSize * 0.15)}px sans-serif`;
+        this.ctx.fillStyle = '#666';
+        this.ctx.fillText(`${state.frequency.toFixed(1)} Hz`, centerX, pivotY + 70);
     } else {
         // Draw "Listening" text
          this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;

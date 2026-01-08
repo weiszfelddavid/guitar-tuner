@@ -274,7 +274,8 @@ describe('VisualHoldManager', () => {
             cents: -5,
             clarity: 0.7,
             volume: 0.5,
-            isLocked: false
+            isLocked: false,
+            frequency: 82.41
         };
 
         // Process valid state
@@ -287,7 +288,8 @@ describe('VisualHoldManager', () => {
             cents: 0,
             clarity: 0.3,
             volume: 0.5,
-            isLocked: false
+            isLocked: false,
+            frequency: 0
         };
 
         // Within 500ms - should still show 'E'
@@ -312,7 +314,8 @@ describe('VisualHoldManager', () => {
             cents: -5,
             clarity: 0.95,
             volume: 0.5,
-            isLocked: false
+            isLocked: false,
+            frequency: 82.41
         };
 
         holdManager.process(validState, 0.5, 'strict', timestamp);
@@ -323,7 +326,8 @@ describe('VisualHoldManager', () => {
             cents: 0,
             clarity: 0.5,
             volume: 0.5,
-            isLocked: false
+            isLocked: false,
+            frequency: 0
         };
 
         const result = holdManager.process(dropoutState, 0.5, 'strict', timestamp + 100);
@@ -340,7 +344,8 @@ describe('VisualHoldManager', () => {
             cents: 2,
             clarity: 0.7,
             volume: 0.5,
-            isLocked: false
+            isLocked: false,
+            frequency: 110
         };
 
         holdManager.process(validState, 0.5, 'forgiving', timestamp);
@@ -351,7 +356,8 @@ describe('VisualHoldManager', () => {
             cents: 0,
             clarity: 0.1,
             volume: 0.005, // Below threshold
-            isLocked: false
+            isLocked: false,
+            frequency: 0
         };
 
         const result = holdManager.process(silenceState, 0.005, 'forgiving', timestamp + 100);
@@ -425,7 +431,8 @@ describe('Fixture-Based Integration Tests', () => {
                 cents: -3,
                 clarity: 0.95,
                 volume: 0.5,
-                isLocked: false
+                isLocked: false,
+                frequency: 82.41
             };
 
             strictHoldManager.process(cleanState, 0.5, 'strict', 100);
@@ -437,7 +444,8 @@ describe('Fixture-Based Integration Tests', () => {
                 cents: 0,
                 clarity: 0.3,
                 volume: 0.5, // Volume still present
-                isLocked: false
+                isLocked: false,
+                frequency: 0
             };
 
             const strictResult = strictHoldManager.process(dropoutState, 0.5, 'strict', 350);
