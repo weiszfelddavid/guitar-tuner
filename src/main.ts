@@ -3,6 +3,7 @@ import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker } from './ui/tuner';
+import { initDebugConsole } from './ui/debug-console';
 import pkg from '../package.json';
 
 // Enable on-screen debugging for mobile
