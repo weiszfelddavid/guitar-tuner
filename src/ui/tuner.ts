@@ -219,13 +219,13 @@ export class NoiseGate {
             // Adapt to noise floor. If current volume is higher than floor, 
             // update floor quickly to follow noise ramps.
             if (volume > this.noiseFloor) {
-                this.noiseFloor = (1 - 0.5) * this.noiseFloor + 0.5 * volume;
+                this.noiseFloor = (1 - 0.05) * this.noiseFloor + 0.05 * volume;
             } else {
                 this.noiseFloor = (1 - this.alpha) * this.noiseFloor + this.alpha * volume;
             }
         } else {
             // Slow decay when clarity is high
-            this.noiseFloor *= 0.999;
+            this.noiseFloor *= 0.95;
         }
 
         return currentDb > (floorDb + this.gateThresholdDb);

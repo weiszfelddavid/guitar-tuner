@@ -20,6 +20,10 @@ const noiseGate = new NoiseGate();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
+// Expose state for testing
+// @ts-ignore
+window.getTunerState = () => currentState;
+
 async function startTuner() {
   try {
     console.log("Starting Tuner...");
@@ -150,6 +154,7 @@ async function startTuner() {
 
       // 1. Noise Gate
       const isOpen = noiseGate.process(volume || 0, clarity);
+      
       if (!isOpen) {
           currentState = { noteName: '--', cents: 0, clarity, volume: volume || 0, isLocked: false };
           smoothedCents = kalman.filter(0);
