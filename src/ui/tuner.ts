@@ -275,12 +275,18 @@ export class NoiseGate {
 export class VisualHoldManager {
     private lastValidState: TunerState | null = null;
     private lastValidTime: number = 0;
-    private readonly holdDuration: number = 500; // 500ms hold
+    private readonly holdDuration: number = 4000; // 4 second hold for guitar sustain
 
-    process(currentState: TunerState, volume: number, mode: TunerMode, timestamp: number): TunerState {
+    process(currentState: TunerState, volume: number, mode: TunerMode, timestamp: number, isAttacking: boolean = false, rawPitch: number = 0): TunerState {
         // Only apply hold in forgiving mode
         if (mode !== 'forgiving') {
             return currentState;
+        }
+
+        // Reset hold on new attack (fresh pluck)
+        if (isAttacking) {
+            this.lastValidState = null;
+            this.lastValidTime = 0;
         }
 
         // If we have a valid note, store it
@@ -296,6 +302,28 @@ export class VisualHoldManager {
 
             // Hold the last valid note if within hold duration
             if (timeSinceLast < this.holdDuration) {
+                // Continue updating cents/frequency if we have valid pitch data
+                // This allows user to see pitch evolve while turning tuning peg
+                if (rawPitch > 60 && rawPitch < 500) {
+                    // Find the target frequency for the held note
+                    const targetString = GUITAR_STRINGS.find(s =>
+                        s.name.replace(/\d/, '') === this.lastValidState!.noteName
+                    );
+
+                    if (targetString) {
+                        // Calculate cents relative to the held note's target frequency
+                        const updatedCents = 1200 * Math.log2(rawPitch / targetString.freq);
+
+                        // Return held note with updated pitch tracking
+                        return {
+                            ...this.lastValidState,
+                            cents: updatedCents,
+                            frequency: rawPitch,
+                            volume: volume
+                        };
+                    }
+                }
+
                 return this.lastValidState;
             }
         }

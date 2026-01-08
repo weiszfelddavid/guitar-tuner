@@ -267,8 +267,8 @@ async function startTuner() {
           }
       }
 
-      // Apply visual hold
-      currentState = visualHoldManager.process(processedState, volume || 0, currentMode, performance.now());
+      // Apply visual hold (with attack detection and raw pitch for sustain tracking)
+      currentState = visualHoldManager.process(processedState, volume || 0, currentMode, performance.now(), isAttacking, prioritizedPitch);
 
       if (currentState.noteName !== '--') {
           smoothedCents = kalman.filter(currentState.cents);

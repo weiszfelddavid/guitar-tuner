@@ -264,7 +264,7 @@ describe('Tuner Modes', () => {
 });
 
 describe('VisualHoldManager', () => {
-    it('should hold note display for 500ms in forgiving mode when signal drops', () => {
+    it('should hold note display for 4 seconds in forgiving mode when signal drops', () => {
         const holdManager = new VisualHoldManager();
         const timestamp = 1000;
 
@@ -292,15 +292,15 @@ describe('VisualHoldManager', () => {
             frequency: 0
         };
 
-        // Within 500ms - should still show 'E'
-        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 200);
+        // Within 4 seconds - should still show 'E'
+        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 1000);
         expect(result.noteName).toBe('E');
 
-        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 400);
+        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 3000);
         expect(result.noteName).toBe('E');
 
-        // After 500ms - should drop to no note
-        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 600);
+        // After 4 seconds - should drop to no note
+        result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 4500);
         expect(result.noteName).toBe('--');
     });
 
@@ -454,13 +454,13 @@ describe('Fixture-Based Integration Tests', () => {
             // STRICT MODE: Should immediately show no note
             expect(strictResult.noteName).toBe('--');
 
-            // FORGIVING MODE: Should hold the 'E' note (within 500ms window)
+            // FORGIVING MODE: Should hold the 'E' note (within 4 second window)
             expect(forgivingResult.noteName).toBe('E');
 
-            // Phase 3: After 600ms total (500ms past the last valid note)
-            const forgivingResultLater = forgivingHoldManager.process(dropoutState, 0.5, 'forgiving', 700);
+            // Phase 3: After 4500ms total (4400ms past the last valid note)
+            const forgivingResultLater = forgivingHoldManager.process(dropoutState, 0.5, 'forgiving', 4600);
 
-            // Should now drop the note since we've exceeded the 500ms hold
+            // Should now drop the note since we've exceeded the 4 second hold
             expect(forgivingResultLater.noteName).toBe('--');
         });
     });
