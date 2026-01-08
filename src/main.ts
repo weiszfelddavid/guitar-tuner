@@ -2,7 +2,8 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer } from './ui/tuner';
+import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker } from './ui/tuner';
+import pkg from '../package.json';
 
 // Enable on-screen debugging for mobile
 initDebugConsole();
@@ -12,6 +13,7 @@ let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0
 const kalman = new KalmanFilter(0.1, 0.1); 
 const pluckDetector = new PluckDetector();
 const pitchStabilizer = new PitchStabilizer();
+const stringLocker = new StringLocker();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -87,6 +89,16 @@ async function startTuner() {
         document.body.appendChild(debugConsole); // Move to end to ensure z-index
     }
 
+    // Add version overlay if not present
+    let versionEl = document.getElementById('app-version');
+    if (!versionEl) {
+        versionEl = document.createElement('div');
+        versionEl.id = 'app-version';
+        versionEl.style.cssText = 'position:fixed;bottom:10px;right:10px;color:rgba(255,255,255,0.5);font-family:sans-serif;font-size:12px;z-index:100;';
+        versionEl.innerText = `v${pkg.version}`;
+        document.body.appendChild(versionEl);
+    }
+
     // FIX 3: Global "Wake Up" listener & UI Overlay
     const checkState = () => {
         if (context.state === 'suspended') {
@@ -149,6 +161,13 @@ async function startTuner() {
       
       const rawState = getTunerState(stablePitch, clarity, volume || 0);
 
+      // Apply String Locking (Hysteresis)
+      if (rawState.noteName !== '--') {
+          rawState.noteName = stringLocker.process(rawState.noteName);
+      } else {
+          stringLocker.reset();
+      }
+
       if (isAttacking) {
           // Heavy damping: Mix 10% new value, 90% old value (if old value exists)
           // Actually, 'damped' usually means we slow down the UPDATE of the cents.
@@ -205,6 +224,7 @@ async function startTuner() {
 document.querySelector('#app')!.innerHTML = `
   <div class="start-container">
     <h1>Pure Tone</h1>
+    <p class="version-label">v${pkg.version}</p>
     <button id="start-btn" class="start-button">
       Start Tuner
     </button>

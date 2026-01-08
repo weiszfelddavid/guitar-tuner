@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PluckDetector, PitchStabilizer } from './tuner';
+import { PluckDetector, PitchStabilizer, StringLocker, getTunerState } from './tuner';
 import fs from 'fs';
 import path from 'path';
 
@@ -103,5 +103,55 @@ describe('PluckDetector', () => {
     // It should trigger very shortly after that.
     expect(attackFrame).toBeGreaterThan(23000); 
     expect(attackFrame).toBeLessThan(25000); 
+  });
+});
+
+describe('StringLocker', () => {
+  it('should maintain lock during jittery phase', () => {
+    const fixturePath = path.resolve(__dirname, '../../tests/fixtures/pitch_jittery_boundary.json');
+    if (!fs.existsSync(fixturePath)) {
+      console.warn('Skipping fixture test: file not found.');
+      return;
+    }
+
+    const pitches = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+    // Threshold of 5 frames for testing (default is 15, but our jitter is short)
+    const locker = new StringLocker(5);
+
+    let lockedNotes: string[] = [];
+    let rawNotes: string[] = [];
+
+    for (const p of pitches) {
+      // Clarity=1, Volume=1 to ensure valid detection
+      const state = getTunerState(p, 1, 1);
+      rawNotes.push(state.noteName);
+      lockedNotes.push(locker.process(state.noteName));
+    }
+
+    // 1. Initial Phase (Frames 0-19): E2 (82.41) -> Note 'E'
+    // Should lock to 'E' immediately
+    expect(lockedNotes[10]).toBe('E');
+
+    // 2. Jitter Phase (Frames 20-49): Alternating 95Hz (E) and 98Hz (A)
+    // Raw notes should flip
+    const jitterSlice = rawNotes.slice(20, 50);
+    const hasE = jitterSlice.includes('E');
+    const hasA = jitterSlice.includes('A');
+    expect(hasE && hasA).toBe(true); // Verify raw input is indeed jittery
+
+    // Locked notes should STAY 'E' because 'A' never sustains for > 5 frames
+    // The jitter is alternating every frame (or every few frames). 
+    // In generated signal: i % 2 === 0 ? 95 : 98. It flips EVERY frame.
+    // So counter never exceeds 1.
+    const lockedJitterSlice = lockedNotes.slice(20, 50);
+    const uniqueLocked = new Set(lockedJitterSlice);
+    expect(uniqueLocked.size).toBe(1);
+    expect(uniqueLocked.has('E')).toBe(true);
+
+    // 3. Final Phase (Frames 50-69): A2 (110) -> Note 'A'
+    // After 5 frames (threshold), it should switch.
+    // Index 50 is A. Index 51 is A...
+    // Index 50 + 6 = 56 should be A.
+    expect(lockedNotes[60]).toBe('A');
   });
 });

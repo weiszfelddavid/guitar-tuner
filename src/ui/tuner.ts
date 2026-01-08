@@ -5,20 +5,6 @@ const GUITAR_STRINGS = [
   { name: 'E2', freq: 82.41 },
   { name: 'A2', freq: 110.00 },
   { name: 'D3', freq: 146.83 },
-  { name: 'G3', freq: 170.00 }, // Note: Spec said 170-220, but G3 is 196.00 Hz usually. 
-  // Wait, let's check spec table:
-  // G3 | 170.00 | 170 - 220 
-  // 196Hz is standard G3. The table listing 170.00 seems to be a "Window Start" or error in the spec's "Frequency" column?
-  // Actually, standard G3 is 196.00. 170 is closer to E3/F3.
-  // I will assume standard tuning G3 = 196.00Hz, but the window 170-220 covers it.
-  // Let's use 196.00 for target, but keep window logic if we were implementing strict windows.
-  // Actually, for "closest string" logic, we just need center frequencies.
-  // Correcting G3 to 196.00 based on standard guitar tuning, assuming typo in spec table for "Frequency" column but correct Window.
-  // Spec Table: G3 | 170.00. That is strange. 
-  // Let's re-read carefully: "G3 | 170.00 | 170 - 220". 
-  // Maybe it means the note G3 starts at 170? No, 196 is G3.
-  // I will USE STANDARD 196.00 for G3 to be correct, as "Reference-grade" requires accuracy.
-  
   { name: 'G3', freq: 196.00 }, 
   { name: 'B3', freq: 246.94 },
   { name: 'E4', freq: 329.63 }
@@ -172,5 +158,52 @@ export class PitchStabilizer {
   
   clear() {
       this.buffer = [];
+  }
+}
+
+export class StringLocker {
+  private currentString: string | null = null;
+  private lastCandidate: string | null = null;
+  private hysteresisCounter: number = 0;
+  private readonly hysteresisThreshold: number;
+
+  constructor(thresholdFrames: number = 15) {
+    this.hysteresisThreshold = thresholdFrames;
+  }
+
+  process(detectedString: string): string {
+    if (!this.currentString) {
+      this.currentString = detectedString;
+      return detectedString;
+    }
+
+    if (detectedString === this.currentString) {
+      this.hysteresisCounter = 0;
+      this.lastCandidate = null;
+      return this.currentString;
+    }
+
+    // Detected string is different
+    if (detectedString === this.lastCandidate) {
+      this.hysteresisCounter++;
+    } else {
+      this.lastCandidate = detectedString;
+      this.hysteresisCounter = 1;
+    }
+
+    // If consistent for threshold, switch
+    if (this.hysteresisCounter > this.hysteresisThreshold) {
+      this.currentString = detectedString;
+      this.hysteresisCounter = 0;
+      this.lastCandidate = null;
+    }
+
+    return this.currentString;
+  }
+  
+  reset() {
+      this.currentString = null;
+      this.lastCandidate = null;
+      this.hysteresisCounter = 0;
   }
 }

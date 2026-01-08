@@ -2,14 +2,14 @@
 
 ## 1. String Locking (Sticky Logic)
 **Goal:** Prevent flickering between notes (e.g., oscillating between "A" and "A#" if slightly sharp).
-- [ ] **Implementation:** Create `StringLocker` class in `src/ui/tuner.ts`.
+- [x] **Implementation:** Create `StringLocker` class in `src/ui/tuner.ts`.
   - Maintain a `currentString` state and a `hysteresisCounter`.
   - **Logic:**
     - If a new string is detected, do *not* switch immediately.
     - Increment `hysteresisCounter`.
     - Only switch `currentString` if the new string is detected consistently for **300ms** (approx 15-20 frames).
     - If the pitch returns to the `currentString` range within that time, reset the counter.
-- [ ] **Testing:** Update `scripts/generate_test_signals.ts` and `src/ui/tuner.test.ts`.
+- [x] **Testing:** Update `scripts/generate_test_signals.ts` and `src/ui/tuner.test.ts`.
   - **Fixture:** `pitch_jittery_boundary.json`: Signal that oscillates +/- 5 cents around the boundary between E2 (82.4Hz) and F2 (87.3Hz).
   - **Test:** Verify that the `StringLocker` reports "E2" consistently despite the boundary crossings, and only switches to "F2" after a sustained period.
 

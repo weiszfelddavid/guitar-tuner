@@ -82,4 +82,33 @@ fs.writeFileSync(
   JSON.stringify(noisyPitch)
 );
 
+function createTestScenario_JitteryBoundary(): number[] {
+  // Boundary between E2 (82.41) and A2 (110.00) is ~96.2 Hz
+  // 1. Start locked to E2
+  // 2. Jitter around boundary (96.2) for a while (should NOT switch to A2 immediately)
+  // 3. Move clearly to A2 (should switch)
+  
+  const pitches: number[] = [];
+  
+  // 20 frames of E2
+  for (let i = 0; i < 20; i++) pitches.push(82.41);
+  
+  // 30 frames of jitter around 96.2 (Boundary)
+  // 95 is E2, 98 is A2
+  for (let i = 0; i < 30; i++) {
+    pitches.push(i % 2 === 0 ? 95.0 : 98.0);
+  }
+  
+  // 20 frames of A2
+  for (let i = 0; i < 20; i++) pitches.push(110.00);
+  
+  return pitches;
+}
+
+const jitteryPitch = createTestScenario_JitteryBoundary();
+fs.writeFileSync(
+  path.join(outDir, 'pitch_jittery_boundary.json'),
+  JSON.stringify(jitteryPitch)
+);
+
 console.log('Generated test signals in tests/fixtures/');
