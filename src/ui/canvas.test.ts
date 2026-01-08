@@ -1,4 +1,7 @@
+import { createCanvas } from 'canvas';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
 import { TunerCanvas } from './canvas';
 import { TunerState } from './tuner';
 
@@ -112,5 +115,41 @@ describe('TunerCanvas', () => {
     const volumeBarCall = fillRectCalls[fillRectCalls.length - 2];
     
     expect(volumeBarCall[2]).toBeCloseTo(barWidth * expectedVolume); // Check the width
+  });
+
+  it('should match the visual snapshot for a given state', () => {
+    const snapshotCanvas = createCanvas(1024, 768);
+    (snapshotCanvas as any).style = {}; // Mock the style property
+    const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockReturnValue(snapshotCanvas as any);
+
+    const tunerCanvas = new TunerCanvas('tuner');
+    
+    const state: TunerState = {
+      noteName: 'A',
+      cents: 15,
+      clarity: 1,
+      volume: 0.5,
+      isLocked: false,
+    };
+    tunerCanvas.render(state, 15);
+
+    const image = snapshotCanvas.toBuffer('image/png');
+    
+    const snapshotDir = path.resolve(__dirname, '__snapshots__');
+    if (!fs.existsSync(snapshotDir)) {
+      fs.mkdirSync(snapshotDir);
+    }
+    
+    const snapshotPath = path.resolve(snapshotDir, 'tuner-canvas-snapshot.png');
+    
+    if (!fs.existsSync(snapshotPath)) {
+      fs.writeFileSync(snapshotPath, image);
+      throw new Error('✨ Snapshot created. Please review the image and run the test again.');
+    } else {
+      const snapshot = fs.readFileSync(snapshotPath);
+      expect(image).toEqual(snapshot);
+    }
+
+    getElementByIdSpy.mockRestore();
   });
 });
