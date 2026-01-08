@@ -57,7 +57,9 @@ export class TunerCanvas {
     const centerX = this.width / 2;
     const centerY = this.height / 2;
     const radius = Math.min(this.width, this.height) * 0.4;
-    const fontSize = Math.floor(radius * 0.75);
+
+    // Clamp font size to prevent excessive scaling on desktop
+    const fontSize = Math.min(Math.floor(radius * 0.75), 80);
     const verticalOffset = radius * 0.6; // Push text up and needle down
 
     // Determine Color
@@ -72,20 +74,25 @@ export class TunerCanvas {
         }
     }
 
-    // Draw Note Name
+    // Draw Note Name - positioned well above the needle arc
     this.ctx.font = `bold ${fontSize}px sans-serif`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillStyle = color;
-    this.ctx.fillText(state.noteName, centerX, centerY - verticalOffset);
+    // Move note name higher to avoid overlap with arc
+    const noteNameY = centerY - verticalOffset - fontSize * 0.35;
+    this.ctx.fillText(state.noteName, centerX, noteNameY);
 
     // Draw String Indicator (if standard guitar string detected)
     if (state.noteName !== '--') {
       const stringInfo = getStringInfo(state.noteName);
       if (stringInfo) {
-        this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
+        const stringInfoFontSize = Math.floor(fontSize * 0.25);
+        this.ctx.font = `${stringInfoFontSize}px sans-serif`;
         this.ctx.fillStyle = '#888';
-        this.ctx.fillText(`${stringInfo.stringNumber}th String (${stringInfo.stringName})`, centerX, centerY - verticalOffset + fontSize * 0.6);
+        // Position string info below note name but above the arc
+        const stringInfoY = noteNameY + fontSize * 0.5 + stringInfoFontSize * 0.5;
+        this.ctx.fillText(`${stringInfo.stringNumber}th String (${stringInfo.stringName})`, centerX, stringInfoY);
       }
     }
 
@@ -144,7 +151,8 @@ export class TunerCanvas {
             const labelX = centerX + labelRadius * Math.cos(angleRad);
             const labelY = pivotY + labelRadius * Math.sin(angleRad);
 
-            this.ctx.font = `${Math.floor(fontSize * 0.12)}px sans-serif`;
+            const labelFontSize = Math.min(Math.floor(fontSize * 0.12), 14);
+            this.ctx.font = `${labelFontSize}px sans-serif`;
             this.ctx.fillStyle = isCenter ? '#00ff00' : '#888';
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
@@ -220,19 +228,22 @@ export class TunerCanvas {
         this.ctx.stroke();
 
         // Text for Cents
-        this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
+        const centsFontSize = Math.min(Math.floor(fontSize * 0.2), 18);
+        this.ctx.font = `${centsFontSize}px sans-serif`;
         this.ctx.fillStyle = '#888';
         this.ctx.fillText(`${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)} ¢`, centerX, pivotY + 50);
 
         // Text for Frequency (Hz)
-        this.ctx.font = `${Math.floor(fontSize * 0.15)}px sans-serif`;
+        const hzFontSize = Math.min(Math.floor(fontSize * 0.15), 14);
+        this.ctx.font = `${hzFontSize}px sans-serif`;
         this.ctx.fillStyle = '#666';
         this.ctx.fillText(`${state.frequency.toFixed(1)} Hz`, centerX, pivotY + 70);
     } else {
         // Draw "Listening" text
-         this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
-         this.ctx.fillStyle = '#666';
-         this.ctx.fillText("Listening...", centerX, pivotY);
+        const listeningFontSize = Math.min(Math.floor(fontSize * 0.2), 18);
+        this.ctx.font = `${listeningFontSize}px sans-serif`;
+        this.ctx.fillStyle = '#666';
+        this.ctx.fillText("Listening...", centerX, pivotY);
     }
     
     // ---------------------------------------------------------
