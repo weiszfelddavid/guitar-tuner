@@ -2,21 +2,45 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate } from './ui/tuner';
+import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate, VisualHoldManager, TunerMode, getDefaultConfig } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
 import pkg from '../package.json';
 
 // Enable on-screen debugging for mobile
 initDebugConsole();
 
+// Mode management with local storage
+const STORAGE_KEY = 'tuner-mode';
+let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY) as TunerMode) || 'strict';
+
+function setMode(mode: TunerMode) {
+    currentMode = mode;
+    localStorage.setItem(STORAGE_KEY, mode);
+
+    // Update Kalman filter smoothing based on mode
+    const config = getDefaultConfig(mode);
+    kalman.setProcessNoise(config.smoothingFactor);
+
+    // Update UI toggle
+    updateModeToggle();
+}
+
+function updateModeToggle() {
+    const modeLabel = document.getElementById('mode-label');
+    if (modeLabel) {
+        modeLabel.textContent = currentMode === 'strict' ? 'Pro' : 'Easy';
+    }
+}
+
 // State management
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
-const kalman = new KalmanFilter(0.1, 0.1); 
+const kalman = new KalmanFilter(getDefaultConfig(currentMode).smoothingFactor, 0.1);
 const pluckDetector = new PluckDetector();
 const pitchStabilizer = new PitchStabilizer();
 const stringLocker = new StringLocker();
 const octaveDiscriminator = new OctaveDiscriminator();
 const noiseGate = new NoiseGate();
+const visualHoldManager = new VisualHoldManager();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -106,6 +130,23 @@ async function startTuner() {
         document.body.appendChild(versionEl);
     }
 
+    // Add mode toggle if not present
+    let modeToggle = document.getElementById('mode-toggle');
+    if (!modeToggle) {
+        modeToggle = document.createElement('div');
+        modeToggle.id = 'mode-toggle';
+        modeToggle.innerHTML = `
+            <span class="mode-prefix">Mode:</span>
+            <span id="mode-label">${currentMode === 'strict' ? 'Pro' : 'Easy'}</span>
+        `;
+        document.body.appendChild(modeToggle);
+
+        // Toggle between modes on click
+        modeToggle.addEventListener('click', () => {
+            setMode(currentMode === 'strict' ? 'forgiving' : 'strict');
+        });
+    }
+
     // FIX 3: Global "Wake Up" listener & UI Overlay
     const checkState = () => {
         if (context.state === 'suspended') {
@@ -175,9 +216,10 @@ async function startTuner() {
       // 3. Octave Priority
       const prioritizedPitch = octaveDiscriminator.process(stablePitch, clarity);
 
-      // 4. State Calculation
+      // 4. State Calculation (with mode configuration)
       const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
-      const rawState = getTunerState(prioritizedPitch, clarity, volume || 0);
+      const config = getDefaultConfig(currentMode);
+      const rawState = getTunerState(prioritizedPitch, clarity, volume || 0, config);
 
       // 5. String Locking
       if (rawState.noteName !== '--') {
@@ -188,17 +230,18 @@ async function startTuner() {
           octaveDiscriminator.setLastNote(null);
       }
 
+      // 6. Apply visual hold for forgiving mode
+      let processedState = rawState;
       if (isAttacking) {
           if (currentState.noteName !== '--') {
-             currentState.cents = currentState.cents + (rawState.cents - currentState.cents) * factor;
-             currentState.volume = rawState.volume;
-          } else {
-             currentState = rawState;
+             processedState.cents = currentState.cents + (rawState.cents - currentState.cents) * factor;
+             processedState.volume = rawState.volume;
           }
-      } else {
-          currentState = rawState;
       }
-      
+
+      // Apply visual hold
+      currentState = visualHoldManager.process(processedState, volume || 0, currentMode, performance.now());
+
       if (currentState.noteName !== '--') {
           smoothedCents = kalman.filter(currentState.cents);
       } else {

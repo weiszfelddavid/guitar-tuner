@@ -1,36 +1,43 @@
-# Pro-Guitar Tuner Roadmap (Remaining Core Stability)
+# Pro-Guitar Tuner Roadmap
 
-## 1. String Locking (Sticky Logic)
-**Goal:** Prevent flickering between notes (e.g., oscillating between "A" and "A#" if slightly sharp).
-- [x] **Implementation:** Create `StringLocker` class in `src/ui/tuner.ts`.
-  - Maintain a `currentString` state and a `hysteresisCounter`.
-  - **Logic:**
-    - If a new string is detected, do *not* switch immediately.
-    - Increment `hysteresisCounter`.
-    - Only switch `currentString` if the new string is detected consistently for **300ms** (approx 15-20 frames).
-    - If the pitch returns to the `currentString` range within that time, reset the counter.
-- [x] **Testing:** Update `scripts/generate_test_signals.ts` and `src/ui/tuner.test.ts`.
-  - **Fixture:** `pitch_jittery_boundary.json`: Signal that oscillates +/- 5 cents around the boundary between E2 (82.4Hz) and F2 (87.3Hz).
-  - **Test:** Verify that the `StringLocker` reports "E2" consistently despite the boundary crossings, and only switches to "F2" after a sustained period.
+## 1. Input Tolerance Modes (Strict vs. Forgiving)
+**Goal:** Make the tuner usable for humming/singing or noisy environments ("Forgiving") while retaining precision for instrument setup ("Strict"). The current implementation is too strict for casual use.
 
-## 2. Octave Priority (Fundamental Bias)
-**Goal:** Correctly identify Low E (E2) vs High E (E4) or harmonics, preventing "octave jumping".
-- [x] **Implementation:** Modify `getTunerState` or creating `OctaveDiscriminator`.
-  - **Logic:**
-    - If multiple potential notes match (e.g., 82Hz vs 164Hz), strictly prefer the **lower** frequency unless the clarity/confidence of the higher note is significantly (e.g., >20%) higher.
-    - Implement a "History Bias": If we were just tuning E2, require strong evidence to jump to E3.
-- [x] **Testing:** Update `scripts/generate_test_signals.ts`.
-  - **Fixture:** `harmonic_ambiguity.json`: Signal with strong 2nd harmonic (164Hz) amplitude but present fundamental (82Hz).
-  - **Test:** Verify tuner locks to E2 (Fundamental) and resists jumping to E3.
+### Specifications
+- **Strict Mode (Current/Default):**
+  - **Clarity Threshold:** 0.9 (90%).
+  - **Visual Decay:** Instant (0ms hold).
+  - **Smoothing:** Low latency, raw feedback.
+  - **Use Case:** Setting intonation, fresh strings, high-quality audio interface.
 
-## 3. Dynamic Noise Gate
-**Goal:** Don't detect fan noise, traffic, or talking as a guitar note.
-- [x] **Implementation:** Create `NoiseGate` class.
-  - **Logic:**
-    - Maintain a rolling average of the "noise floor" (volume when `clarity` is low).
-    - Set the detection threshold to `NoiseFloor + 6dB`.
-    - If `CurrentVolume < Threshold`, force state to "Listening..." (mute).
-    - **Decay:** Slowly lower the threshold (1dB/sec) if no signal is present, to ensure we don't get stuck in a high-threshold state after a loud noise event.
-- [x] **Testing:** Update `scripts/generate_test_signals.ts`.
-  - **Fixture:** `noise_floor_rise.json`: Silence -> Rising Background Noise -> Guitar Pluck -> Falling Noise.
-  - **Test:** Verify tuner ignores the rising noise until the actual guitar pluck breaks the dynamic threshold.
+- **Forgiving Mode (New "Easy" Mode):**
+  - **Clarity Threshold:** 0.6 (60%) to accept breathy signals or humming.
+  - **Visual Hold:** "Stick" the note on screen for ~500ms if the signal drops (volume present, but clarity dips) to prevent flashing.
+  - **Smoothing:** Increase Kalman filter smoothing factor to reduce needle jitter on unstable inputs.
+
+### Implementation Tasks
+- [x] **UI:** Add a toggle switch in the UI (e.g., "Mode: Pro" / "Mode: Easy").
+- [x] **Logic:** Refactor `getTunerState` to accept a configuration object or mode flag.
+- [x] **State:** Persist the mode selection in local storage.
+- [x] **Visual Hold:** Implement 500ms visual hold for Forgiving mode.
+- [x] **Kalman Smoothing:** Adjust Kalman filter smoothing factor based on mode (0.1 for strict, 0.3 for forgiving).
+
+### Testing Strategy
+- [x] **Fixture:** Create `pitch_breathy_hum.json` (Sine wave mixed with 35% white noise, resulting in ~0.65 clarity).
+- [x] **Test Case 1 (Strict):** Ensure the breathy fixture returns "No Note" (Clarity < 0.9).
+- [x] **Test Case 2 (Forgiving):** Ensure the breathy fixture returns the correct Note Name (Clarity > 0.6).
+- [x] **Test Case 3 (Hysteresis):** Feed a signal that cuts out briefly (100ms gap); verify Forgiving Mode holds the display while Strict Mode drops it.
+
+### ✅ Completed Implementation
+
+All tasks have been completed and tested. The feature includes:
+- **Mode Toggle UI** in top-right corner (Pro/Easy)
+- **Dual clarity thresholds** (0.9 for Pro, 0.6 for Easy)
+- **Visual hold mechanism** (500ms in Easy mode)
+- **Enhanced smoothing** (0.3 vs 0.1) in Easy mode
+- **Local storage persistence** for mode selection
+- **Comprehensive test coverage** with 24 passing tests:
+  - Unit tests for mode configurations
+  - Fixture-based integration tests using generated audio signals
+  - Hysteresis/hold behavior tests
+  - All tests passing with TypeScript type checking

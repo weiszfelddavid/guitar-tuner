@@ -158,8 +158,56 @@ function createTestScenario_NoiseFloorRise(): Float32Array {
 
 const noiseRiseBuffer = createTestScenario_NoiseFloorRise();
 fs.writeFileSync(
-  path.join(outDir, 'noise_floor_rise.json'), 
+  path.join(outDir, 'noise_floor_rise.json'),
   JSON.stringify(Array.from(noiseRiseBuffer))
+);
+
+function createTestScenario_BreathyHum(): Float32Array {
+  // Create a breathy/humming signal by mixing sine wave with 35% white noise
+  // Target clarity: ~0.65 (between strict 0.9 and forgiving 0.6)
+  const buffer = new Float32Array(SAMPLE_RATE * 1); // 1 second
+  const freq = 110.00; // A2
+  const sineAmp = 0.5;
+  const noiseAmp = 0.35; // 35% noise to achieve ~0.65 clarity
+
+  for (let i = 0; i < buffer.length; i++) {
+    const t = i / SAMPLE_RATE;
+    const sine = sineAmp * Math.sin(2 * Math.PI * freq * t);
+    const noise = (Math.random() * 2 - 1) * noiseAmp;
+    buffer[i] = sine + noise;
+  }
+  return buffer;
+}
+
+const breathyBuffer = createTestScenario_BreathyHum();
+fs.writeFileSync(
+  path.join(outDir, 'pitch_breathy_hum.json'),
+  JSON.stringify(Array.from(breathyBuffer))
+);
+
+function createTestScenario_SignalDropout(): Float32Array {
+  // Signal that cuts out briefly (100ms gap) to test hysteresis
+  const buffer = new Float32Array(SAMPLE_RATE * 1); // 1 second
+  const freq = 82.41; // E2
+
+  for (let i = 0; i < buffer.length; i++) {
+    const t = i / SAMPLE_RATE;
+    // 0-0.3s: Clean signal
+    // 0.3-0.4s: Gap (100ms dropout)
+    // 0.4-1.0s: Clean signal resumes
+    if (t >= 0.3 && t < 0.4) {
+      buffer[i] = 0; // Dropout
+    } else {
+      buffer[i] = 0.5 * Math.sin(2 * Math.PI * freq * t);
+    }
+  }
+  return buffer;
+}
+
+const dropoutBuffer = createTestScenario_SignalDropout();
+fs.writeFileSync(
+  path.join(outDir, 'signal_dropout.json'),
+  JSON.stringify(Array.from(dropoutBuffer))
 );
 
 console.log('Generated test signals in tests/fixtures/');

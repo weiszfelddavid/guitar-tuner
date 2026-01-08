@@ -18,12 +18,20 @@ export interface TunerState {
   isLocked: boolean;
 }
 
+export type TunerMode = 'strict' | 'forgiving';
+
+export interface TunerConfig {
+  mode: TunerMode;
+  clarityThreshold: number;
+  smoothingFactor: number;
+}
+
 export class KalmanFilter {
-  private x: number = 0; 
-  private p: number = 1; 
-  private q: number;     
-  private r: number;     
-  private k: number = 0; 
+  private x: number = 0;
+  private p: number = 1;
+  private q: number;
+  private r: number;
+  private k: number = 0;
 
   constructor(processNoise: number = 0.1, measurementNoise: number = 0.1) {
     this.q = processNoise;
@@ -37,15 +45,41 @@ export class KalmanFilter {
     this.p = (1 - this.k) * this.p;
     return this.x;
   }
-  
+
   reset(value: number) {
       this.x = value;
       this.p = 1;
   }
+
+  setProcessNoise(processNoise: number) {
+      this.q = processNoise;
+  }
+
+  setMeasurementNoise(measurementNoise: number) {
+      this.r = measurementNoise;
+  }
 }
 
-export function getTunerState(pitch: number, clarity: number, volume: number): TunerState {
-  if (clarity < 0.9 || volume < 0.01 || pitch < 60 || pitch > 500) {
+export function getDefaultConfig(mode: TunerMode): TunerConfig {
+  if (mode === 'strict') {
+    return {
+      mode: 'strict',
+      clarityThreshold: 0.9,
+      smoothingFactor: 0.1
+    };
+  } else {
+    return {
+      mode: 'forgiving',
+      clarityThreshold: 0.6,
+      smoothingFactor: 0.3
+    };
+  }
+}
+
+export function getTunerState(pitch: number, clarity: number, volume: number, config?: TunerConfig): TunerState {
+  const cfg = config || getDefaultConfig('strict');
+
+  if (clarity < cfg.clarityThreshold || volume < 0.01 || pitch < 60 || pitch > 500) {
     return { noteName: '--', cents: 0, clarity, volume, isLocked: false };
   }
 
@@ -207,8 +241,8 @@ export class OctaveDiscriminator {
 }
 
 export class NoiseGate {
-    private noiseFloor: number = 0.0001; 
-    private readonly alpha: number = 0.1; 
+    private noiseFloor: number = 0.0001;
+    private readonly alpha: number = 0.1;
     private readonly gateThresholdDb: number = 6;
 
     process(volume: number, clarity: number): boolean {
@@ -216,7 +250,7 @@ export class NoiseGate {
         const floorDb = 20 * Math.log10(Math.max(this.noiseFloor, 0.00001));
 
         if (clarity < 0.8) {
-            // Adapt to noise floor. If current volume is higher than floor, 
+            // Adapt to noise floor. If current volume is higher than floor,
             // update floor quickly to follow noise ramps.
             if (volume > this.noiseFloor) {
                 this.noiseFloor = (1 - 0.05) * this.noiseFloor + 0.05 * volume;
@@ -230,8 +264,46 @@ export class NoiseGate {
 
         return currentDb > (floorDb + this.gateThresholdDb);
     }
-    
+
     getThreshold(): number {
         return this.noiseFloor * Math.pow(10, this.gateThresholdDb / 20);
+    }
+}
+
+export class VisualHoldManager {
+    private lastValidState: TunerState | null = null;
+    private lastValidTime: number = 0;
+    private readonly holdDuration: number = 500; // 500ms hold
+
+    process(currentState: TunerState, volume: number, mode: TunerMode, timestamp: number): TunerState {
+        // Only apply hold in forgiving mode
+        if (mode !== 'forgiving') {
+            return currentState;
+        }
+
+        // If we have a valid note, store it
+        if (currentState.noteName !== '--') {
+            this.lastValidState = currentState;
+            this.lastValidTime = timestamp;
+            return currentState;
+        }
+
+        // If signal drops but we have recent valid state and volume is still present
+        if (this.lastValidState && volume > 0.01) {
+            const timeSinceLast = timestamp - this.lastValidTime;
+
+            // Hold the last valid note if within hold duration
+            if (timeSinceLast < this.holdDuration) {
+                return this.lastValidState;
+            }
+        }
+
+        // Otherwise, return the current state (no note)
+        return currentState;
+    }
+
+    reset() {
+        this.lastValidState = null;
+        this.lastValidTime = 0;
     }
 }
