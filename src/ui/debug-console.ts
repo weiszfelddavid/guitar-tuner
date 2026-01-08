@@ -1,4 +1,8 @@
 export function initDebugConsole() {
+    // Storage key for debug console visibility preference
+    const STORAGE_KEY = 'debug-console-visible';
+    const isVisible = localStorage.getItem(STORAGE_KEY) === 'true';
+
     const debugDiv = document.createElement('div');
     debugDiv.id = 'debug-console';
     debugDiv.style.cssText = `
@@ -7,15 +11,18 @@ export function initDebugConsole() {
         left: 0;
         width: 100%;
         height: 30%; /* Take top 30% */
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.9);
         color: #0f0;
         font-family: monospace;
         font-size: 12px;
-        overflow-y: scroll;
+        overflow-y: auto;
         z-index: 10000;
-        pointer-events: none; /* Let touches pass through */
+        pointer-events: auto;
         white-space: pre-wrap;
         padding: 5px;
+        padding-bottom: 35px; /* Space for buttons */
+        display: ${isVisible ? 'block' : 'none'};
+        transition: opacity 0.2s;
     `;
     document.body.appendChild(debugDiv);
 
@@ -23,7 +30,7 @@ export function initDebugConsole() {
     copyBtn.innerText = 'Copy Logs';
     copyBtn.style.cssText = `
         position: fixed;
-        top: 5px;
+        bottom: 5px;
         right: 5px;
         z-index: 10001;
         padding: 5px 10px;
@@ -31,6 +38,9 @@ export function initDebugConsole() {
         color: white;
         border: 1px solid #666;
         cursor: pointer;
+        border-radius: 4px;
+        font-size: 11px;
+        display: ${isVisible ? 'block' : 'none'};
     `;
     copyBtn.onclick = () => {
         const text = debugDiv.innerText;
@@ -43,6 +53,39 @@ export function initDebugConsole() {
         });
     };
     document.body.appendChild(copyBtn);
+
+    // Clear logs button
+    const clearBtn = document.createElement('button');
+    clearBtn.innerText = 'Clear';
+    clearBtn.style.cssText = `
+        position: fixed;
+        bottom: 5px;
+        right: 90px;
+        z-index: 10001;
+        padding: 5px 10px;
+        background: #333;
+        color: white;
+        border: 1px solid #666;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 11px;
+        display: ${isVisible ? 'block' : 'none'};
+    `;
+    clearBtn.onclick = () => {
+        debugDiv.innerHTML = '';
+        console.log('Debug console cleared');
+    };
+    document.body.appendChild(clearBtn);
+
+    // Toggle function exposed globally
+    (window as any).toggleDebugConsole = () => {
+        const isCurrentlyVisible = debugDiv.style.display !== 'none';
+        debugDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
+        copyBtn.style.display = isCurrentlyVisible ? 'none' : 'block';
+        clearBtn.style.display = isCurrentlyVisible ? 'none' : 'block';
+        localStorage.setItem(STORAGE_KEY, String(!isCurrentlyVisible));
+        return !isCurrentlyVisible;
+    };
 
     const originalLog = console.log;
     const originalError = console.error;

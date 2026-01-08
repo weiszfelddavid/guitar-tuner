@@ -147,6 +147,34 @@ async function startTuner() {
         });
     }
 
+    // Add debug console toggle button next to mode toggle
+    let debugToggle = document.getElementById('debug-toggle');
+    if (!debugToggle) {
+        debugToggle = document.createElement('div');
+        debugToggle.id = 'debug-toggle';
+        debugToggle.innerHTML = `
+            <span class="mode-prefix">Logs:</span>
+            <span id="debug-label">Hidden</span>
+        `;
+        document.body.appendChild(debugToggle);
+
+        // Toggle debug console on click
+        debugToggle.addEventListener('click', () => {
+            const isVisible = (window as any).toggleDebugConsole();
+            const label = document.getElementById('debug-label');
+            if (label) {
+                label.textContent = isVisible ? 'Visible' : 'Hidden';
+            }
+        });
+
+        // Set initial label state
+        const isDebugVisible = localStorage.getItem('debug-console-visible') === 'true';
+        const label = document.getElementById('debug-label');
+        if (label) {
+            label.textContent = isDebugVisible ? 'Visible' : 'Hidden';
+        }
+    }
+
     // FIX 3: Global "Wake Up" listener & UI Overlay
     const checkState = () => {
         if (context.state === 'suspended') {
