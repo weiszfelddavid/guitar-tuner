@@ -111,4 +111,55 @@ fs.writeFileSync(
   JSON.stringify(jitteryPitch)
 );
 
+function createTestScenario_HarmonicAmbiguity(): Float32Array {
+  const buffer = new Float32Array(SAMPLE_RATE * 1); // 1 second
+  const f0 = 82.41; // E2
+  const f1 = 164.82; // E3 (2nd harmonic)
+  
+  for (let i = 0; i < buffer.length; i++) {
+    const t = i / SAMPLE_RATE;
+    // Mix fundamental and strong 2nd harmonic
+    // Fundamental: 0.3 amplitude
+    // 2nd Harmonic: 0.6 amplitude (Stronger!)
+    buffer[i] = 0.3 * Math.sin(2 * Math.PI * f0 * t) + 
+                0.6 * Math.sin(2 * Math.PI * f1 * t);
+  }
+  return buffer;
+}
+
+const harmonicBuffer = createTestScenario_HarmonicAmbiguity();
+fs.writeFileSync(
+  path.join(outDir, 'harmonic_ambiguity.json'),
+  JSON.stringify(Array.from(harmonicBuffer))
+);
+
+function createTestScenario_NoiseFloorRise(): Float32Array {
+  const buffer = new Float32Array(SAMPLE_RATE * 3); // 3 seconds
+  
+  for (let i = 0; i < buffer.length; i++) {
+    const t = i / SAMPLE_RATE;
+    if (t < 1.0) {
+      // 0-1s: Rising Noise (0.001 to 0.05)
+      const amp = 0.001 + (t * 0.049);
+      buffer[i] = (Math.random() * 2 - 1) * amp;
+    } else if (t < 1.5) {
+      // 1.0-1.5s: Just Noise at 0.05
+      buffer[i] = (Math.random() * 2 - 1) * 0.05;
+    } else if (t < 1.7) {
+      // 1.5-1.7s: Pluck (82.41Hz, 0.2 Amp)
+      buffer[i] = 0.2 * Math.sin(2 * Math.PI * 82.41 * t);
+    } else {
+      // 1.7-3.0s: Silence
+      buffer[i] = 0;
+    }
+  }
+  return buffer;
+}
+
+const noiseRiseBuffer = createTestScenario_NoiseFloorRise();
+fs.writeFileSync(
+  path.join(outDir, 'noise_floor_rise.json'), 
+  JSON.stringify(Array.from(noiseRiseBuffer))
+);
+
 console.log('Generated test signals in tests/fixtures/');

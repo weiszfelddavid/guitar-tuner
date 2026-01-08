@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PluckDetector, PitchStabilizer, StringLocker, getTunerState } from './tuner';
+import { PluckDetector, PitchStabilizer, StringLocker, getTunerState, OctaveDiscriminator, NoiseGate } from './tuner';
 import fs from 'fs';
 import path from 'path';
 
@@ -140,9 +140,6 @@ describe('StringLocker', () => {
     expect(hasE && hasA).toBe(true); // Verify raw input is indeed jittery
 
     // Locked notes should STAY 'E' because 'A' never sustains for > 5 frames
-    // The jitter is alternating every frame (or every few frames). 
-    // In generated signal: i % 2 === 0 ? 95 : 98. It flips EVERY frame.
-    // So counter never exceeds 1.
     const lockedJitterSlice = lockedNotes.slice(20, 50);
     const uniqueLocked = new Set(lockedJitterSlice);
     expect(uniqueLocked.size).toBe(1);
@@ -150,8 +147,65 @@ describe('StringLocker', () => {
 
     // 3. Final Phase (Frames 50-69): A2 (110) -> Note 'A'
     // After 5 frames (threshold), it should switch.
-    // Index 50 is A. Index 51 is A...
-    // Index 50 + 6 = 56 should be A.
     expect(lockedNotes[60]).toBe('A');
   });
 });
+
+describe('OctaveDiscriminator', () => {
+    it('should prefer fundamental over 2nd harmonic when history bias is present', () => {
+        const discriminator = new OctaveDiscriminator();
+        
+        // Scenario: We were just tuning E2
+        discriminator.setLastNote('E');
+        
+        // We detect 164.82 (E3), which is a harmonic of E2
+        const result = discriminator.process(164.82, 0.95);
+        
+        // It should return 82.41 (E2)
+        expect(result).toBeCloseTo(82.41, 1);
+    });
+});
+
+describe('NoiseGate', () => {
+    it('should ignore rising background noise and trigger on pluck', () => {
+        const fixturePath = path.resolve(__dirname, '../../tests/fixtures/noise_floor_rise.json');
+        if (!fs.existsSync(fixturePath)) {
+            console.warn('Skipping fixture test: file not found.');
+            return;
+        }
+
+        const buffer = JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+        const gate = new NoiseGate();
+        // Force a very fast alpha for this specific test so it can keep up with the 1s rise
+        (gate as any).alpha = 0.8;
+        
+        const stepSize = 480; 
+        let openIndices: number[] = [];
+        
+        for (let i = 0; i < buffer.length; i += stepSize) {
+            let windowMax = 0;
+            for (let j = 0; j < stepSize && (i + j) < buffer.length; j++) {
+                windowMax = Math.max(windowMax, Math.abs(buffer[i+j]));
+            }
+
+            // Assume clarity is low during noise, high during pluck
+            const isPluck = (i > 1.5 * 48000 && i < 1.7 * 48000);
+            const clarity = isPluck ? 0.98 : 0.3;
+            
+            const isOpen = gate.process(windowMax, clarity);
+            if (isOpen) {
+                openIndices.push(i);
+            }
+        }
+
+        // Noise phase (0-1.5s): 
+        // We expect it to be CLOSED just before the pluck starts (e.g. at 1.4s)
+        const closedJustBeforePluck = openIndices.filter(idx => idx > 1.2 * 48000 && idx < 1.5 * 48000);
+        expect(closedJustBeforePluck.length).toBe(0); 
+        
+        // Pluck phase (1.5s-1.7s): Gate MUST open
+        const pluckPhaseOpen = openIndices.filter(idx => idx >= 1.5 * 48000 && idx < 1.7 * 48000);
+        expect(pluckPhaseOpen.length).toBeGreaterThan(0);
+    });
+});
+

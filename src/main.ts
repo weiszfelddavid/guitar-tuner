@@ -1,8 +1,8 @@
 import './style.css';
-import { getAudioContext, getMicrophoneStream } from './audio/setup';
+import { getTunerContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker } from './ui/tuner';
+import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
 import pkg from '../package.json';
 
@@ -15,6 +15,8 @@ const kalman = new KalmanFilter(0.1, 0.1);
 const pluckDetector = new PluckDetector();
 const pitchStabilizer = new PitchStabilizer();
 const stringLocker = new StringLocker();
+const octaveDiscriminator = new OctaveDiscriminator();
+const noiseGate = new NoiseGate();
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -143,12 +145,19 @@ async function startTuner() {
           return;
       }
 
-      // Backward compatibility or explicit type check
       const { pitch, clarity, volume } = data.type === 'result' ? data : data;
-      
-      if (pitch === undefined) return; // ignore unknown messages
+      if (pitch === undefined) return;
 
-      // 1. Stabilize Pitch (Median Filter)
+      // 1. Noise Gate
+      const isOpen = noiseGate.process(volume || 0, clarity);
+      if (!isOpen) {
+          currentState = { noteName: '--', cents: 0, clarity, volume: volume || 0, isLocked: false };
+          smoothedCents = kalman.filter(0);
+          stringLocker.reset();
+          return;
+      }
+
+      // 2. Stabilize Pitch
       if (clarity > 0.9) {
         pitchStabilizer.add(pitch);
       } else {
@@ -156,54 +165,43 @@ async function startTuner() {
       }
       
       const stablePitch = pitchStabilizer.getStablePitch();
-      if (stablePitch === 0) return; // Wait for buffer
+      if (stablePitch === 0) return;
 
+      // 3. Octave Priority
+      const prioritizedPitch = octaveDiscriminator.process(stablePitch, clarity);
+
+      // 4. State Calculation
       const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
-      
-      const rawState = getTunerState(stablePitch, clarity, volume || 0);
+      const rawState = getTunerState(prioritizedPitch, clarity, volume || 0);
 
-      // Apply String Locking (Hysteresis)
+      // 5. String Locking
       if (rawState.noteName !== '--') {
           rawState.noteName = stringLocker.process(rawState.noteName);
+          octaveDiscriminator.setLastNote(rawState.noteName);
       } else {
           stringLocker.reset();
+          octaveDiscriminator.setLastNote(null);
       }
 
       if (isAttacking) {
-          // Heavy damping: Mix 10% new value, 90% old value (if old value exists)
-          // Actually, 'damped' usually means we slow down the UPDATE of the cents.
-          // But getTunerState calculates a snapshot.
-          // We will apply the factor to the Kalman filter or just interpolation here.
-          
           if (currentState.noteName !== '--') {
-             // If we already have a note, hold it or move very slowly
              currentState.cents = currentState.cents + (rawState.cents - currentState.cents) * factor;
              currentState.volume = rawState.volume;
-             // Don't update note name during attack if possible to avoid flickering
           } else {
-             // If we were silent, we have to accept the new value, but maybe wait?
-             // For now, let's just accept it if we were silent.
              currentState = rawState;
           }
       } else {
           currentState = rawState;
       }
       
-      // We only smooth valid readings.
-      
-      // We only smooth valid readings.
       if (currentState.noteName !== '--') {
           smoothedCents = kalman.filter(currentState.cents);
       } else {
-          // Decay needle to 0
           smoothedCents = kalman.filter(0);
       }
     };
 
     source.connect(tunerNode);
-    // Keep connection to destination to prevent Garbage Collection, 
-    // but typically we don't want feedback. 
-    // If TunerProcessor doesn't output audio to output buffer, this is safe.
     tunerNode.connect(context.destination); 
  
 
@@ -220,6 +218,7 @@ async function startTuner() {
     document.body.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Error: ${e}</div>`;
   }
 }
+
 
 // Initial UI
 document.querySelector('#app')!.innerHTML = `
