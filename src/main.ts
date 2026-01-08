@@ -259,7 +259,47 @@ async function startTuner() {
       requestAnimationFrame(render);
     };
     render();
-    
+
+    // 5. Handle Page Visibility (pause mic when tab is hidden)
+    let isConnected = true;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Tab went to background - disconnect microphone to save battery
+        console.log('Tab hidden - disconnecting microphone');
+        if (isConnected) {
+          source.disconnect();
+          isConnected = false;
+
+          // Reset state to show no note
+          currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false };
+          smoothedCents = 0;
+          stringLocker.reset();
+          octaveDiscriminator.setLastNote(null);
+          visualHoldManager.reset();
+          pitchStabilizer.clear();
+        }
+
+        // Suspend audio context to save resources
+        if (context.state === 'running') {
+          context.suspend();
+        }
+      } else {
+        // Tab came to foreground - reconnect microphone
+        console.log('Tab visible - reconnecting microphone');
+        if (!isConnected) {
+          // Resume audio context first
+          context.resume().then(() => {
+            source.connect(tunerNode);
+            isConnected = true;
+            console.log('Microphone reconnected');
+          }).catch(err => {
+            console.error('Failed to resume audio context:', err);
+          });
+        }
+      }
+    });
+
     console.log("Tuner started!");
   } catch (e) {
     console.error("Failed to start tuner:", e);
