@@ -4,8 +4,8 @@ import { TunerState } from './tuner';
 export class TunerCanvas {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private width: number;
-  private height: number;
+  private width: number = 0;
+  private height: number = 0;
   private needleAngle: number = 0; // Current smoothed angle in degrees
 
   // Volume Meter State (Ballistics)

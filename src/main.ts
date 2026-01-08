@@ -1,5 +1,5 @@
 import './style.css';
-import { getTunerContext, getMicrophoneStream } from './audio/setup';
+import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate } from './ui/tuner';

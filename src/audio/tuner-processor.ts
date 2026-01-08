@@ -1,5 +1,7 @@
+// @ts-ignore
 import init, { PitchDetector } from './pure_tone_lib.mjs';
 
+// @ts-ignore
 class TunerProcessor extends AudioWorkletProcessor {
   private detector: any = null; 
   private buffer: Float32Array;
@@ -13,11 +15,13 @@ class TunerProcessor extends AudioWorkletProcessor {
     this.buffer = new Float32Array(this.BUFFER_SIZE);
     
     // this.port.postMessage({ type: 'log', message: '[Worklet] Constructor called' });
+    // @ts-ignore
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
   async handleMessage(event: MessageEvent) {
     if (event.data.type === 'load-wasm') {
+        // @ts-ignore
         this.port.postMessage({ type: 'log', message: '[Worklet] Received WASM bytes' });
         await this.initWasm(event.data.wasmBytes);
     }
@@ -28,10 +32,13 @@ class TunerProcessor extends AudioWorkletProcessor {
       // this.port.postMessage({ type: 'log', message: '[Worklet] initWasm started with buffer' });
       
       await init(wasmBytes);
+      // @ts-ignore
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
+      // @ts-ignore
       this.port.postMessage({ type: 'log', message: '[Worklet] WASM initialized successfully' });
     } catch (e) {
+      // @ts-ignore
       this.port.postMessage({ type: 'log', message: `[Worklet] Failed to initialize WASM: ${e}` });
     }
   }
@@ -83,6 +90,7 @@ class TunerProcessor extends AudioWorkletProcessor {
     try {
         const result = this.detector.process(this.buffer);
         // Post result to main thread
+        // @ts-ignore
         this.port.postMessage({
             type: 'result',
             pitch: result.pitch,
@@ -90,9 +98,11 @@ class TunerProcessor extends AudioWorkletProcessor {
             volume: rms
         });
     } catch (e) {
+        // @ts-ignore
          this.port.postMessage({ type: 'log', message: `[Worklet] Error in processBuffer: ${e}` });
     }
   }
 }
 
+// @ts-ignore
 registerProcessor('tuner-processor', TunerProcessor);
