@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -17,5 +18,9 @@ export default defineConfig({
     format: 'es',
     plugins: () => [
     ]
-  }
+  },
+  test: {
+    setupFiles: ['./tests/setup.ts'],
+    environment: 'jsdom', // or 'happy-dom'
+  },
 });

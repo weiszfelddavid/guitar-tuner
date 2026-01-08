@@ -24,11 +24,14 @@
   "devDependencies": {
     "@types/node": "^25.0.3",
     "@types/web": "^0.0.312",
+    "canvas": "^3.2.0",
+    "jsdom": "^27.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vitest-canvas-mock": "^1.1.3"
   },
   "dependencies": {
     "@playwright/test": "^1.57.0"
