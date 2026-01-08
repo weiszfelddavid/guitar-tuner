@@ -128,26 +128,26 @@ describe('StringLocker', () => {
       lockedNotes.push(locker.process(state.noteName));
     }
 
-    // 1. Initial Phase (Frames 0-19): E2 (82.41) -> Note 'E'
-    // Should lock to 'E' immediately
-    expect(lockedNotes[10]).toBe('E');
+    // 1. Initial Phase (Frames 0-19): E2 (82.41) -> Note 'E2'
+    // Should lock to 'E2' immediately
+    expect(lockedNotes[10]).toBe('E2');
 
-    // 2. Jitter Phase (Frames 20-49): Alternating 95Hz (E) and 98Hz (A)
+    // 2. Jitter Phase (Frames 20-49): Alternating 95Hz (E2) and 98Hz (A2)
     // Raw notes should flip
     const jitterSlice = rawNotes.slice(20, 50);
-    const hasE = jitterSlice.includes('E');
-    const hasA = jitterSlice.includes('A');
+    const hasE = jitterSlice.includes('E2');
+    const hasA = jitterSlice.includes('A2');
     expect(hasE && hasA).toBe(true); // Verify raw input is indeed jittery
 
-    // Locked notes should STAY 'E' because 'A' never sustains for > 5 frames
+    // Locked notes should STAY 'E2' because 'A2' never sustains for > 5 frames
     const lockedJitterSlice = lockedNotes.slice(20, 50);
     const uniqueLocked = new Set(lockedJitterSlice);
     expect(uniqueLocked.size).toBe(1);
-    expect(uniqueLocked.has('E')).toBe(true);
+    expect(uniqueLocked.has('E2')).toBe(true);
 
-    // 3. Final Phase (Frames 50-69): A2 (110) -> Note 'A'
+    // 3. Final Phase (Frames 50-69): A2 (110) -> Note 'A2'
     // After 5 frames (threshold), it should switch.
-    expect(lockedNotes[60]).toBe('A');
+    expect(lockedNotes[60]).toBe('A2');
   });
 });
 
@@ -156,7 +156,7 @@ describe('OctaveDiscriminator', () => {
         const discriminator = new OctaveDiscriminator();
         
         // Scenario: We were just tuning E2
-        discriminator.setLastNote('E');
+        discriminator.setLastNote('E2');
         
         // We detect 164.82 (E3), which is a harmonic of E2
         const result = discriminator.process(164.82, 0.95);
@@ -232,7 +232,7 @@ describe('Tuner Modes', () => {
             const state = getTunerState(pitch, clarity, volume, strictConfig);
 
             // Strict mode should accept this
-            expect(state.noteName).toBe('A');
+            expect(state.noteName).toBe('A2');
         });
     });
 
@@ -246,7 +246,7 @@ describe('Tuner Modes', () => {
             const state = getTunerState(pitch, clarity, volume, forgivingConfig);
 
             // Forgiving mode should accept this (clarity >= 0.6)
-            expect(state.noteName).toBe('A');
+            expect(state.noteName).toBe('A2');
         });
 
         it('should reject very poor signal with clarity < 0.6', () => {
@@ -270,7 +270,7 @@ describe('VisualHoldManager', () => {
 
         // Valid note detected
         const validState = {
-            noteName: 'E',
+            noteName: 'E2',
             cents: -5,
             clarity: 0.7,
             volume: 0.5,
@@ -280,7 +280,7 @@ describe('VisualHoldManager', () => {
 
         // Process valid state
         let result = holdManager.process(validState, 0.5, 'forgiving', timestamp);
-        expect(result.noteName).toBe('E');
+        expect(result.noteName).toBe('E2');
 
         // Signal drops (no note) but volume still present - should hold
         const dropoutState = {
@@ -294,10 +294,10 @@ describe('VisualHoldManager', () => {
 
         // Within 4 seconds - should still show 'E'
         result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 1000);
-        expect(result.noteName).toBe('E');
+        expect(result.noteName).toBe('E2');
 
         result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 3000);
-        expect(result.noteName).toBe('E');
+        expect(result.noteName).toBe('E2');
 
         // After 4 seconds - should drop to no note
         result = holdManager.process(dropoutState, 0.5, 'forgiving', timestamp + 4500);
@@ -404,7 +404,7 @@ describe('Fixture-Based Integration Tests', () => {
             const state = getTunerState(expectedPitch, expectedClarity, volume, forgivingConfig);
 
             // Forgiving mode (0.6 threshold) should accept this
-            expect(state.noteName).toBe('A');
+            expect(state.noteName).toBe('A2');
             expect(state.clarity).toBe(expectedClarity);
         });
     });
@@ -427,7 +427,7 @@ describe('Fixture-Based Integration Tests', () => {
 
             // Phase 1: Clean signal detected
             const cleanState = {
-                noteName: 'E',
+                noteName: 'E2',
                 cents: -3,
                 clarity: 0.95,
                 volume: 0.5,
@@ -454,8 +454,8 @@ describe('Fixture-Based Integration Tests', () => {
             // STRICT MODE: Should immediately show no note
             expect(strictResult.noteName).toBe('--');
 
-            // FORGIVING MODE: Should hold the 'E' note (within 4 second window)
-            expect(forgivingResult.noteName).toBe('E');
+            // FORGIVING MODE: Should hold the 'E2' note (within 4 second window)
+            expect(forgivingResult.noteName).toBe('E2');
 
             // Phase 3: After 4500ms total (4400ms past the last valid note)
             const forgivingResultLater = forgivingHoldManager.process(dropoutState, 0.5, 'forgiving', 4600);

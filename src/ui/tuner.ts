@@ -2,13 +2,22 @@
 
 // Standard E Guitar Tuning Frequencies
 const GUITAR_STRINGS = [
-  { name: 'E2', freq: 82.41 },
-  { name: 'A2', freq: 110.00 },
-  { name: 'D3', freq: 146.83 },
-  { name: 'G3', freq: 196.00 }, 
-  { name: 'B3', freq: 246.94 },
-  { name: 'E4', freq: 329.63 }
+  { name: 'E2', freq: 82.41, stringNumber: 6, stringName: 'Low E' },
+  { name: 'A2', freq: 110.00, stringNumber: 5, stringName: 'A' },
+  { name: 'D3', freq: 146.83, stringNumber: 4, stringName: 'D' },
+  { name: 'G3', freq: 196.00, stringNumber: 3, stringName: 'G' },
+  { name: 'B3', freq: 246.94, stringNumber: 2, stringName: 'B' },
+  { name: 'E4', freq: 329.63, stringNumber: 1, stringName: 'High E' }
 ];
+
+// Helper function to get string info from note name
+export function getStringInfo(noteName: string): { stringNumber: number; stringName: string } | null {
+  const stringData = GUITAR_STRINGS.find(s => s.name === noteName);
+  if (stringData) {
+    return { stringNumber: stringData.stringNumber, stringName: stringData.stringName };
+  }
+  return null;
+}
 
 export interface TunerState {
   noteName: string;
@@ -98,7 +107,7 @@ export function getTunerState(pitch: number, clarity: number, volume: number, co
   const cents = 1200 * Math.log2(pitch / closestString.freq);
 
   return {
-    noteName: closestString.name.replace(/\d/, ''),
+    noteName: closestString.name, // Keep full name with octave (e.g., E2, A2, D3)
     cents: cents,
     clarity: clarity,
     volume: volume,
@@ -228,7 +237,7 @@ export class OctaveDiscriminator {
         const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.freq)) < 100);
 
         if (isString(fundamental)) {
-            if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.freq)) < 100)?.name.replace(/\d/, '')) {
+            if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.freq)) < 100)?.name) {
                 return fundamental;
             }
             if (clarity < 0.98) return fundamental;
@@ -307,7 +316,7 @@ export class VisualHoldManager {
                 if (rawPitch > 60 && rawPitch < 500) {
                     // Find the target frequency for the held note
                     const targetString = GUITAR_STRINGS.find(s =>
-                        s.name.replace(/\d/, '') === this.lastValidState!.noteName
+                        s.name === this.lastValidState!.noteName
                     );
 
                     if (targetString) {

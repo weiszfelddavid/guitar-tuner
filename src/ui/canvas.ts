@@ -1,5 +1,5 @@
 // src/ui/canvas.ts
-import { TunerState } from './tuner';
+import { TunerState, getStringInfo } from './tuner';
 
 export class TunerCanvas {
   private canvas: HTMLCanvasElement;
@@ -79,6 +79,16 @@ export class TunerCanvas {
     this.ctx.fillStyle = color;
     this.ctx.fillText(state.noteName, centerX, centerY - verticalOffset);
 
+    // Draw String Indicator (if standard guitar string detected)
+    if (state.noteName !== '--') {
+      const stringInfo = getStringInfo(state.noteName);
+      if (stringInfo) {
+        this.ctx.font = `${Math.floor(fontSize * 0.2)}px sans-serif`;
+        this.ctx.fillStyle = '#888';
+        this.ctx.fillText(`${stringInfo.stringNumber}th String (${stringInfo.stringName})`, centerX, centerY - verticalOffset + fontSize * 0.6);
+      }
+    }
+
     // Draw Needle (Arc Meter)
     // Pivot point
     const pivotY = centerY + verticalOffset;
@@ -127,6 +137,19 @@ export class TunerCanvas {
         this.ctx.moveTo(startX, startY);
         this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
+
+        // Draw numerical labels for major tick marks (±50, ±25, 0)
+        if (Math.abs(cents) === 50 || Math.abs(cents) === 25 || cents === 0) {
+            const labelRadius = radius + tickLength + 15;
+            const labelX = centerX + labelRadius * Math.cos(angleRad);
+            const labelY = pivotY + labelRadius * Math.sin(angleRad);
+
+            this.ctx.font = `${Math.floor(fontSize * 0.12)}px sans-serif`;
+            this.ctx.fillStyle = isCenter ? '#00ff00' : '#888';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(cents > 0 ? `+${cents}` : `${cents}`, labelX, labelY);
+        }
     });
 
     if (state.noteName !== '--') {
