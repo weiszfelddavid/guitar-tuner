@@ -1,12 +1,13 @@
 {
   "name": "guitar-tuner",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "wasm-pack build --target web && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "pre-flight": "./scripts/pre-flight.sh"
   },
   "repository": {
     "type": "git",
