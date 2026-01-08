@@ -5,7 +5,7 @@
 
 ### Info Display
 - [x] **Frequency (Hz) Readout:** Display the exact detected frequency (e.g., "110.2 Hz") alongside the note name and cents. This is critical for intonation work.
-- [ ] **String Number:** Display the detected string number (e.g., "5th String") to help beginners confirm they are tuning the correct peg.
+- [x] **String Number:** Display the detected string number (e.g., "5th String") to help beginners confirm they are tuning the correct peg.
 
 ## 2. Essential Tuner Functionality
 **Goal:** Add standard features expected in a guitar tuner application.
