@@ -62,10 +62,10 @@ async function startTuner() {
       await context.resume();
     }
     
-    const micStream = await getMicrophoneStream(context);
-    
+    let micStream = await getMicrophoneStream(context);
+
     // Log active settings to debug "Silence" issue
-    const track = micStream.getAudioTracks()[0];
+    let track = micStream.getAudioTracks()[0];
     if (track) {
         console.log("Mic Label:", track.label);
         console.log("Mic Settings:", JSON.stringify(track.getSettings(), null, 2));
@@ -80,7 +80,7 @@ async function startTuner() {
       await context.resume();
     }
 
-    const source = context.createMediaStreamSource(micStream);
+    let source = context.createMediaStreamSource(micStream);
     const tunerNode = await createTunerWorklet(context);
 
     // Load WASM from main thread and pass to worklet
@@ -288,16 +288,24 @@ async function startTuner() {
     };
     render();
 
-    // 5. Handle Page Visibility (pause mic when tab is hidden)
+    // 5. Handle Page Visibility (fully release mic when tab is hidden)
     let isConnected = true;
 
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener('visibilitychange', async () => {
       if (document.hidden) {
-        // Tab went to background - disconnect microphone to save battery
-        console.log('Tab hidden - disconnecting microphone');
+        // Tab went to background - FULLY RELEASE microphone
+        console.log('Tab hidden - releasing microphone');
         if (isConnected) {
+          // Disconnect from audio processing
           source.disconnect();
           isConnected = false;
+
+          // CRITICAL: Stop all tracks to fully release microphone back to OS
+          // This allows other apps (dictation, calls, etc.) to use the mic
+          micStream.getTracks().forEach(track => {
+            console.log('Stopping mic track:', track.label);
+            track.stop();
+          });
 
           // Reset state to show no note
           currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
@@ -313,17 +321,31 @@ async function startTuner() {
           context.suspend();
         }
       } else {
-        // Tab came to foreground - reconnect microphone
-        console.log('Tab visible - reconnecting microphone');
+        // Tab came to foreground - request fresh microphone access
+        console.log('Tab visible - requesting fresh microphone access');
         if (!isConnected) {
-          // Resume audio context first
-          context.resume().then(() => {
+          try {
+            // Resume audio context first
+            await context.resume();
+
+            // Request fresh microphone stream
+            micStream = await getMicrophoneStream(context);
+            console.log('Fresh microphone stream acquired');
+
+            // Create new source node with fresh stream
+            source = context.createMediaStreamSource(micStream);
+
+            // Connect to tuner
             source.connect(tunerNode);
             isConnected = true;
             console.log('Microphone reconnected');
-          }).catch(err => {
-            console.error('Failed to resume audio context:', err);
-          });
+          } catch (err) {
+            console.error('Failed to resume microphone:', err);
+            // Show user-friendly error if permission denied
+            if (err instanceof DOMException && err.name === 'NotAllowedError') {
+              alert('Microphone permission denied. Please allow microphone access to use the tuner.');
+            }
+          }
         }
       }
     });
