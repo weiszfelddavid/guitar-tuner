@@ -304,13 +304,13 @@ describe('VisualHoldManager', () => {
         expect(result.noteName).toBe('--');
     });
 
-    it('should NOT hold in strict mode', () => {
+    it('should hold briefly in strict mode (anti-flicker)', () => {
         const holdManager = new VisualHoldManager();
         const timestamp = 1000;
 
         // Valid note detected
         const validState = {
-            noteName: 'E',
+            noteName: 'E2',
             cents: -5,
             clarity: 0.95,
             volume: 0.5,
@@ -320,7 +320,7 @@ describe('VisualHoldManager', () => {
 
         holdManager.process(validState, 0.5, 'strict', timestamp);
 
-        // Signal drops - in strict mode, should immediately show no note
+        // Signal drops - in strict mode, should hold briefly to prevent flicker
         const dropoutState = {
             noteName: '--',
             cents: 0,
@@ -330,8 +330,13 @@ describe('VisualHoldManager', () => {
             frequency: 0
         };
 
-        const result = holdManager.process(dropoutState, 0.5, 'strict', timestamp + 100);
-        expect(result.noteName).toBe('--'); // No hold in strict mode
+        // Within 400ms hold window - should still show the note
+        const result1 = holdManager.process(dropoutState, 0.5, 'strict', timestamp + 300);
+        expect(result1.noteName).toBe('E2');
+
+        // After 400ms hold window - should drop to no note
+        const result2 = holdManager.process(dropoutState, 0.5, 'strict', timestamp + 500);
+        expect(result2.noteName).toBe('--');
     });
 
     it('should release hold if volume drops completely', () => {
@@ -451,8 +456,12 @@ describe('Fixture-Based Integration Tests', () => {
             const strictResult = strictHoldManager.process(dropoutState, 0.5, 'strict', 350);
             const forgivingResult = forgivingHoldManager.process(dropoutState, 0.5, 'forgiving', 350);
 
-            // STRICT MODE: Should immediately show no note
-            expect(strictResult.noteName).toBe('--');
+            // STRICT MODE: Should hold briefly (250ms < 400ms window) to prevent flicker
+            expect(strictResult.noteName).toBe('E2');
+
+            // But after 400ms, strict mode should drop
+            const strictResultLater = strictHoldManager.process(dropoutState, 0.5, 'strict', 600);
+            expect(strictResultLater.noteName).toBe('--');
 
             // FORGIVING MODE: Should hold the 'E2' note (within 4 second window)
             expect(forgivingResult.noteName).toBe('E2');

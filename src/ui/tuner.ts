@@ -284,13 +284,12 @@ export class NoiseGate {
 export class VisualHoldManager {
     private lastValidState: TunerState | null = null;
     private lastValidTime: number = 0;
-    private readonly holdDuration: number = 4000; // 4 second hold for guitar sustain
+    private readonly forgivingHoldDuration: number = 4000; // 4 second hold for guitar sustain (forgiving mode)
+    private readonly strictHoldDuration: number = 400; // 400ms anti-flicker hold (strict mode)
 
     process(currentState: TunerState, volume: number, mode: TunerMode, timestamp: number, isAttacking: boolean = false, rawPitch: number = 0): TunerState {
-        // Only apply hold in forgiving mode
-        if (mode !== 'forgiving') {
-            return currentState;
-        }
+        // Determine hold duration based on mode
+        const holdDuration = mode === 'forgiving' ? this.forgivingHoldDuration : this.strictHoldDuration;
 
         // Reset hold on new attack (fresh pluck)
         if (isAttacking) {
@@ -310,7 +309,7 @@ export class VisualHoldManager {
             const timeSinceLast = timestamp - this.lastValidTime;
 
             // Hold the last valid note if within hold duration
-            if (timeSinceLast < this.holdDuration) {
+            if (timeSinceLast < holdDuration) {
                 // Continue updating cents/frequency if we have valid pitch data
                 // This allows user to see pitch evolve while turning tuning peg
                 if (rawPitch > 60 && rawPitch < 500) {
