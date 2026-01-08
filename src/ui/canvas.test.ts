@@ -53,15 +53,17 @@ describe('TunerCanvas', () => {
     canvas.render(state, 0);
 
     // For 0 cents, the angle is -90 degrees (pointing straight up).
-    // The line should be from the pivot to a point directly above it.
+    // The tapered needle should have its tip at (centerX, pivotY - radius)
     const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const centerX = (canvas as any).width / 2;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
-    
-    // We expect lineTo(centerX, pivotY - radius)
-    const lineToCall = (ctx.lineTo as any).mock.calls[1];
-    expect(lineToCall[0]).toBeCloseTo(centerX);
-    expect(lineToCall[1]).toBeCloseTo(pivotY - radius);
+
+    // Check that the needle tip coordinates appear in lineTo calls
+    // The needle triangle uses lineTo for the tip point
+    const lineToCallsWithTip = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
+      return Math.abs(call[0] - centerX) < 1 && Math.abs(call[1] - (pivotY - radius)) < 1;
+    });
+    expect(lineToCallsWithTip.length).toBeGreaterThan(0);
   });
 
   it('should draw the needle to the right for positive cents', () => {
@@ -76,8 +78,18 @@ describe('TunerCanvas', () => {
 
     // For +25 cents, the angle is > -90 degrees. The x coordinate should be > centerX.
     const centerX = (canvas as any).width / 2;
-    const lineToCall = (ctx.lineTo as any).mock.calls[1];
-    expect(lineToCall[0]).toBeGreaterThan(centerX);
+    const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
+
+    // Find lineTo calls that are near the arc radius (needle tip)
+    const needleTipCalls = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
+      const distFromPivot = Math.sqrt(Math.pow(call[0] - centerX, 2) + Math.pow(call[1] - pivotY, 2));
+      return Math.abs(distFromPivot - radius) < 10; // Within 10px of radius
+    });
+
+    // Check that at least one needle tip is to the right of center
+    const hasRightwardNeedle = needleTipCalls.some((call: number[]) => call[0] > centerX);
+    expect(hasRightwardNeedle).toBe(true);
   });
 
   it('should draw the needle to the left for negative cents', () => {
@@ -92,8 +104,18 @@ describe('TunerCanvas', () => {
 
     // For -25 cents, the angle is < -90 degrees. The x coordinate should be < centerX.
     const centerX = (canvas as any).width / 2;
-    const lineToCall = (ctx.lineTo as any).mock.calls[1];
-    expect(lineToCall[0]).toBeLessThan(centerX);
+    const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
+
+    // Find lineTo calls that are near the arc radius (needle tip)
+    const needleTipCalls = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
+      const distFromPivot = Math.sqrt(Math.pow(call[0] - centerX, 2) + Math.pow(call[1] - pivotY, 2));
+      return Math.abs(distFromPivot - radius) < 10; // Within 10px of radius
+    });
+
+    // Check that at least one needle tip is to the left of center
+    const hasLeftwardNeedle = needleTipCalls.some((call: number[]) => call[0] < centerX);
+    expect(hasLeftwardNeedle).toBe(true);
   });
 
   it('should render the volume meter correctly', () => {

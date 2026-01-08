@@ -83,40 +83,117 @@ export class TunerCanvas {
     // Pivot point
     const pivotY = centerY + verticalOffset;
     
-    // Draw Scale
+    // Draw Scale Arc
     this.ctx.beginPath();
     this.ctx.strokeStyle = '#444';
     this.ctx.lineWidth = 4;
     // Arc from -45 to +45 degrees
-    this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75); 
+    this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75);
     this.ctx.stroke();
-    
-    // Draw Center Marker
+
+    // Draw Target Zone (±5 cents) - Green highlight in center
     this.ctx.beginPath();
-    this.ctx.strokeStyle = '#666';
-    this.ctx.lineWidth = 2;
-    this.ctx.moveTo(centerX, pivotY - radius - 10);
-    this.ctx.lineTo(centerX, pivotY - radius + 10);
+    this.ctx.strokeStyle = '#00ff0033'; // Semi-transparent green
+    this.ctx.lineWidth = 8;
+    // ±5 cents = ±4.5 degrees out of the ±45 degree range
+    const targetAngleRange = (5 / 50) * (Math.PI / 4); // 4.5 degrees in radians
+    const centerAngle = Math.PI * 1.5; // Straight up (270 degrees)
+    this.ctx.arc(centerX, pivotY, radius, centerAngle - targetAngleRange, centerAngle + targetAngleRange);
     this.ctx.stroke();
+
+    // Draw Tick Marks at ±10, ±25, ±50 cents
+    const tickPositions = [-50, -25, -10, 0, 10, 25, 50]; // cents
+    tickPositions.forEach(cents => {
+        const angleDeg = (cents / 50) * 45; // Map cents to degrees
+        const angleRad = (angleDeg - 90) * (Math.PI / 180); // Convert to radians
+
+        // Determine tick size (longer for major marks)
+        const isCenter = cents === 0;
+        const tickLength = isCenter ? 20 : (Math.abs(cents) === 50 ? 15 : 10);
+        const tickWidth = isCenter ? 3 : 2;
+
+        // Calculate tick position on arc
+        const innerRadius = radius - 5;
+        const outerRadius = radius + tickLength - 5;
+        const startX = centerX + innerRadius * Math.cos(angleRad);
+        const startY = pivotY + innerRadius * Math.sin(angleRad);
+        const endX = centerX + outerRadius * Math.cos(angleRad);
+        const endY = pivotY + outerRadius * Math.sin(angleRad);
+
+        // Draw tick mark
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = isCenter ? '#00ff00' : '#666';
+        this.ctx.lineWidth = tickWidth;
+        this.ctx.moveTo(startX, startY);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.stroke();
+    });
 
     if (state.noteName !== '--') {
         // Map cents (-50 to +50) to angle (-45 to +45 degrees)
         // Clamp cents
         const clampedCents = Math.max(-50, Math.min(50, smoothedCents));
-        const angleDeg = (clampedCents / 50) * 45; 
-        
+        const angleDeg = (clampedCents / 50) * 45;
+
         // Convert to radians for math (0 is up, -PI/2 is left)
-        const angleRad = (angleDeg - 90) * (Math.PI / 180); 
-        
+        const angleRad = (angleDeg - 90) * (Math.PI / 180);
+
         // Calculate needle tip
         const tipX = centerX + radius * Math.cos(angleRad);
         const tipY = pivotY + radius * Math.sin(angleRad);
 
+        // Draw tapered needle with drop shadow
+        const needleWidth = 8; // Base width
+        const needleLength = radius;
+
+        // Calculate perpendicular vector for needle width
+        const perpAngle = angleRad + Math.PI / 2;
+        const halfWidth = needleWidth / 2;
+
+        // Needle base points (at pivot)
+        const baseLeft = {
+            x: centerX + halfWidth * Math.cos(perpAngle),
+            y: pivotY + halfWidth * Math.sin(perpAngle)
+        };
+        const baseRight = {
+            x: centerX - halfWidth * Math.cos(perpAngle),
+            y: pivotY - halfWidth * Math.sin(perpAngle)
+        };
+
+        // Needle tip (tapered to a point)
+        const tip = { x: tipX, y: tipY };
+
+        // Draw shadow first
+        this.ctx.save();
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.shadowBlur = 8;
+        this.ctx.shadowOffsetX = 2;
+        this.ctx.shadowOffsetY = 2;
+
+        // Draw needle shape
         this.ctx.beginPath();
+        this.ctx.fillStyle = color;
+        this.ctx.moveTo(baseLeft.x, baseLeft.y);
+        this.ctx.lineTo(baseRight.x, baseRight.y);
+        this.ctx.lineTo(tip.x, tip.y);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        // Draw needle outline for definition
+        this.ctx.shadowColor = 'transparent';
         this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = 6;
-        this.ctx.moveTo(centerX, pivotY);
-        this.ctx.lineTo(tipX, tipY);
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
+
+        this.ctx.restore();
+
+        // Draw center pivot circle
+        this.ctx.beginPath();
+        this.ctx.fillStyle = color;
+        this.ctx.arc(centerX, pivotY, 6, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#000';
+        this.ctx.lineWidth = 1;
         this.ctx.stroke();
         
         // Text for Cents

@@ -3,11 +3,6 @@
 ## 1. Visual Interface Polish
 **Goal:** Enhance the visual gauge to provide more precise and readable feedback, mimicking professional hardware tuners.
 
-### Scale & Needle
-- [ ] **Tick Marks:** Add calibrated tick marks to the arc scale (e.g., at ±10, ±25, ±50 cents) to give the user better context for how far off they are.
-- [ ] **Target Zone:** Visually highlight the "in-tune" window (±5 cents) on the arc (e.g., a green zone or thicker center line) so the user has a clear visual target.
-- [ ] **Needle Design:** Improve the needle aesthetic (e.g., tapered shape, drop shadow) to make it clearer against the background.
-
 ### Info Display
 - [ ] **Frequency (Hz) Readout:** Display the exact detected frequency (e.g., "110.2 Hz") alongside the note name and cents. This is critical for intonation work.
 - [ ] **String Number:** Display the detected string number (e.g., "5th String") to help beginners confirm they are tuning the correct peg.
