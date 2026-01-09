@@ -380,59 +380,45 @@ async function startTuner() {
     };
     render();
 
-    // 5. Handle Page Visibility (fully release mic when tab is hidden)
+    // 5. Handle Page Visibility (suspend AudioContext but keep MediaStream)
     let isConnected = true;
 
     document.addEventListener('visibilitychange', async () => {
       if (document.hidden) {
-        // Tab went to background - FULLY RELEASE microphone
-        console.log('Tab hidden - releasing microphone');
+        // Tab went to background - suspend processing but keep microphone permission
+        console.log('Tab hidden - suspending audio processing');
         if (isConnected) {
-          // Disconnect from audio processing
+          // Disconnect from audio processing to stop worklet
           source.disconnect();
           isConnected = false;
 
-          // CRITICAL: Stop all tracks to fully release microphone back to OS
-          // This allows other apps (dictation, calls, etc.) to use the mic
-          micStream.getTracks().forEach(track => {
-            console.log('Stopping mic track:', track.label);
-            track.stop();
-          });
-
-          // Reset state to show no note
+          // Reset visual state to show no note
           currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0, isAttacking: false };
           smoothedCents = 0;
         }
 
-        // Suspend audio context to save resources
+        // Suspend audio context to save CPU/battery
         if (context.state === 'running') {
-          context.suspend();
+          await context.suspend();
+          console.log('AudioContext suspended');
         }
       } else {
-        // Tab came to foreground - request fresh microphone access
-        console.log('Tab visible - requesting fresh microphone access');
+        // Tab came to foreground - resume audio processing
+        console.log('Tab visible - resuming audio processing');
         if (!isConnected) {
           try {
             // Resume audio context first
-            await context.resume();
+            if (context.state === 'suspended') {
+              await context.resume();
+              console.log('AudioContext resumed');
+            }
 
-            // Request fresh microphone stream
-            micStream = await getMicrophoneStream(context);
-            console.log('Fresh microphone stream acquired');
-
-            // Create new source node with fresh stream
-            source = context.createMediaStreamSource(micStream);
-
-            // Connect to tuner
+            // Reconnect existing MediaStream (no new permission needed)
             source.connect(tunerNode);
             isConnected = true;
-            console.log('Microphone reconnected');
+            console.log('Audio processing reconnected');
           } catch (err) {
-            console.error('Failed to resume microphone:', err);
-            // Show user-friendly error if permission denied
-            if (err instanceof DOMException && err.name === 'NotAllowedError') {
-              alert('Microphone permission denied. Please allow microphone access to use the tuner.');
-            }
+            console.error('Failed to resume audio processing:', err);
           }
         }
       }
