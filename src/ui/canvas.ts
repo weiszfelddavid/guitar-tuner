@@ -21,6 +21,24 @@ export class TunerCanvas {
   private peakTimer: number = 0;
   private lastFrameTime: number = 0;
 
+  // Performance optimization: Offscreen canvas for static elements
+  private offscreenCanvas: HTMLCanvasElement | null = null;
+  private offscreenCtx: CanvasRenderingContext2D | null = null;
+  private staticElementsCached: boolean = false;
+
+  // Performance optimization: Dirty tracking for selective redraws
+  private lastState: {
+    noteName: string;
+    cents: number;
+    frequency: number;
+    volume: number;
+  } = {
+    noteName: '--',
+    cents: 0,
+    frequency: 0,
+    volume: 0
+  };
+
   // CSS Custom Properties cache
   private colors: {
     bg: string;
@@ -68,17 +86,133 @@ export class TunerCanvas {
   private resize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
-    
+
     // 1. Set Physical Resolution (High DPI)
     this.canvas.width = this.width * window.devicePixelRatio;
     this.canvas.height = this.height * window.devicePixelRatio;
-    
+
     // 2. Set Logical Display Size (CSS)
     this.canvas.style.width = `${this.width}px`;
     this.canvas.style.height = `${this.height}px`;
 
     // 3. Normalize Coordinate System
     this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    // 4. Invalidate static elements cache (dimensions changed)
+    this.staticElementsCached = false;
+
+    // 5. Recreate offscreen canvas with new dimensions
+    this.createOffscreenCanvas();
+  }
+
+  /**
+   * Create offscreen canvas for caching static elements
+   */
+  private createOffscreenCanvas() {
+    if (!this.offscreenCanvas) {
+      this.offscreenCanvas = document.createElement('canvas');
+      this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: true })!;
+    }
+
+    // Match dimensions of main canvas
+    this.offscreenCanvas.width = this.canvas.width;
+    this.offscreenCanvas.height = this.canvas.height;
+
+    // Reset transform and scale to match main canvas
+    this.offscreenCtx!.resetTransform();
+    this.offscreenCtx!.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+
+  /**
+   * Helper method to draw static elements to any context
+   */
+  private drawStaticElementsToContext(ctx: CanvasRenderingContext2D) {
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
+    const radius = Math.min(this.width, this.height) * 0.4;
+    const fontSize = Math.min(Math.floor(radius * 0.75), 80);
+    const verticalOffset = radius * 0.6;
+    const pivotY = centerY + verticalOffset;
+
+    // Draw Scale Arc
+    ctx.beginPath();
+    ctx.strokeStyle = this.colors.textSubtle;
+    ctx.lineWidth = 4;
+    ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75);
+    ctx.stroke();
+
+    // Draw Target Zone (±5 cents) - Green highlight in center
+    ctx.beginPath();
+    ctx.strokeStyle = this.colors.success + '33';
+    ctx.lineWidth = 8;
+    const targetAngleRange = (5 / CENTS_DISPLAY_RANGE) * (Math.PI / 4);
+    const centerAngle = Math.PI * 1.5;
+    ctx.arc(centerX, pivotY, radius, centerAngle - targetAngleRange, centerAngle + targetAngleRange);
+    ctx.stroke();
+
+    // Draw Tick Marks - only center marker
+    const tickPositions = [0];
+    tickPositions.forEach(cents => {
+      const angleDeg = (cents / CENTS_DISPLAY_RANGE) * NEEDLE_MAX_ANGLE_DEG;
+      const angleRad = (angleDeg - 90) * (Math.PI / 180);
+
+      const tickLength = 20;
+      const tickWidth = 3;
+
+      const innerRadius = radius - 5;
+      const outerRadius = radius + tickLength - 5;
+      const startX = centerX + innerRadius * Math.cos(angleRad);
+      const startY = pivotY + innerRadius * Math.sin(angleRad);
+      const endX = centerX + outerRadius * Math.cos(angleRad);
+      const endY = pivotY + outerRadius * Math.sin(angleRad);
+
+      ctx.beginPath();
+      ctx.strokeStyle = this.colors.success;
+      ctx.lineWidth = tickWidth;
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    });
+
+    // Draw Flat symbol (♭) at the left end of the arc
+    const flatAngleDeg = -NEEDLE_MAX_ANGLE_DEG;
+    const flatAngleRad = (flatAngleDeg - 90) * (Math.PI / 180);
+    const flatRadius = radius + 25;
+    const flatX = centerX + flatRadius * Math.cos(flatAngleRad);
+    const flatY = pivotY + flatRadius * Math.sin(flatAngleRad);
+
+    const symbolFontSize = Math.min(Math.floor(fontSize * 0.25), 20);
+    ctx.font = `${symbolFontSize}px sans-serif`;
+    ctx.fillStyle = this.colors.textSubtle;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('♭', flatX, flatY);
+
+    // Draw Sharp symbol (#) at the right end of the arc
+    const sharpAngleDeg = NEEDLE_MAX_ANGLE_DEG;
+    const sharpAngleRad = (sharpAngleDeg - 90) * (Math.PI / 180);
+    const sharpRadius = radius + 25;
+    const sharpX = centerX + sharpRadius * Math.cos(sharpAngleRad);
+    const sharpY = pivotY + sharpRadius * Math.sin(sharpAngleRad);
+
+    ctx.fillText('#', sharpX, sharpY);
+  }
+
+  /**
+   * Render static elements to offscreen canvas (arc, target zone, tick marks, symbols)
+   * This is only called when dimensions change, not every frame
+   */
+  private renderStaticElements() {
+    if (!this.offscreenCtx || this.staticElementsCached) return;
+
+    // Clear offscreen canvas
+    this.offscreenCtx.clearRect(0, 0, this.width, this.height);
+
+    // Draw static elements to offscreen canvas
+    this.drawStaticElementsToContext(this.offscreenCtx);
+
+    // Mark cache as valid
+    this.staticElementsCached = true;
   }
 
   public render(state: TunerState, smoothedCents: number) {
@@ -86,11 +220,29 @@ export class TunerCanvas {
     const dt = (now - this.lastFrameTime) / 1000; // Delta time in seconds
     this.lastFrameTime = now;
 
+    // Ensure static elements are cached
+    this.renderStaticElements();
+
+    // Clear canvas
     this.ctx.clearRect(0, 0, this.width, this.height);
 
     // Background
     this.ctx.fillStyle = this.colors.bg;
     this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // Draw cached static elements from offscreen canvas
+    if (this.offscreenCanvas && this.staticElementsCached) {
+      try {
+        this.ctx.drawImage(this.offscreenCanvas, 0, 0);
+      } catch (e) {
+        // Fallback: If drawImage fails (e.g., in some test environments),
+        // draw static elements directly to main canvas
+        this.drawStaticElementsToContext(this.ctx);
+      }
+    } else if (!this.staticElementsCached) {
+      // If cache is not available, draw directly
+      this.drawStaticElementsToContext(this.ctx);
+    }
 
     const centerX = this.width / 2;
     const centerY = this.height / 2;
@@ -129,76 +281,8 @@ export class TunerCanvas {
       this.ctx.fillText('--', centerX, noteNameY);
     }
 
-    // Draw Needle (Arc Meter)
-    // Pivot point
+    // Pivot point for needle
     const pivotY = centerY + verticalOffset;
-    
-    // Draw Scale Arc
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = this.colors.textSubtle;
-    this.ctx.lineWidth = 4;
-    // Arc from -NEEDLE_MAX_ANGLE_DEG to +NEEDLE_MAX_ANGLE_DEG degrees
-    this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75);
-    this.ctx.stroke();
-
-    // Draw Target Zone (±5 cents) - Green highlight in center
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = this.colors.success + '33'; // Semi-transparent green
-    this.ctx.lineWidth = 8;
-    // ±5 cents = ±4.5 degrees out of the ±NEEDLE_MAX_ANGLE_DEG degree range
-    const targetAngleRange = (5 / CENTS_DISPLAY_RANGE) * (Math.PI / 4); // 4.5 degrees in radians
-    const centerAngle = Math.PI * 1.5; // Straight up (270 degrees)
-    this.ctx.arc(centerX, pivotY, radius, centerAngle - targetAngleRange, centerAngle + targetAngleRange);
-    this.ctx.stroke();
-
-    // Draw Tick Marks - only center marker
-    const tickPositions = [0]; // Only center tick
-    tickPositions.forEach(cents => {
-        const angleDeg = (cents / CENTS_DISPLAY_RANGE) * NEEDLE_MAX_ANGLE_DEG; // Map cents to degrees
-        const angleRad = (angleDeg - 90) * (Math.PI / 180); // Convert to radians
-
-        const tickLength = 20;
-        const tickWidth = 3;
-
-        // Calculate tick position on arc
-        const innerRadius = radius - 5;
-        const outerRadius = radius + tickLength - 5;
-        const startX = centerX + innerRadius * Math.cos(angleRad);
-        const startY = pivotY + innerRadius * Math.sin(angleRad);
-        const endX = centerX + outerRadius * Math.cos(angleRad);
-        const endY = pivotY + outerRadius * Math.sin(angleRad);
-
-        // Draw tick mark
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = this.colors.success;
-        this.ctx.lineWidth = tickWidth;
-        this.ctx.moveTo(startX, startY);
-        this.ctx.lineTo(endX, endY);
-        this.ctx.stroke();
-    });
-
-    // Draw Flat symbol (♭) at the left end of the arc
-    const flatAngleDeg = -NEEDLE_MAX_ANGLE_DEG; // Left end
-    const flatAngleRad = (flatAngleDeg - 90) * (Math.PI / 180);
-    const flatRadius = radius + 25;
-    const flatX = centerX + flatRadius * Math.cos(flatAngleRad);
-    const flatY = pivotY + flatRadius * Math.sin(flatAngleRad);
-
-    const symbolFontSize = Math.min(Math.floor(fontSize * 0.25), 20);
-    this.ctx.font = `${symbolFontSize}px sans-serif`;
-    this.ctx.fillStyle = this.colors.textSubtle;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText('♭', flatX, flatY);
-
-    // Draw Sharp symbol (#) at the right end of the arc
-    const sharpAngleDeg = NEEDLE_MAX_ANGLE_DEG; // Right end
-    const sharpAngleRad = (sharpAngleDeg - 90) * (Math.PI / 180);
-    const sharpRadius = radius + 25;
-    const sharpX = centerX + sharpRadius * Math.cos(sharpAngleRad);
-    const sharpY = pivotY + sharpRadius * Math.sin(sharpAngleRad);
-
-    this.ctx.fillText('#', sharpX, sharpY);
 
     if (state.noteName !== '--') {
         // Map cents (-CENTS_DISPLAY_RANGE to +CENTS_DISPLAY_RANGE) to angle (-NEEDLE_MAX_ANGLE_DEG to +NEEDLE_MAX_ANGLE_DEG degrees)
