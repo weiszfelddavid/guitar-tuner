@@ -1,0 +1,27 @@
+# Caddy configuration for Pure Tone Guitar Tuner
+# Serves the application with required security headers for WASM/AudioWorklet
+
+138.197.70.108 {
+    # Serve files from the deployment directory
+    root * /var/www/tuner
+    file_server
+
+    # Required security headers for WASM in AudioWorklets
+    # These enable SharedArrayBuffer and cross-origin isolation
+    header {
+        Cross-Origin-Opener-Policy "same-origin"
+        Cross-Origin-Embedder-Policy "require-corp"
+    }
+
+    # Serve WASM files with correct MIME type
+    @wasm {
+        path *.wasm
+    }
+    header @wasm Content-Type "application/wasm"
+
+    # Enable gzip compression for better performance
+    encode gzip
+
+    # Single Page Application: serve index.html for all non-file routes
+    try_files {path} /index.html
+}

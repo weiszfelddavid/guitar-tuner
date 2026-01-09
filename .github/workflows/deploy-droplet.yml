@@ -45,3 +45,25 @@ jobs:
           target: "/var/www/tuner"
           strip_components: 1
           overwrite: true
+
+      - name: Deploy Caddyfile
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 138.197.70.108
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: "Caddyfile"
+          target: "/etc/caddy/"
+          overwrite: true
+
+      - name: Reload Caddy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 138.197.70.108
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            # Validate Caddy configuration
+            caddy validate --config /etc/caddy/Caddyfile
+            # Reload Caddy with new configuration
+            caddy reload --config /etc/caddy/Caddyfile
