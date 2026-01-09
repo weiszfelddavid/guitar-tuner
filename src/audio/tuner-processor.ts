@@ -1,4 +1,9 @@
+console.log('[tuner-processor] Module starting to load...');
+
 import init, { PitchDetector } from './pure_tone_lib.mjs';
+
+console.log('[tuner-processor] Imports successful');
+
 import { findClosestString, calculateCents } from '../utils/frequency';
 
 // Import constants (note: these are bundled separately for worklet context)
