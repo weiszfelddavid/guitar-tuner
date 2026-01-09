@@ -227,8 +227,7 @@ async function __wbg_init(module_or_path) {
         }
     }
 
-    if (typeof module_or_path === 'undefined') {
-        module_or_path = new URL('pure_tone_bg.wasm', import.meta.url);
+    if (false) {
     }
     const imports = __wbg_get_imports();
 

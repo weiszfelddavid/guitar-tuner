@@ -20,8 +20,12 @@ if wasm-pack build --target web; then
     # Copy the WASM binary to public/ (served at runtime)
     cp -v pkg/pure_tone_bg.wasm public/pure_tone_bg.wasm
 
-    # Copy the JS glue code to src/audio/ (bundled with app)
-    cp -v pkg/pure_tone.js src/audio/pure_tone_lib.mjs
+    # Patch the JS glue code to remove import.meta.url (breaks in AudioWorklet)
+    # We manually load WASM via postMessage, so we don't need automatic URL resolution
+    sed '/new URL.*import\.meta\.url/d' pkg/pure_tone.js | \
+    sed 's/if (typeof module_or_path === .undefined.) {/if (false) {/g' > src/audio/pure_tone_lib.mjs
+
+    echo "Patched pure_tone.js to remove import.meta.url for AudioWorklet compatibility"
 
     echo ""
     echo "✓ WASM files updated"
