@@ -153,7 +153,7 @@
     * Professional optimization with graceful fallbacks
   - **Bundle Impact:** Main bundle: 26.73 kB → 28.00 kB (+1.27 kB, +4.8%)
   - **Files:** src/ui/canvas.ts
-  - **Commit:** [pending]
+  - **Commit:** ad107fb
 
 - [x] **Add error recovery for WASM loading** ✅ COMPLETED
   - **Problem:** Generic error text replaces body if WASM fails, no retry mechanism
