@@ -18,11 +18,13 @@
   - **Result:** String lock now sent to worklet via message, processed in pipeline
   - **Commit:** d5d254f
 
-- [ ] **Add loading state during WASM initialization**
+- [x] **Add loading state during WASM initialization** ✅ COMPLETED
   - **Problem:** 1-2 seconds of frozen UI after clicking "Start Tuner"
   - **Impact:** Users think app crashed, abandon before it starts
   - **Fix:** Show spinner/progress during fetch + validation (lines 92-105)
-  - **Files:** src/main.ts
+  - **Result:** Professional loading overlay with animated spinner, progress messages, error handling
+  - **Bundle:** +2.12 kB (acceptable for critical UX fix)
+  - **Commit:** f3f7ab6
 
 - [x] **Remove debug console from production build** ✅ COMPLETED
   - **Problem:** 110-line debug console ships to all users (debug-console.ts)

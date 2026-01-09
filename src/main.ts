@@ -83,9 +83,76 @@ async function startTuner() {
     let source = context.createMediaStreamSource(micStream);
     const tunerNode = await createTunerWorklet(context);
 
+    // Show loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: sans-serif;
+    `;
+
+    const loadingText = document.createElement('div');
+    loadingText.style.cssText = `
+        font-size: 18px;
+        margin-top: 20px;
+        color: rgba(255, 255, 255, 0.9);
+    `;
+    loadingText.textContent = 'Initializing tuner...';
+
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top: 4px solid var(--color-accent, #4a9eff);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    `;
+
+    // Add spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    loadingOverlay.appendChild(spinner);
+    loadingOverlay.appendChild(loadingText);
+    document.body.appendChild(loadingOverlay);
+
     // Load WASM from main thread and pass to worklet
+    let wasmInitialized = false;
+
+    // Listen for WASM initialization confirmation from worklet
+    const wasmInitPromise = new Promise<void>((resolve) => {
+        const messageHandler = (event: MessageEvent) => {
+            if (event.data.type === 'log' && event.data.message.includes('WASM initialized successfully')) {
+                wasmInitialized = true;
+                tunerNode.port.removeEventListener('message', messageHandler);
+                resolve();
+            }
+        };
+        tunerNode.port.addEventListener('message', messageHandler);
+    });
+
     try {
+        loadingText.textContent = 'Loading audio engine...';
         console.log("Loading WASM from main thread...");
+
         const wasmRes = await fetch('/pure_tone_bg.wasm');
         if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
 
@@ -94,15 +161,36 @@ async function startTuner() {
             throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
         }
 
+        loadingText.textContent = 'Initializing audio processor...';
         const wasmBuffer = await wasmRes.arrayBuffer();
         tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
         console.log("WASM sent to worklet");
+
+        // Wait for worklet to confirm initialization (max 5 seconds)
+        await Promise.race([
+            wasmInitPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('WASM initialization timeout')), 5000))
+        ]);
+
+        loadingText.textContent = 'Ready!';
+        console.log("WASM initialization confirmed");
     } catch (e) {
         console.error("Main Thread WASM Load Error:", e);
+        loadingText.textContent = `Error: ${e instanceof Error ? e.message : 'Failed to load tuner'}`;
+        loadingText.style.color = '#ff5555';
+        // Wait 2 seconds to show error before removing overlay
+        await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     // Send initial mode to worklet
     tunerNode.port.postMessage({ type: 'set-mode', mode: currentMode });
+
+    // Remove loading overlay
+    setTimeout(() => {
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.transition = 'opacity 0.3s';
+        setTimeout(() => loadingOverlay.remove(), 300);
+    }, 300);
 
     // 2. Setup UI
     // Remove start container instead of wiping body
