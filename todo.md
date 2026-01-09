@@ -3,18 +3,20 @@
 ## CRITICAL PRIORITY (Ship-Blocking)
 **Impact:** Performance bugs, architectural flaws, production issues
 
-- [ ] **Move audio processing pipeline to AudioWorklet**
+- [x] **Move audio processing pipeline to AudioWorklet** ✅ COMPLETED
   - **Problem:** 7-stage processing runs on main thread (60fps) blocking rendering
   - **Impact:** Causes frame drops, janky UI on slower devices
   - **Fix:** Move NoiseGate, PitchStabilizer, OctaveDiscriminator, etc. into tuner-processor.ts
   - **Benefit:** Main thread freed up (5ms → 0ms), silky 60fps, better battery life
-  - **Files:** src/main.ts (lines 236-319), src/ui/tuner.ts, tuner-processor.ts
+  - **Result:** Worklet: 5.03 kB → 10.25 kB, Main: 28.05 kB → 22.08 kB
+  - **Commit:** d5d254f
 
-- [ ] **Fix state synchronization for manual string lock**
+- [x] **Fix state synchronization for manual string lock** ✅ COMPLETED
   - **Problem:** Manual lock mutates state after pipeline calculates it (main.ts:275-284)
   - **Impact:** Breaks single source of truth, logic split across 2 locations
   - **Fix:** String lock should be input to pipeline, not post-processing override
-  - **Files:** src/main.ts, src/ui/string-selector.ts
+  - **Result:** String lock now sent to worklet via message, processed in pipeline
+  - **Commit:** d5d254f
 
 - [ ] **Add loading state during WASM initialization**
   - **Problem:** 1-2 seconds of frozen UI after clicking "Start Tuner"
