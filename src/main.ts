@@ -45,7 +45,6 @@ let stringSelector: StringSelector | null = null;
 let smoothedCents = 0;
 
 // Expose state for testing
-// @ts-ignore
 window.getTunerState = () => currentState;
 
 async function startTuner() {

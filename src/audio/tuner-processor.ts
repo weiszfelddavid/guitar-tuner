@@ -1,4 +1,3 @@
-// @ts-ignore
 import init, { PitchDetector } from './pure_tone_lib.mjs';
 
 // ============================================================================
@@ -362,9 +361,8 @@ class StateManager {
 // WORKLET PROCESSOR
 // ============================================================================
 
-// @ts-ignore
 class TunerProcessor extends AudioWorkletProcessor {
-  private detector: any = null;
+  private detector: PitchDetector | null = null;
   private buffer: Float32Array;
   private samplesProcessed: number = 0;
   private readonly BUFFER_SIZE = 4096;
@@ -382,7 +380,6 @@ class TunerProcessor extends AudioWorkletProcessor {
   private manualStringLock: { note: string; frequency: number } | null = null;
 
   // Timing
-  // @ts-ignore
   private startTime: number = currentTime * 1000;
 
   constructor() {
@@ -396,23 +393,19 @@ class TunerProcessor extends AudioWorkletProcessor {
 
     this.config = getDefaultConfig(this.currentMode);
 
-    // @ts-ignore
     this.port.onmessage = this.handleMessage.bind(this);
   }
 
   async handleMessage(event: MessageEvent) {
     if (event.data.type === 'load-wasm') {
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: '[Worklet] Received WASM bytes' });
       await this.initWasm(event.data.wasmBytes);
     } else if (event.data.type === 'set-mode') {
       this.currentMode = event.data.mode;
       this.config = getDefaultConfig(this.currentMode);
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: `[Worklet] Mode changed to ${this.currentMode}` });
     } else if (event.data.type === 'set-string-lock') {
       this.manualStringLock = event.data.stringLock;
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: `[Worklet] String lock: ${this.manualStringLock ? this.manualStringLock.note : 'none'}` });
     }
   }
@@ -420,13 +413,10 @@ class TunerProcessor extends AudioWorkletProcessor {
   async initWasm(wasmBytes: ArrayBuffer) {
     try {
       await init(wasmBytes);
-      // @ts-ignore
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: '[Worklet] WASM initialized successfully' });
     } catch (e) {
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: `[Worklet] Failed to initialize WASM: ${e}` });
     }
   }
@@ -473,19 +463,16 @@ class TunerProcessor extends AudioWorkletProcessor {
       const result = this.detector.process(this.buffer);
       const { pitch, clarity } = result;
 
-      // @ts-ignore
       const now = this.startTime + (currentTime * 1000);
 
       // Simplified 3-stage pipeline
       const finalState = this.runPipeline(pitch, clarity, volume, now);
 
-      // @ts-ignore
       this.port.postMessage({
         type: 'state',
         state: finalState
       });
     } catch (e) {
-      // @ts-ignore
       this.port.postMessage({ type: 'log', message: `[Worklet] Error in processBuffer: ${e}` });
     }
   }
@@ -519,5 +506,4 @@ class TunerProcessor extends AudioWorkletProcessor {
   }
 }
 
-// @ts-ignore
 registerProcessor('tuner-processor', TunerProcessor);
