@@ -45,11 +45,12 @@
   - **Result:** Created src/constants/guitar-strings.ts with unified interface, helper functions
   - **Commit:** e31ceff
 
-- [ ] **Simplify processing pipeline classes**
-  - **Problem:** 8 separate classes (KalmanFilter, PluckDetector, etc.) with tight coupling
+- [x] **Simplify processing pipeline classes** ✅ COMPLETED
+  - **Problem:** 6 separate classes (NoiseGate, PitchStabilizer, OctaveDiscriminator, StringLocker, PluckDetector, VisualHoldManager)
   - **Impact:** Initialization overhead, complexity, hard to modify
-  - **Fix:** Consolidate into 2-3 classes with clear responsibilities
-  - **Files:** src/ui/tuner.ts (400+ lines)
+  - **Fix:** Consolidated into 3 classes: SignalProcessor, NoteDetector, StateManager
+  - **Result:** Reduced from 6 stages to 3 stages, clearer responsibilities, worklet 10.25 kB → 9.88 kB (-3.6%)
+  - **Commit:** 759d370
 
 - [ ] **Fix dual smoothing systems**
   - **Problem:** Kalman filter + PluckDetector both smooth cents independently
