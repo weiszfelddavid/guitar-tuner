@@ -2,7 +2,7 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate, VisualHoldManager, TunerMode, getDefaultConfig } from './ui/tuner';
+import { KalmanFilter, TunerState, TunerMode, getDefaultConfig } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
@@ -14,13 +14,18 @@ initDebugConsole();
 const STORAGE_KEY = 'tuner-mode';
 let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY) as TunerMode) || 'strict';
 
-function setMode(mode: TunerMode) {
+function setMode(mode: TunerMode, tunerNode?: AudioWorkletNode) {
     currentMode = mode;
     localStorage.setItem(STORAGE_KEY, mode);
 
     // Update Kalman filter smoothing based on mode
     const config = getDefaultConfig(mode);
     kalman.setProcessNoise(config.smoothingFactor);
+
+    // Send mode update to worklet
+    if (tunerNode) {
+        tunerNode.port.postMessage({ type: 'set-mode', mode });
+    }
 
     // Update UI toggle
     updateModeToggle();
@@ -33,18 +38,10 @@ function updateModeToggle() {
     }
 }
 
-// State management
+// State management - only visual state on main thread now
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
 const kalman = new KalmanFilter(getDefaultConfig(currentMode).smoothingFactor, 0.1);
-const pluckDetector = new PluckDetector();
-const pitchStabilizer = new PitchStabilizer();
-const stringLocker = new StringLocker();
-const octaveDiscriminator = new OctaveDiscriminator();
-const noiseGate = new NoiseGate();
-const visualHoldManager = new VisualHoldManager();
 let stringSelector: StringSelector | null = null;
-let manualStringLock: string | null = null; // Manually selected string frequency target
-// We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
 // Expose state for testing
@@ -54,17 +51,17 @@ window.getTunerState = () => currentState;
 async function startTuner() {
   try {
     console.log("Starting Tuner...");
-    
+
     // 1. Setup Audio
     const context = await getAudioContext();
     console.log("AudioContext created. State:", context.state);
-    
+
     // FIX: Force resume AudioContext if it's suspended (Common on Android/iOS)
     if (context.state === 'suspended') {
       console.log("AudioContext suspended, resuming...");
       await context.resume();
     }
-    
+
     let micStream = await getMicrophoneStream(context);
 
     // Log active settings to debug "Silence" issue
@@ -91,7 +88,7 @@ async function startTuner() {
         console.log("Loading WASM from main thread...");
         const wasmRes = await fetch('/pure_tone_bg.wasm');
         if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
-        
+
         const contentType = wasmRes.headers.get('Content-Type');
         if (contentType && !contentType.includes('wasm')) {
             throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
@@ -103,11 +100,14 @@ async function startTuner() {
     } catch (e) {
         console.error("Main Thread WASM Load Error:", e);
     }
-    
+
+    // Send initial mode to worklet
+    tunerNode.port.postMessage({ type: 'set-mode', mode: currentMode });
+
     // 2. Setup UI
     // Remove start container instead of wiping body
     document.querySelector('.start-container')?.remove();
-    
+
     // Create canvas if it doesn't exist (it shouldn't)
     let canvasEl = document.getElementById('tuner-canvas');
     if (!canvasEl) {
@@ -116,7 +116,7 @@ async function startTuner() {
         document.body.appendChild(canvasEl);
     }
     const canvas = new TunerCanvas('tuner-canvas');
-    
+
     // Re-append debug console if it was wiped (just in case)
     const debugConsole = document.getElementById('debug-console');
     if (debugConsole) {
@@ -146,7 +146,7 @@ async function startTuner() {
 
         // Toggle between modes on click
         modeToggle.addEventListener('click', () => {
-            setMode(currentMode === 'strict' ? 'forgiving' : 'strict');
+            setMode(currentMode === 'strict' ? 'forgiving' : 'strict', tunerNode);
         });
     }
 
@@ -187,12 +187,23 @@ async function startTuner() {
             if (stringId) {
                 const selectedString = stringSelector!.getSelectedString();
                 if (selectedString) {
-                    manualStringLock = selectedString.note;
                     console.log(`Manual string lock: ${selectedString.label} (${selectedString.note})`);
+                    // Send string lock to worklet
+                    tunerNode.port.postMessage({
+                        type: 'set-string-lock',
+                        stringLock: {
+                            note: selectedString.note,
+                            frequency: selectedString.frequency
+                        }
+                    });
                 }
             } else {
-                manualStringLock = null;
                 console.log('Manual string lock released');
+                // Clear string lock in worklet
+                tunerNode.port.postMessage({
+                    type: 'set-string-lock',
+                    stringLock: null
+                });
             }
         });
     }
@@ -208,7 +219,7 @@ async function startTuner() {
                 overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;justify-content:center;align-items:center;z-index:9999;font-size:24px;cursor:pointer;';
                 overlay.innerText = 'Tap to Activate Tuner';
                 document.body.appendChild(overlay);
-                
+
                 overlay.addEventListener('click', async () => {
                     await context.resume();
                     console.log("Overlay resume triggered");
@@ -225,102 +236,44 @@ async function startTuner() {
 
     // Check periodically
     setInterval(checkState, 1000);
-    
+
     // Also check on touch
     document.addEventListener('touchstart', async () => {
         if (context.state === 'suspended') await context.resume();
         checkState();
     }, { passive: true });
-    
-    // 3. Audio Loop
+
+    // 3. Audio Loop - Now just receives final state from worklet
     tunerNode.port.onmessage = (event) => {
       const data = event.data;
+
+      // Handle log messages
       if (data.type === 'log') {
           console.log(data.message);
           return;
       }
 
-      const { pitch, clarity, volume } = data.type === 'result' ? data : data;
-      if (pitch === undefined) return;
+      // Handle state messages from worklet
+      if (data.type === 'state') {
+          // Receive final processed state from worklet
+          currentState = data.state;
 
-      // 1. Noise Gate
-      const isOpen = noiseGate.process(volume || 0, clarity);
-
-      if (!isOpen) {
-          currentState = { noteName: '--', cents: 0, clarity, volume: volume || 0, isLocked: false, frequency: pitch };
-          smoothedCents = kalman.filter(0);
-          stringLocker.reset();
-          return;
-      }
-
-      // 2. Stabilize Pitch
-      if (clarity > 0.9) {
-        pitchStabilizer.add(pitch);
-      } else {
-        pitchStabilizer.clear();
-      }
-      
-      const stablePitch = pitchStabilizer.getStablePitch();
-      if (stablePitch === 0) return;
-
-      // 3. Octave Priority
-      const prioritizedPitch = octaveDiscriminator.process(stablePitch, clarity);
-
-      // 4. State Calculation (with mode configuration)
-      const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
-      const config = getDefaultConfig(currentMode);
-      let rawState = getTunerState(prioritizedPitch, clarity, volume || 0, config);
-
-      // If manual string lock is active, force the note and recalculate cents
-      if (manualStringLock && rawState.noteName !== '--') {
-          // Find the target frequency for the locked string
-          const lockedString = stringSelector?.getSelectedString();
-          if (lockedString) {
-              // Force the note name to the locked string
-              rawState.noteName = lockedString.note;
-              // Recalculate cents relative to the locked string's frequency
-              rawState.cents = 1200 * Math.log2(prioritizedPitch / lockedString.frequency);
+          // Update string selector with current detected string
+          if (stringSelector) {
+              stringSelector.setAutoDetectedString(currentState.noteName);
           }
-      }
 
-      // 5. String Locking (only if not manually locked)
-      if (rawState.noteName !== '--') {
-          if (!manualStringLock) {
-              rawState.noteName = stringLocker.process(rawState.noteName);
-          }
-          octaveDiscriminator.setLastNote(rawState.noteName);
-      } else {
-          stringLocker.reset();
-          octaveDiscriminator.setLastNote(null);
-      }
-
-      // 6. Apply visual hold for forgiving mode
-      let processedState = rawState;
-      if (isAttacking) {
+          // Apply Kalman filter for visual needle smoothing
           if (currentState.noteName !== '--') {
-             processedState.cents = currentState.cents + (rawState.cents - currentState.cents) * factor;
-             processedState.volume = rawState.volume;
+              smoothedCents = kalman.filter(currentState.cents);
+          } else {
+              smoothedCents = kalman.filter(0);
           }
-      }
-
-      // Apply visual hold (with attack detection and raw pitch for sustain tracking)
-      currentState = visualHoldManager.process(processedState, volume || 0, currentMode, performance.now(), isAttacking, prioritizedPitch);
-
-      // Update string selector with current detected string
-      if (stringSelector) {
-          stringSelector.setAutoDetectedString(currentState.noteName);
-      }
-
-      if (currentState.noteName !== '--') {
-          smoothedCents = kalman.filter(currentState.cents);
-      } else {
-          smoothedCents = kalman.filter(0);
       }
     };
 
     source.connect(tunerNode);
-    tunerNode.connect(context.destination); 
- 
+    tunerNode.connect(context.destination);
 
     // 4. Render Loop
     const render = () => {
@@ -351,10 +304,6 @@ async function startTuner() {
           // Reset state to show no note
           currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
           smoothedCents = 0;
-          stringLocker.reset();
-          octaveDiscriminator.setLastNote(null);
-          visualHoldManager.reset();
-          pitchStabilizer.clear();
         }
 
         // Suspend audio context to save resources
