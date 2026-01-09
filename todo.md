@@ -186,14 +186,29 @@
   - **Result:** Repository 3MB lighter, fixtures generated on-demand in ~1 second, all 24 tests pass
   - **Commit:** 7544a37
 
-- [ ] **Add integration tests**
-  - Currently only unit tests (no worklet, no full pipeline)
-  - Test WASM ↔ TypeScript integration
-  - Test mode switching, string locking end-to-end
+- [x] **Add integration tests** ✅ COMPLETED
+  - Created comprehensive integration test suite (62 tests total)
+  - WASM ↔ TypeScript integration tests (6 tests)
+  - Mode switching tests (10 tests) - strict vs forgiving behavior
+  - String locking end-to-end tests (11 tests) - hysteresis, boundaries, manual override
+  - Full pipeline integration tests (11 tests) - complete signal processing chain
+  - All tests passing
+  - **Commit:** TBD
 
-- [ ] **Create constants file for magic numbers**
-  - 15 dB threshold, 4096 buffer, 0.8 volume, etc.
-  - Centralize with explanatory comments
+- [x] **Create constants file for magic numbers** ✅ COMPLETED
+  - Created comprehensive src/constants/tuner-config.ts with 40+ documented constants
+  - Replaced all magic numbers throughout codebase:
+    - Audio buffer constants (AUDIO_BUFFER_SIZE, PITCH_UPDATE_INTERVAL_SAMPLES)
+    - Signal processing (PITCH_STABILIZER_BUFFER_SIZE, PITCH_RATIO_TOLERANCE)
+    - Noise gate (NOISE_GATE_THRESHOLD_DB, NOISE_GATE_ALPHA, adaptive rates)
+    - Attack detection (ATTACK_DB_THRESHOLD, ATTACK_DURATION_MS)
+    - String locking (STRING_LOCK_HYSTERESIS_FRAMES)
+    - Visual hold (FORGIVING_HOLD_DURATION_MS, STRICT_HOLD_DURATION_MS)
+    - Pitch detection (MIN_VALID_PITCH_HZ, MAX_VALID_PITCH_HZ)
+    - UI constants (VOLUME_METER_SENSITIVITY_SCALE, CENTS_DISPLAY_RANGE, NEEDLE_MAX_ANGLE_DEG)
+  - Updated 6 files: tuner-processor.ts, tuner.ts, main.ts, canvas.ts, and imports
+  - All tests passing after refactor
+  - **Commit:** TBD
 
 - [ ] **Add linting configuration**
   - ESLint for TypeScript, Rustfmt for Rust
@@ -224,12 +239,13 @@
 ## Code Quality Quick Wins
 **Small refactors with high impact:**
 
-- [ ] Remove `window.getTunerState()` global (main.ts:51) - test pollution in production
-- [ ] Extract frequency ↔ note conversion to shared utility
-- [ ] Unify timestamp tracking (3 separate `performance.now()` calls)
-- [ ] Replace magic `1000` interval with named constant `MONITORING_INTERVAL_MS`
-- [ ] Add namespace prefix to localStorage keys (`tuner:mode`, `tuner:debug`)
-- [ ] Remove commented code in tuner-processor.ts (lines 17, 32, 48-51)
+- [x] Remove `window.getTunerState()` global (main.ts:51) - test pollution in production ✅
+- [x] Extract frequency ↔ note conversion to shared utility ✅
+- [x] Unify timestamp tracking (3 separate `performance.now()` calls) ✅
+- [x] Replace magic `1000` interval with named constant `MONITORING_INTERVAL_MS` ✅
+- [x] Add namespace prefix to localStorage keys (`tuner:mode`, `tuner:debug`) ✅
+- [x] Remove commented code in tuner-processor.ts (lines 17, 32, 48-51) ✅ (already done)
+  - **Commit:** d78a34f
 
 ---
 

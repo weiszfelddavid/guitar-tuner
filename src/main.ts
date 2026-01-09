@@ -3,7 +3,12 @@ import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { KalmanFilter, TunerState, TunerMode, TunerConfig, getDefaultConfig } from './ui/tuner';
-import { ATTACK_SMOOTHING_FACTOR, KALMAN_MEASUREMENT_NOISE } from './constants/tuner-config';
+import {
+  ATTACK_SMOOTHING_FACTOR,
+  KALMAN_MEASUREMENT_NOISE,
+  AUDIO_CONTEXT_CHECK_INTERVAL_MS,
+  WASM_INIT_TIMEOUT_MS
+} from './constants/tuner-config';
 import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
@@ -14,9 +19,6 @@ initDebugConsole();
 // Mode management with local storage
 const STORAGE_KEY_MODE = 'tuner:mode';
 let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY_MODE) as TunerMode) || 'strict';
-
-// Audio context monitoring interval (milliseconds)
-const AUDIO_CONTEXT_CHECK_INTERVAL_MS = 1000;
 
 // Centralized configuration - updated when mode changes
 let currentConfig: TunerConfig = getDefaultConfig(currentMode);
@@ -174,10 +176,10 @@ async function startTuner() {
         tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
         console.log("WASM sent to worklet");
 
-        // Wait for worklet to confirm initialization (max 5 seconds)
+        // Wait for worklet to confirm initialization
         await Promise.race([
             wasmInitPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('WASM initialization timeout')), 5000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('WASM initialization timeout')), WASM_INIT_TIMEOUT_MS))
         ]);
 
         loadingText.textContent = 'Ready!';

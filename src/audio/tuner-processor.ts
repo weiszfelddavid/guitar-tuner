@@ -1,6 +1,36 @@
 import init, { PitchDetector } from './pure_tone_lib.mjs';
 import { findClosestString, calculateCents } from '../utils/frequency';
 
+// Import constants (note: these are bundled separately for worklet context)
+import {
+  STRICT_MODE_CONFIG,
+  FORGIVING_MODE_CONFIG,
+  AUDIO_BUFFER_SIZE,
+  PITCH_UPDATE_INTERVAL_SAMPLES,
+  PITCH_STABILIZER_BUFFER_SIZE,
+  PITCH_RATIO_TOLERANCE_MIN,
+  PITCH_RATIO_TOLERANCE_MAX,
+  PITCH_CLARITY_THRESHOLD,
+  NOISE_GATE_THRESHOLD_DB,
+  NOISE_GATE_ALPHA,
+  NOISE_FLOOR_FAST_ADAPT_RATE,
+  NOISE_FLOOR_SLOW_ADAPT_RATE,
+  NOISE_FLOOR_DECAY_RATE,
+  NOISE_DETECTION_CLARITY_THRESHOLD,
+  ATTACK_DB_THRESHOLD,
+  ATTACK_DURATION_MS,
+  STRING_LOCK_HYSTERESIS_FRAMES,
+  FORGIVING_HOLD_DURATION_MS,
+  STRICT_HOLD_DURATION_MS,
+  MIN_VALID_PITCH_HZ,
+  MAX_VALID_PITCH_HZ,
+  MIN_VOLUME_THRESHOLD,
+  TUNED_CLARITY_THRESHOLD,
+  TUNED_CENTS_THRESHOLD,
+  OCTAVE_DISCRIMINATION_CLARITY,
+  OCTAVE_CENTS_TOLERANCE
+} from '../constants/tuner-config';
+
 // ============================================================================
 // TYPES & CONSTANTS
 // ============================================================================
@@ -35,18 +65,17 @@ const GUITAR_STRINGS = [
   { note: 'E4', frequency: 329.63, stringNumber: 1, label: 'High E', id: 'string-1' }
 ];
 
-// Configuration constants (synchronized with src/constants/tuner-config.ts)
-// Note: Inlined here because worklet has separate bundling context
+// Configuration constants (using imported config objects)
 const STRICT_CONFIG: TunerConfig = {
   mode: 'strict',
-  clarityThreshold: 0.9,    // Only accept very clean signals
-  smoothingFactor: 0.1      // Minimal smoothing for instant response
+  clarityThreshold: STRICT_MODE_CONFIG.clarityThreshold,
+  smoothingFactor: STRICT_MODE_CONFIG.smoothingFactor
 };
 
 const FORGIVING_CONFIG: TunerConfig = {
   mode: 'forgiving',
-  clarityThreshold: 0.6,    // Accept noisier signals
-  smoothingFactor: 0.3      // More smoothing for stable reading
+  clarityThreshold: FORGIVING_MODE_CONFIG.clarityThreshold,
+  smoothingFactor: FORGIVING_MODE_CONFIG.smoothingFactor
 };
 
 function getDefaultConfig(mode: TunerMode): TunerConfig {
@@ -64,11 +93,11 @@ function getDefaultConfig(mode: TunerMode): TunerConfig {
 class SignalProcessor {
   // Noise gate state
   private noiseFloor: number = 0.0001;
-  private readonly alpha: number = 0.1;
-  private readonly gateThresholdDb: number = 6;
+  private readonly alpha: number = NOISE_GATE_ALPHA;
+  private readonly gateThresholdDb: number = NOISE_GATE_THRESHOLD_DB;
 
   // Pitch stabilizer state - using circular buffer for efficiency
-  private readonly bufferSize: number = 11;
+  private readonly bufferSize: number = PITCH_STABILIZER_BUFFER_SIZE;
   private pitchBuffer: Float32Array = new Float32Array(this.bufferSize);
   private bufferCount: number = 0;
   private bufferIndex: number = 0;
@@ -88,14 +117,14 @@ class SignalProcessor {
     const floorDb = 20 * Math.log10(Math.max(this.noiseFloor, 0.00001));
 
     // Adaptive noise floor
-    if (clarity < 0.8) {
+    if (clarity < NOISE_DETECTION_CLARITY_THRESHOLD) {
       if (volume > this.noiseFloor) {
-        this.noiseFloor = (1 - 0.05) * this.noiseFloor + 0.05 * volume;
+        this.noiseFloor = (1 - NOISE_FLOOR_FAST_ADAPT_RATE) * this.noiseFloor + NOISE_FLOOR_FAST_ADAPT_RATE * volume;
       } else {
         this.noiseFloor = (1 - this.alpha) * this.noiseFloor + this.alpha * volume;
       }
     } else {
-      this.noiseFloor *= 0.95;
+      this.noiseFloor *= NOISE_FLOOR_DECAY_RATE;
     }
 
     const isGateOpen = currentDb > (floorDb + this.gateThresholdDb);
@@ -106,7 +135,7 @@ class SignalProcessor {
     }
 
     // 2. Pitch Stabilizer - only accept high-clarity pitches
-    if (clarity > 0.9) {
+    if (clarity > PITCH_CLARITY_THRESHOLD) {
       // Add to circular buffer
       this.pitchBuffer[this.bufferIndex] = pitch;
       this.bufferIndex = (this.bufferIndex + 1) % this.bufferSize;
@@ -135,11 +164,11 @@ class SignalProcessor {
     this.quickSort(this.sortedBuffer, 0, this.bufferCount - 1);
     const median = this.sortedBuffer[Math.floor(this.bufferCount / 2)];
 
-    // Filter samples within 3% of median (reuse validSamples array)
+    // Filter samples within tolerance of median (reuse validSamples array)
     this.validCount = 0;
     for (let i = 0; i < this.bufferCount; i++) {
       const ratio = this.pitchBuffer[i] / median;
-      if (ratio > 0.97 && ratio < 1.03) {
+      if (ratio > PITCH_RATIO_TOLERANCE_MIN && ratio < PITCH_RATIO_TOLERANCE_MAX) {
         this.validSamples[this.validCount++] = this.pitchBuffer[i];
       }
     }
@@ -201,14 +230,14 @@ class NoteDetector {
   private lockedString: string | null = null;
   private candidateString: string | null = null;
   private lockCounter: number = 0;
-  private readonly lockThreshold: number = 15;
+  private readonly lockThreshold: number = STRING_LOCK_HYSTERESIS_FRAMES;
 
   /**
    * Detect note from pitch with octave correction and locking
    */
   detect(pitch: number, clarity: number, volume: number, config: TunerConfig): TunerState | null {
     // Invalid pitch range
-    if (clarity < config.clarityThreshold || volume < 0.01 || pitch < 60 || pitch > 500) {
+    if (clarity < config.clarityThreshold || volume < MIN_VOLUME_THRESHOLD || pitch < MIN_VALID_PITCH_HZ || pitch > MAX_VALID_PITCH_HZ) {
       this.reset();
       return null;
     }
@@ -232,7 +261,7 @@ class NoteDetector {
       cents: finalCents,
       clarity: clarity,
       volume: volume,
-      isLocked: clarity > 0.95 && Math.abs(finalCents) < 2,
+      isLocked: clarity > TUNED_CLARITY_THRESHOLD && Math.abs(finalCents) < TUNED_CENTS_THRESHOLD,
       frequency: correctedPitch,
       isAttacking: false  // Will be set by StateManager
     };
@@ -244,15 +273,15 @@ class NoteDetector {
   private correctOctave(pitch: number, clarity: number): number {
     const fundamental = pitch / 2;
 
-    const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.frequency)) < 100);
+    const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.frequency)) < OCTAVE_CENTS_TOLERANCE);
 
     if (isString(fundamental)) {
       // If we detected this fundamental last time, trust it
-      if (this.lastDetectedNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.frequency)) < 100)?.note) {
+      if (this.lastDetectedNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.frequency)) < OCTAVE_CENTS_TOLERANCE)?.note) {
         return fundamental;
       }
       // If clarity is low, prefer fundamental (likely harmonic)
-      if (clarity < 0.98) return fundamental;
+      if (clarity < OCTAVE_DISCRIMINATION_CLARITY) return fundamental;
     }
 
     return pitch;
@@ -313,14 +342,14 @@ class StateManager {
   private isAttacking: boolean = false;
   private attackEndTime: number = 0;
   private lastVolume: number = 0;
-  private readonly attackDbThreshold: number = 15;
-  private readonly attackDuration: number = 200;
+  private readonly attackDbThreshold: number = ATTACK_DB_THRESHOLD;
+  private readonly attackDuration: number = ATTACK_DURATION_MS;
 
   // Visual hold state
   private heldState: TunerState | null = null;
   private holdStartTime: number = 0;
-  private readonly forgivingHoldDuration: number = 4000;
-  private readonly strictHoldDuration: number = 400;
+  private readonly forgivingHoldDuration: number = FORGIVING_HOLD_DURATION_MS;
+  private readonly strictHoldDuration: number = STRICT_HOLD_DURATION_MS;
 
   /**
    * Manage state with attack detection and visual hold
@@ -343,13 +372,13 @@ class StateManager {
 
     // 3. No valid state - check if we should hold previous state
     if (!currentState) {
-      if (this.heldState && volume > 0.01) {
+      if (this.heldState && volume > MIN_VOLUME_THRESHOLD) {
         const holdDuration = mode === 'forgiving' ? this.forgivingHoldDuration : this.strictHoldDuration;
         const timeSinceHold = timestamp - this.holdStartTime;
 
         if (timeSinceHold < holdDuration) {
           // Update cents if we have valid pitch (allows tuning during sustain)
-          if (rawPitch > 60 && rawPitch < 500) {
+          if (rawPitch > MIN_VALID_PITCH_HZ && rawPitch < MAX_VALID_PITCH_HZ) {
             const targetString = GUITAR_STRINGS.find(s => s.note === this.heldState!.noteName);
             if (targetString) {
               const updatedCents = calculateCents(rawPitch, targetString.frequency);
@@ -417,8 +446,8 @@ class TunerProcessor extends AudioWorkletProcessor {
   private detector: PitchDetector | null = null;
   private buffer: Float32Array;
   private samplesProcessed: number = 0;
-  private readonly BUFFER_SIZE = 4096;
-  private readonly UPDATE_INTERVAL = 800;
+  private readonly BUFFER_SIZE = AUDIO_BUFFER_SIZE;
+  private readonly UPDATE_INTERVAL = PITCH_UPDATE_INTERVAL_SAMPLES;
   private initialized = false;
 
   // Consolidated processing pipeline (3 classes instead of 6)

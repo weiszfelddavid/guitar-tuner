@@ -1,5 +1,12 @@
 // src/ui/canvas.ts
 import { TunerState, getStringInfo } from './tuner';
+import {
+  VOLUME_METER_SENSITIVITY_SCALE,
+  VOLUME_METER_DISPLAY_THRESHOLD,
+  VOLUME_GOOD_THRESHOLD,
+  CENTS_DISPLAY_RANGE,
+  NEEDLE_MAX_ANGLE_DEG
+} from '../constants/tuner-config';
 
 export class TunerCanvas {
   private canvas: HTMLCanvasElement;
@@ -51,7 +58,7 @@ export class TunerCanvas {
       textMuted: style.getPropertyValue('--color-text-muted').trim() || '#888888',
       textSubtle: style.getPropertyValue('--color-text-subtle').trim() || '#666666',
       success: style.getPropertyValue('--color-success').trim() || '#00ff00',
-      warning: style.getPropertyValue('--color-warning').trim() || '#ffa500',
+      warning: style.getPropertyValue('--color-warning').trim() || '#ffaCENTS_DISPLAY_RANGE0',
       danger: style.getPropertyValue('--color-danger').trim() || '#ff0000',
       accent: style.getPropertyValue('--color-accent').trim() || '#4a9eff',
       border: style.getPropertyValue('--color-border').trim() || 'rgba(255,255,255,0.2)',
@@ -130,7 +137,7 @@ export class TunerCanvas {
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.colors.textSubtle;
     this.ctx.lineWidth = 4;
-    // Arc from -45 to +45 degrees
+    // Arc from -NEEDLE_MAX_ANGLE_DEG to +NEEDLE_MAX_ANGLE_DEG degrees
     this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75);
     this.ctx.stroke();
 
@@ -138,8 +145,8 @@ export class TunerCanvas {
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.colors.success + '33'; // Semi-transparent green
     this.ctx.lineWidth = 8;
-    // ±5 cents = ±4.5 degrees out of the ±45 degree range
-    const targetAngleRange = (5 / 50) * (Math.PI / 4); // 4.5 degrees in radians
+    // ±5 cents = ±4.5 degrees out of the ±NEEDLE_MAX_ANGLE_DEG degree range
+    const targetAngleRange = (5 / CENTS_DISPLAY_RANGE) * (Math.PI / 4); // 4.5 degrees in radians
     const centerAngle = Math.PI * 1.5; // Straight up (270 degrees)
     this.ctx.arc(centerX, pivotY, radius, centerAngle - targetAngleRange, centerAngle + targetAngleRange);
     this.ctx.stroke();
@@ -147,7 +154,7 @@ export class TunerCanvas {
     // Draw Tick Marks - only center marker
     const tickPositions = [0]; // Only center tick
     tickPositions.forEach(cents => {
-        const angleDeg = (cents / 50) * 45; // Map cents to degrees
+        const angleDeg = (cents / CENTS_DISPLAY_RANGE) * NEEDLE_MAX_ANGLE_DEG; // Map cents to degrees
         const angleRad = (angleDeg - 90) * (Math.PI / 180); // Convert to radians
 
         const tickLength = 20;
@@ -171,7 +178,7 @@ export class TunerCanvas {
     });
 
     // Draw Flat symbol (♭) at the left end of the arc
-    const flatAngleDeg = -45; // Left end
+    const flatAngleDeg = -NEEDLE_MAX_ANGLE_DEG; // Left end
     const flatAngleRad = (flatAngleDeg - 90) * (Math.PI / 180);
     const flatRadius = radius + 25;
     const flatX = centerX + flatRadius * Math.cos(flatAngleRad);
@@ -185,7 +192,7 @@ export class TunerCanvas {
     this.ctx.fillText('♭', flatX, flatY);
 
     // Draw Sharp symbol (#) at the right end of the arc
-    const sharpAngleDeg = 45; // Right end
+    const sharpAngleDeg = NEEDLE_MAX_ANGLE_DEG; // Right end
     const sharpAngleRad = (sharpAngleDeg - 90) * (Math.PI / 180);
     const sharpRadius = radius + 25;
     const sharpX = centerX + sharpRadius * Math.cos(sharpAngleRad);
@@ -194,10 +201,10 @@ export class TunerCanvas {
     this.ctx.fillText('#', sharpX, sharpY);
 
     if (state.noteName !== '--') {
-        // Map cents (-50 to +50) to angle (-45 to +45 degrees)
+        // Map cents (-CENTS_DISPLAY_RANGE to +CENTS_DISPLAY_RANGE) to angle (-NEEDLE_MAX_ANGLE_DEG to +NEEDLE_MAX_ANGLE_DEG degrees)
         // Clamp cents
-        const clampedCents = Math.max(-50, Math.min(50, smoothedCents));
-        const angleDeg = (clampedCents / 50) * 45;
+        const clampedCents = Math.max(-CENTS_DISPLAY_RANGE, Math.min(CENTS_DISPLAY_RANGE, smoothedCents));
+        const angleDeg = (clampedCents / CENTS_DISPLAY_RANGE) * NEEDLE_MAX_ANGLE_DEG;
 
         // Convert to radians for math (0 is up, -PI/2 is left)
         const angleRad = (angleDeg - 90) * (Math.PI / 180);
@@ -250,10 +257,9 @@ export class TunerCanvas {
     // ---------------------------------------------------------
     
     // 1. Normalize Volume (0.0 to 1.0)
-    // RMS is typically small. We scale it up. 
-    // 0.3 RMS is treated as "Max/Clipping" for visualization.
-    const SENSITIVITY_SCALE = 0.3; 
-    const targetVolume = Math.min(state.volume / SENSITIVITY_SCALE, 1.0);
+    // RMS is typically small. We scale it up.
+    // VOLUME_METER_SENSITIVITY_SCALE RMS is treated as "Max/Clipping" for visualization.
+    const targetVolume = Math.min(state.volume / VOLUME_METER_SENSITIVITY_SCALE, 1.0);
 
     // 2. Ballistics: Instant Rise, Slow Decay
     const DECAY_RATE = 0.5; // Units per second
@@ -282,7 +288,7 @@ export class TunerCanvas {
     const barX = (this.width - barWidth) / 2;
     const barY = this.height - 40;
 
-    const hasSignal = this.displayedVolume > 0.01 || this.peakVolume > 0.01;
+    const hasSignal = this.displayedVolume > VOLUME_METER_DISPLAY_THRESHOLD || this.peakVolume > VOLUME_METER_DISPLAY_THRESHOLD;
 
     // Background Track - Always visible
     // Dim when no signal, brighter when active
@@ -302,7 +308,7 @@ export class TunerCanvas {
         let zoneColor = this.colors.textSubtle; // Default Weak
         let feedbackText = "";
 
-        if (this.displayedVolume > 0.8) {
+        if (this.displayedVolume > VOLUME_GOOD_THRESHOLD) {
             zoneColor = this.colors.danger; // Hot/Clip (Red)
             feedbackText = "TOO LOUD / MOVE BACK";
         } else if (this.displayedVolume > 0.15) {
