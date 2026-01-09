@@ -103,11 +103,12 @@
   - **Fix:** Show "Ready" or checkmark icon when in optimal range
   - **Files:** src/ui/canvas.ts (lines 290-303)
 
-- [ ] **Show volume meter always (not just during signal)**
-  - **Problem:** Meter hidden when volume < 0.01 (canvas.ts:280)
-  - **Impact:** Can't verify microphone is connected/working before playing
-  - **Fix:** Always show meter background, dim when no signal
-  - **Files:** src/ui/canvas.ts
+- [x] **Show volume meter always (not just during signal)** ✅ COMPLETED
+  - **Problem:** Meter hidden when volume < 0.01, users couldn't verify mic was working before playing
+  - **Impact:** Poor UX for setup and troubleshooting, no feedback that audio input was ready
+  - **Fix:** Always show meter background (dimmed when no signal), added "MIC READY" indicator
+  - **Result:** Users can verify mic without playing, better setup experience, main 20.86→21.07 kB (+210 bytes)
+  - **Commit:** bd69491
 
 - [ ] **Add visual indicator when string is locked**
   - **Problem:** String selector shows "active" but main display doesn't
