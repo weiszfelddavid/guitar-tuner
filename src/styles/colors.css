@@ -1,0 +1,52 @@
+/* colors.css - OKLCH color system with primitives and semantics */
+@layer base {
+  :root {
+    /* Primitives - OKLCH values (lightness, chroma, hue) */
+    --lch-bg-dark: 15% 0 0;
+    --lch-surface: 20% 0 0;
+    --lch-text-primary: 100% 0 0;
+    --lch-text-secondary: 60% 0 0;
+    --lch-text-tertiary: 45% 0 0;
+
+    /* Brand/Accent Colors */
+    --lch-accent: 65% 0.19 255;        /* Blue accent */
+    --lch-success: 85% 0.29 142;       /* Green */
+    --lch-warning: 75% 0.17 75;        /* Orange */
+    --lch-danger: 60% 0.25 25;         /* Red */
+
+    /* Semantic Variables */
+    --color-bg: oklch(var(--lch-bg-dark));
+    --color-surface: oklch(var(--lch-surface));
+    --color-text: oklch(var(--lch-text-primary));
+    --color-text-muted: oklch(var(--lch-text-secondary));
+    --color-text-subtle: oklch(var(--lch-text-tertiary));
+
+    --color-accent: oklch(var(--lch-accent));
+    --color-accent-hover: oklch(from var(--color-accent) calc(l + 0.05) c h);
+    --color-accent-muted: oklch(from var(--color-accent) l calc(c * 0.3) h / 0.2);
+
+    --color-success: oklch(var(--lch-success));
+    --color-warning: oklch(var(--lch-warning));
+    --color-danger: oklch(var(--lch-danger));
+
+    /* Component-specific derived colors */
+    --color-border: oklch(from var(--color-text) l c h / 0.2);
+    --color-border-subtle: oklch(from var(--color-text) l c h / 0.1);
+    --color-overlay: oklch(from var(--color-bg) l c h / 0.9);
+    --color-shadow: oklch(0% 0 0 / 0.5);
+  }
+
+  /* Dark mode override (system preference) */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --lch-bg-dark: 98% 0 0;
+      --lch-surface: 95% 0 0;
+      --lch-text-primary: 15% 0 0;
+      --lch-text-secondary: 40% 0 0;
+      --lch-text-tertiary: 55% 0 0;
+
+      /* Accent colors remain the same, but will be derived differently */
+      --lch-accent: 55% 0.19 255;
+    }
+  }
+}

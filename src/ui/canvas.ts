@@ -14,17 +14,48 @@ export class TunerCanvas {
   private peakTimer: number = 0;
   private lastFrameTime: number = 0;
 
+  // CSS Custom Properties cache
+  private colors: {
+    bg: string;
+    text: string;
+    textMuted: string;
+    textSubtle: string;
+    success: string;
+    warning: string;
+    danger: string;
+    accent: string;
+    border: string;
+  };
+
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) throw new Error(`Canvas with id ${canvasId} not found`);
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d', { alpha: false })!; // alpha: false for performance
-    
+
+    // Load colors from CSS custom properties
+    this.colors = this.loadColors();
+
     // Handle resizing
     this.resize();
     window.addEventListener('resize', () => this.resize());
-    
+
     this.lastFrameTime = performance.now();
+  }
+
+  private loadColors() {
+    const style = getComputedStyle(document.documentElement);
+    return {
+      bg: style.getPropertyValue('--color-bg').trim() || '#1a1a1a',
+      text: style.getPropertyValue('--color-text').trim() || '#ffffff',
+      textMuted: style.getPropertyValue('--color-text-muted').trim() || '#888888',
+      textSubtle: style.getPropertyValue('--color-text-subtle').trim() || '#666666',
+      success: style.getPropertyValue('--color-success').trim() || '#00ff00',
+      warning: style.getPropertyValue('--color-warning').trim() || '#ffa500',
+      danger: style.getPropertyValue('--color-danger').trim() || '#ff0000',
+      accent: style.getPropertyValue('--color-accent').trim() || '#4a9eff',
+      border: style.getPropertyValue('--color-border').trim() || 'rgba(255,255,255,0.2)',
+    };
   }
 
   private resize() {
@@ -49,9 +80,9 @@ export class TunerCanvas {
     this.lastFrameTime = now;
 
     this.ctx.clearRect(0, 0, this.width, this.height);
-    
+
     // Background
-    this.ctx.fillStyle = '#1a1a1a';
+    this.ctx.fillStyle = this.colors.bg;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     const centerX = this.width / 2;
@@ -61,18 +92,6 @@ export class TunerCanvas {
     // Clamp font size to prevent excessive scaling on desktop
     const fontSize = Math.min(Math.floor(radius * 0.75), 80);
     const verticalOffset = radius * 0.6; // Push text up and needle down
-
-    // Determine Color
-    let color = '#ffffff'; // White (Searching)
-    if (state.noteName !== '--') {
-        if (state.isLocked) {
-            color = '#00ff00'; // Green (Locked)
-        } else if (Math.abs(state.cents) > 2) {
-             color = '#ff0000'; // Red (Out of tune)
-        } else {
-            color = '#ffa500'; // Orange (Close/Detection)
-        }
-    }
 
     // Draw Note Name - just the letter, positioned above the arc
     const noteNameY = centerY - verticalOffset - fontSize * 0.35;
@@ -84,7 +103,7 @@ export class TunerCanvas {
       this.ctx.font = `bold ${fontSize}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillStyle = '#ffffff'; // Always white for note letter
+      this.ctx.fillStyle = this.colors.text;
       this.ctx.fillText(noteLetter, centerX, noteNameY);
 
       // Draw Hz and Cents side-by-side below the note letter
@@ -92,14 +111,14 @@ export class TunerCanvas {
       const infoY = noteNameY + fontSize * 0.55;
 
       this.ctx.font = `${infoFontSize}px sans-serif`;
-      this.ctx.fillStyle = '#888';
+      this.ctx.fillStyle = this.colors.textMuted;
       this.ctx.fillText(`${state.frequency.toFixed(1)} Hz  •  ${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)}¢`, centerX, infoY);
     } else {
       // Show "--" when no note detected
       this.ctx.font = `bold ${fontSize}px sans-serif`;
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillStyle = this.colors.text;
       this.ctx.fillText('--', centerX, noteNameY);
     }
 
@@ -109,7 +128,7 @@ export class TunerCanvas {
     
     // Draw Scale Arc
     this.ctx.beginPath();
-    this.ctx.strokeStyle = '#444';
+    this.ctx.strokeStyle = this.colors.textSubtle;
     this.ctx.lineWidth = 4;
     // Arc from -45 to +45 degrees
     this.ctx.arc(centerX, pivotY, radius, Math.PI * 1.25, Math.PI * 1.75);
@@ -117,7 +136,7 @@ export class TunerCanvas {
 
     // Draw Target Zone (±5 cents) - Green highlight in center
     this.ctx.beginPath();
-    this.ctx.strokeStyle = '#00ff0033'; // Semi-transparent green
+    this.ctx.strokeStyle = this.colors.success + '33'; // Semi-transparent green
     this.ctx.lineWidth = 8;
     // ±5 cents = ±4.5 degrees out of the ±45 degree range
     const targetAngleRange = (5 / 50) * (Math.PI / 4); // 4.5 degrees in radians
@@ -144,7 +163,7 @@ export class TunerCanvas {
 
         // Draw tick mark
         this.ctx.beginPath();
-        this.ctx.strokeStyle = '#00ff00';
+        this.ctx.strokeStyle = this.colors.success;
         this.ctx.lineWidth = tickWidth;
         this.ctx.moveTo(startX, startY);
         this.ctx.lineTo(endX, endY);
@@ -160,7 +179,7 @@ export class TunerCanvas {
 
     const symbolFontSize = Math.min(Math.floor(fontSize * 0.25), 20);
     this.ctx.font = `${symbolFontSize}px sans-serif`;
-    this.ctx.fillStyle = '#666';
+    this.ctx.fillStyle = this.colors.textSubtle;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillText('♭', flatX, flatY);
@@ -190,11 +209,11 @@ export class TunerCanvas {
         // Determine bead color based on tuning accuracy
         let beadColor;
         if (Math.abs(clampedCents) <= 5) {
-            beadColor = '#00ff00'; // Green - in tune
+            beadColor = this.colors.success; // Green - in tune
         } else if (Math.abs(clampedCents) <= 15) {
-            beadColor = '#ffa500'; // Orange - close
+            beadColor = this.colors.warning; // Orange - close
         } else {
-            beadColor = '#ff0000'; // Red - out of tune
+            beadColor = this.colors.danger; // Red - out of tune
         }
 
         // Draw bead (solid circle on the arc)
@@ -213,7 +232,7 @@ export class TunerCanvas {
 
         // Add subtle border to bead
         this.ctx.shadowColor = 'transparent';
-        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.strokeStyle = this.colors.text;
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
 
@@ -222,7 +241,7 @@ export class TunerCanvas {
         // Draw "Listening" text
         const listeningFontSize = Math.min(Math.floor(fontSize * 0.2), 18);
         this.ctx.font = `${listeningFontSize}px sans-serif`;
-        this.ctx.fillStyle = '#666';
+        this.ctx.fillStyle = this.colors.textSubtle;
         this.ctx.fillText("Listening...", centerX, pivotY);
     }
     
@@ -265,21 +284,21 @@ export class TunerCanvas {
         const barY = this.height - 40;
 
         // Background Track (Subtle)
-        this.ctx.fillStyle = '#333';
+        this.ctx.fillStyle = this.colors.textSubtle;
         this.ctx.fillRect(barX, barY, barWidth, barHeight);
 
         // Determine Zone Color & Feedback Text
-        let zoneColor = '#666'; // Default Weak
+        let zoneColor = this.colors.textSubtle; // Default Weak
         let feedbackText = "";
-        
+
         if (this.displayedVolume > 0.8) {
-            zoneColor = '#ff3333'; // Hot/Clip (Red)
+            zoneColor = this.colors.danger; // Hot/Clip (Red)
             feedbackText = "TOO LOUD / MOVE BACK";
         } else if (this.displayedVolume > 0.15) {
-            zoneColor = '#00ff00'; // Good (Green)
+            zoneColor = this.colors.success; // Good (Green)
             feedbackText = ""; // Silence is Golden (Reward)
         } else {
-            zoneColor = '#aaaaaa'; // Weak (Grey/White)
+            zoneColor = this.colors.textMuted; // Weak (Grey)
             feedbackText = "MOVE CLOSER";
         }
 
@@ -292,7 +311,7 @@ export class TunerCanvas {
 
         // Draw Peak Marker (White Line)
         const peakX = barX + (barWidth * this.peakVolume);
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = this.colors.text;
         this.ctx.fillRect(peakX, barY - 2, 2, barHeight + 4);
 
         // Draw Feedback Text

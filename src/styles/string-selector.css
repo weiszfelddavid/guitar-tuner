@@ -1,0 +1,136 @@
+/* string-selector.css - String selector component */
+@layer components {
+  .string-selector {
+    /* Component API variables with defaults */
+    --selector-bg: var(--color-overlay);
+    --selector-padding-block: var(--space-lg);
+    --selector-padding-inline: var(--space-sm);
+    --selector-gap: var(--space-xs);
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-block: var(--selector-padding-block);
+    padding-inline: var(--selector-padding-inline);
+    background: linear-gradient(to top, var(--selector-bg) 0%, transparent 100%);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    gap: var(--selector-gap);
+  }
+
+  .string-button {
+    /* Button API variables */
+    --btn-size: 50px;
+    --btn-bg: oklch(from var(--color-text) l c h / 0.1);
+    --btn-border: var(--color-border);
+    --btn-color: var(--color-text);
+    --btn-opacity: 0.3;
+    --btn-transition: var(--transition-base);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: var(--btn-size);
+    height: var(--btn-size);
+    border-radius: var(--radius-full);
+    background: var(--btn-bg);
+    border: 2px solid var(--btn-border);
+    cursor: pointer;
+    transition: all var(--btn-transition);
+    padding: 0;
+    opacity: var(--btn-opacity);
+    user-select: none;
+  }
+
+  .string-button:hover {
+    --btn-opacity: 0.6;
+    transform: scale(1.05);
+  }
+
+  .string-button .string-note {
+    font-size: var(--text-lg);
+    font-weight: bold;
+    color: var(--btn-color);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .string-button .string-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* State variants - only override what changes */
+  .string-button.detected {
+    --btn-opacity: 0.7;
+    --btn-bg: var(--color-accent-muted);
+    --btn-border: oklch(from var(--color-accent) l c h / 0.5);
+    --btn-color: var(--color-accent);
+  }
+
+  .string-button.active {
+    --btn-opacity: 1;
+    --btn-bg: oklch(from var(--color-accent) l c h / 0.4);
+    --btn-border: var(--color-accent);
+    box-shadow: 0 0 15px oklch(from var(--color-accent) l c h / 0.5);
+  }
+
+  .string-button.active .string-note {
+    font-size: var(--text-xl);
+  }
+
+  .string-button.active .string-label {
+    color: var(--color-text);
+    font-weight: bold;
+  }
+
+  /* Responsive - content-based breakpoints */
+  @media (max-width: 600px) {
+    .string-selector {
+      --selector-padding-block: var(--space-md);
+      --selector-padding-inline: 5px;
+      --selector-gap: 4px;
+    }
+
+    .string-button {
+      --btn-size: 45px;
+    }
+
+    .string-button .string-note {
+      font-size: var(--text-base);
+    }
+
+    .string-button .string-label {
+      font-size: 7px;
+    }
+
+    .string-button.active .string-note {
+      font-size: var(--text-lg);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .string-button {
+      --btn-size: 60px;
+    }
+
+    .string-button .string-note {
+      font-size: var(--text-xl);
+    }
+
+    .string-button .string-label {
+      font-size: 9px;
+    }
+
+    .string-button.active .string-note {
+      font-size: var(--text-2xl);
+    }
+  }
+}
