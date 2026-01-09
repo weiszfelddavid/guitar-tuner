@@ -4,6 +4,7 @@ import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { getTunerState, KalmanFilter, TunerState, PluckDetector, PitchStabilizer, StringLocker, OctaveDiscriminator, NoiseGate, VisualHoldManager, TunerMode, getDefaultConfig } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
+import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
 
 // Enable on-screen debugging for mobile
@@ -41,6 +42,8 @@ const stringLocker = new StringLocker();
 const octaveDiscriminator = new OctaveDiscriminator();
 const noiseGate = new NoiseGate();
 const visualHoldManager = new VisualHoldManager();
+let stringSelector: StringSelector | null = null;
+let manualStringLock: string | null = null; // Manually selected string frequency target
 // We use a separate smoothed value for the needle to keep it fluid
 let smoothedCents = 0;
 
@@ -175,6 +178,25 @@ async function startTuner() {
         }
     }
 
+    // Add string selector component
+    if (!stringSelector) {
+        stringSelector = new StringSelector();
+
+        // Handle manual string selection
+        stringSelector.onSelect((stringId) => {
+            if (stringId) {
+                const selectedString = stringSelector!.getSelectedString();
+                if (selectedString) {
+                    manualStringLock = selectedString.note;
+                    console.log(`Manual string lock: ${selectedString.label} (${selectedString.note})`);
+                }
+            } else {
+                manualStringLock = null;
+                console.log('Manual string lock released');
+            }
+        });
+    }
+
     // FIX 3: Global "Wake Up" listener & UI Overlay
     const checkState = () => {
         if (context.state === 'suspended') {
@@ -247,11 +269,25 @@ async function startTuner() {
       // 4. State Calculation (with mode configuration)
       const { isAttacking, factor } = pluckDetector.process(volume || 0, performance.now());
       const config = getDefaultConfig(currentMode);
-      const rawState = getTunerState(prioritizedPitch, clarity, volume || 0, config);
+      let rawState = getTunerState(prioritizedPitch, clarity, volume || 0, config);
 
-      // 5. String Locking
+      // If manual string lock is active, force the note and recalculate cents
+      if (manualStringLock && rawState.noteName !== '--') {
+          // Find the target frequency for the locked string
+          const lockedString = stringSelector?.getSelectedString();
+          if (lockedString) {
+              // Force the note name to the locked string
+              rawState.noteName = lockedString.note;
+              // Recalculate cents relative to the locked string's frequency
+              rawState.cents = 1200 * Math.log2(prioritizedPitch / lockedString.frequency);
+          }
+      }
+
+      // 5. String Locking (only if not manually locked)
       if (rawState.noteName !== '--') {
-          rawState.noteName = stringLocker.process(rawState.noteName);
+          if (!manualStringLock) {
+              rawState.noteName = stringLocker.process(rawState.noteName);
+          }
           octaveDiscriminator.setLastNote(rawState.noteName);
       } else {
           stringLocker.reset();
@@ -269,6 +305,11 @@ async function startTuner() {
 
       // Apply visual hold (with attack detection and raw pitch for sustain tracking)
       currentState = visualHoldManager.process(processedState, volume || 0, currentMode, performance.now(), isAttacking, prioritizedPitch);
+
+      // Update string selector with current detected string
+      if (stringSelector) {
+          stringSelector.setAutoDetectedString(currentState.noteName);
+      }
 
       if (currentState.noteName !== '--') {
           smoothedCents = kalman.filter(currentState.cents);
