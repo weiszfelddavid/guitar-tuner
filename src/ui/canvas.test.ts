@@ -44,9 +44,9 @@ describe('TunerCanvas', () => {
     expect(ctx.fillText).toHaveBeenCalledWith('--', expect.any(Number), expect.any(Number));
   });
 
-  it('should draw the needle in the center for 0 cents offset', () => {
+  it('should draw the bead in the center for 0 cents offset', () => {
     const state: TunerState = {
-      noteName: 'E',
+      noteName: 'E2',
       cents: 0,
       clarity: 1,
       volume: 0.5,
@@ -55,23 +55,25 @@ describe('TunerCanvas', () => {
     };
     canvas.render(state, 0);
 
-    // For 0 cents, the angle is -90 degrees (pointing straight up).
-    // The tapered needle should have its tip at (centerX, pivotY - radius)
+    // For 0 cents, the bead should be at (centerX, pivotY - radius)
     const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const centerX = (canvas as any).width / 2;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
-    // Check that the needle tip coordinates appear in lineTo calls
-    // The needle triangle uses lineTo for the tip point
-    const lineToCallsWithTip = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
-      return Math.abs(call[0] - centerX) < 1 && Math.abs(call[1] - (pivotY - radius)) < 1;
+    // Check that the bead (arc) is drawn near the expected position
+    const arcCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
+      const x = call[0];
+      const y = call[1];
+      const r = call[2];
+      // Bead should be small circle (radius < 20) at the indicator position
+      return r < 20 && Math.abs(x - centerX) < 5 && Math.abs(y - (pivotY - radius)) < 5;
     });
-    expect(lineToCallsWithTip.length).toBeGreaterThan(0);
+    expect(arcCalls.length).toBeGreaterThan(0);
   });
 
-  it('should draw the needle to the right for positive cents', () => {
+  it('should draw the bead to the right for positive cents', () => {
     const state: TunerState = {
-      noteName: 'E',
+      noteName: 'E2',
       cents: 25,
       clarity: 1,
       volume: 0.5,
@@ -80,25 +82,29 @@ describe('TunerCanvas', () => {
     };
     canvas.render(state, 25);
 
-    // For +25 cents, the angle is > -90 degrees. The x coordinate should be > centerX.
+    // For +25 cents, the bead should be to the right of center
     const centerX = (canvas as any).width / 2;
     const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
-    // Find lineTo calls that are near the arc radius (needle tip)
-    const needleTipCalls = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
-      const distFromPivot = Math.sqrt(Math.pow(call[0] - centerX, 2) + Math.pow(call[1] - pivotY, 2));
-      return Math.abs(distFromPivot - radius) < 10; // Within 10px of radius
+    // Find arc calls that represent the bead (small radius < 20)
+    const beadCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
+      const x = call[0];
+      const y = call[1];
+      const r = call[2];
+      const distFromPivot = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - pivotY, 2));
+      // Bead is small circle on the arc
+      return r < 20 && Math.abs(distFromPivot - radius) < 20;
     });
 
-    // Check that at least one needle tip is to the right of center
-    const hasRightwardNeedle = needleTipCalls.some((call: number[]) => call[0] > centerX);
-    expect(hasRightwardNeedle).toBe(true);
+    // Check that at least one bead is to the right of center
+    const hasRightwardBead = beadCalls.some((call: number[]) => call[0] > centerX);
+    expect(hasRightwardBead).toBe(true);
   });
 
-  it('should draw the needle to the left for negative cents', () => {
+  it('should draw the bead to the left for negative cents', () => {
     const state: TunerState = {
-      noteName: 'E',
+      noteName: 'E2',
       cents: -25,
       clarity: 1,
       volume: 0.5,
@@ -107,30 +113,34 @@ describe('TunerCanvas', () => {
     };
     canvas.render(state, -25);
 
-    // For -25 cents, the angle is < -90 degrees. The x coordinate should be < centerX.
+    // For -25 cents, the bead should be to the left of center
     const centerX = (canvas as any).width / 2;
     const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
-    // Find lineTo calls that are near the arc radius (needle tip)
-    const needleTipCalls = (ctx.lineTo as any).mock.calls.filter((call: number[]) => {
-      const distFromPivot = Math.sqrt(Math.pow(call[0] - centerX, 2) + Math.pow(call[1] - pivotY, 2));
-      return Math.abs(distFromPivot - radius) < 10; // Within 10px of radius
+    // Find arc calls that represent the bead (small radius < 20)
+    const beadCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
+      const x = call[0];
+      const y = call[1];
+      const r = call[2];
+      const distFromPivot = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - pivotY, 2));
+      // Bead is small circle on the arc
+      return r < 20 && Math.abs(distFromPivot - radius) < 20;
     });
 
-    // Check that at least one needle tip is to the left of center
-    const hasLeftwardNeedle = needleTipCalls.some((call: number[]) => call[0] < centerX);
-    expect(hasLeftwardNeedle).toBe(true);
+    // Check that at least one bead is to the left of center
+    const hasLeftwardBead = beadCalls.some((call: number[]) => call[0] < centerX);
+    expect(hasLeftwardBead).toBe(true);
   });
 
   it('should render the volume meter correctly', () => {
     const state: TunerState = {
-      noteName: 'A',
+      noteName: 'A2',
       cents: 0,
       clarity: 1,
       volume: 0.1, // This will be scaled
       isLocked: false,
-      frequency: 440,
+      frequency: 110,
     };
     canvas.render(state, 0);
 

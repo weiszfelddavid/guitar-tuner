@@ -74,26 +74,33 @@ export class TunerCanvas {
         }
     }
 
-    // Draw Note Name - positioned well above the needle arc
-    this.ctx.font = `bold ${fontSize}px sans-serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillStyle = color;
-    // Move note name higher to avoid overlap with arc
+    // Draw Note Name - just the letter, positioned above the arc
     const noteNameY = centerY - verticalOffset - fontSize * 0.35;
-    this.ctx.fillText(state.noteName, centerX, noteNameY);
 
-    // Draw String Indicator (if standard guitar string detected)
     if (state.noteName !== '--') {
-      const stringInfo = getStringInfo(state.noteName);
-      if (stringInfo) {
-        const stringInfoFontSize = Math.floor(fontSize * 0.25);
-        this.ctx.font = `${stringInfoFontSize}px sans-serif`;
-        this.ctx.fillStyle = '#888';
-        // Position string info below note name but above the arc
-        const stringInfoY = noteNameY + fontSize * 0.5 + stringInfoFontSize * 0.5;
-        this.ctx.fillText(`${stringInfo.stringNumber}th String (${stringInfo.stringName})`, centerX, stringInfoY);
-      }
+      // Extract just the note letter (E, A, D, G, B) without octave number
+      const noteLetter = state.noteName.charAt(0);
+
+      this.ctx.font = `bold ${fontSize}px sans-serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillStyle = '#ffffff'; // Always white for note letter
+      this.ctx.fillText(noteLetter, centerX, noteNameY);
+
+      // Draw Hz and Cents side-by-side below the note letter
+      const infoFontSize = Math.min(Math.floor(fontSize * 0.18), 16);
+      const infoY = noteNameY + fontSize * 0.55;
+
+      this.ctx.font = `${infoFontSize}px sans-serif`;
+      this.ctx.fillStyle = '#888';
+      this.ctx.fillText(`${state.frequency.toFixed(1)} Hz  •  ${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)}¢`, centerX, infoY);
+    } else {
+      // Show "--" when no note detected
+      this.ctx.font = `bold ${fontSize}px sans-serif`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillText('--', centerX, noteNameY);
     }
 
     // Draw Needle (Arc Meter)
@@ -118,16 +125,14 @@ export class TunerCanvas {
     this.ctx.arc(centerX, pivotY, radius, centerAngle - targetAngleRange, centerAngle + targetAngleRange);
     this.ctx.stroke();
 
-    // Draw Tick Marks at ±10, ±25, ±50 cents
-    const tickPositions = [-50, -25, -10, 0, 10, 25, 50]; // cents
+    // Draw Tick Marks - only center marker
+    const tickPositions = [0]; // Only center tick
     tickPositions.forEach(cents => {
         const angleDeg = (cents / 50) * 45; // Map cents to degrees
         const angleRad = (angleDeg - 90) * (Math.PI / 180); // Convert to radians
 
-        // Determine tick size (longer for major marks)
-        const isCenter = cents === 0;
-        const tickLength = isCenter ? 20 : (Math.abs(cents) === 50 ? 15 : 10);
-        const tickWidth = isCenter ? 3 : 2;
+        const tickLength = 20;
+        const tickWidth = 3;
 
         // Calculate tick position on arc
         const innerRadius = radius - 5;
@@ -139,26 +144,35 @@ export class TunerCanvas {
 
         // Draw tick mark
         this.ctx.beginPath();
-        this.ctx.strokeStyle = isCenter ? '#00ff00' : '#666';
+        this.ctx.strokeStyle = '#00ff00';
         this.ctx.lineWidth = tickWidth;
         this.ctx.moveTo(startX, startY);
         this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
-
-        // Draw numerical labels for major tick marks (±50, ±25, 0)
-        if (Math.abs(cents) === 50 || Math.abs(cents) === 25 || cents === 0) {
-            const labelRadius = radius + tickLength + 15;
-            const labelX = centerX + labelRadius * Math.cos(angleRad);
-            const labelY = pivotY + labelRadius * Math.sin(angleRad);
-
-            const labelFontSize = Math.min(Math.floor(fontSize * 0.12), 14);
-            this.ctx.font = `${labelFontSize}px sans-serif`;
-            this.ctx.fillStyle = isCenter ? '#00ff00' : '#888';
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(cents > 0 ? `+${cents}` : `${cents}`, labelX, labelY);
-        }
     });
+
+    // Draw Flat symbol (♭) at the left end of the arc
+    const flatAngleDeg = -45; // Left end
+    const flatAngleRad = (flatAngleDeg - 90) * (Math.PI / 180);
+    const flatRadius = radius + 25;
+    const flatX = centerX + flatRadius * Math.cos(flatAngleRad);
+    const flatY = pivotY + flatRadius * Math.sin(flatAngleRad);
+
+    const symbolFontSize = Math.min(Math.floor(fontSize * 0.25), 20);
+    this.ctx.font = `${symbolFontSize}px sans-serif`;
+    this.ctx.fillStyle = '#666';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText('♭', flatX, flatY);
+
+    // Draw Sharp symbol (#) at the right end of the arc
+    const sharpAngleDeg = 45; // Right end
+    const sharpAngleRad = (sharpAngleDeg - 90) * (Math.PI / 180);
+    const sharpRadius = radius + 25;
+    const sharpX = centerX + sharpRadius * Math.cos(sharpAngleRad);
+    const sharpY = pivotY + sharpRadius * Math.sin(sharpAngleRad);
+
+    this.ctx.fillText('#', sharpX, sharpY);
 
     if (state.noteName !== '--') {
         // Map cents (-50 to +50) to angle (-45 to +45 degrees)
@@ -169,75 +183,41 @@ export class TunerCanvas {
         // Convert to radians for math (0 is up, -PI/2 is left)
         const angleRad = (angleDeg - 90) * (Math.PI / 180);
 
-        // Calculate needle tip
-        const tipX = centerX + radius * Math.cos(angleRad);
-        const tipY = pivotY + radius * Math.sin(angleRad);
+        // Calculate bead position on the arc
+        const beadX = centerX + radius * Math.cos(angleRad);
+        const beadY = pivotY + radius * Math.sin(angleRad);
 
-        // Draw tapered needle with drop shadow
-        const needleWidth = 8; // Base width
-        const needleLength = radius;
+        // Determine bead color based on tuning accuracy
+        let beadColor;
+        if (Math.abs(clampedCents) <= 5) {
+            beadColor = '#00ff00'; // Green - in tune
+        } else if (Math.abs(clampedCents) <= 15) {
+            beadColor = '#ffa500'; // Orange - close
+        } else {
+            beadColor = '#ff0000'; // Red - out of tune
+        }
 
-        // Calculate perpendicular vector for needle width
-        const perpAngle = angleRad + Math.PI / 2;
-        const halfWidth = needleWidth / 2;
+        // Draw bead (solid circle on the arc)
+        const beadRadius = Math.min(12, radius * 0.05); // Responsive bead size
 
-        // Needle base points (at pivot)
-        const baseLeft = {
-            x: centerX + halfWidth * Math.cos(perpAngle),
-            y: pivotY + halfWidth * Math.sin(perpAngle)
-        };
-        const baseRight = {
-            x: centerX - halfWidth * Math.cos(perpAngle),
-            y: pivotY - halfWidth * Math.sin(perpAngle)
-        };
-
-        // Needle tip (tapered to a point)
-        const tip = { x: tipX, y: tipY };
-
-        // Draw shadow first
         this.ctx.save();
         this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
         this.ctx.shadowBlur = 8;
         this.ctx.shadowOffsetX = 2;
         this.ctx.shadowOffsetY = 2;
 
-        // Draw needle shape
         this.ctx.beginPath();
-        this.ctx.fillStyle = color;
-        this.ctx.moveTo(baseLeft.x, baseLeft.y);
-        this.ctx.lineTo(baseRight.x, baseRight.y);
-        this.ctx.lineTo(tip.x, tip.y);
-        this.ctx.closePath();
+        this.ctx.fillStyle = beadColor;
+        this.ctx.arc(beadX, beadY, beadRadius, 0, Math.PI * 2);
         this.ctx.fill();
 
-        // Draw needle outline for definition
+        // Add subtle border to bead
         this.ctx.shadowColor = 'transparent';
-        this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.lineWidth = 2;
         this.ctx.stroke();
 
         this.ctx.restore();
-
-        // Draw center pivot circle
-        this.ctx.beginPath();
-        this.ctx.fillStyle = color;
-        this.ctx.arc(centerX, pivotY, 6, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.strokeStyle = '#000';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
-
-        // Text for Cents
-        const centsFontSize = Math.min(Math.floor(fontSize * 0.2), 18);
-        this.ctx.font = `${centsFontSize}px sans-serif`;
-        this.ctx.fillStyle = '#888';
-        this.ctx.fillText(`${state.cents > 0 ? '+' : ''}${state.cents.toFixed(1)} ¢`, centerX, pivotY + 50);
-
-        // Text for Frequency (Hz)
-        const hzFontSize = Math.min(Math.floor(fontSize * 0.15), 14);
-        this.ctx.font = `${hzFontSize}px sans-serif`;
-        this.ctx.fillStyle = '#666';
-        this.ctx.fillText(`${state.frequency.toFixed(1)} Hz`, centerX, pivotY + 70);
     } else {
         // Draw "Listening" text
         const listeningFontSize = Math.min(Math.floor(fontSize * 0.2), 18);
