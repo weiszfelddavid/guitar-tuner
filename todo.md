@@ -193,7 +193,7 @@
   - String locking end-to-end tests (11 tests) - hysteresis, boundaries, manual override
   - Full pipeline integration tests (11 tests) - complete signal processing chain
   - All tests passing
-  - **Commit:** TBD
+  - **Commit:** 4951380
 
 - [x] **Create constants file for magic numbers** ✅ COMPLETED
   - Created comprehensive src/constants/tuner-config.ts with 40+ documented constants
@@ -208,7 +208,7 @@
     - UI constants (VOLUME_METER_SENSITIVITY_SCALE, CENTS_DISPLAY_RANGE, NEEDLE_MAX_ANGLE_DEG)
   - Updated 6 files: tuner-processor.ts, tuner.ts, main.ts, canvas.ts, and imports
   - All tests passing after refactor
-  - **Commit:** TBD
+  - **Commit:** 4951380
 
 - [ ] **Add linting configuration**
   - ESLint for TypeScript, Rustfmt for Rust
