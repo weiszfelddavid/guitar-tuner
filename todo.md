@@ -59,11 +59,12 @@
   - **Result:** Single smoothing system, fast response during plucks, smooth sustain, worklet 9.88→9.96 kB (+0.08), main 20.72→20.87 kB (+0.15)
   - **Commit:** 97793e5
 
-- [ ] **Add proper TypeScript types (eliminate @ts-ignore)**
-  - **Problem:** 11 occurrences suppressing legitimate type errors
+- [x] **Add proper TypeScript types (eliminate @ts-ignore)** ✅ COMPLETED
+  - **Problem:** 15 @ts-ignore comments suppressing legitimate type errors (13 in tuner-processor.ts, 1 in main.ts, 1 any type)
   - **Impact:** No type safety, runtime errors possible, hard to refactor
-  - **Fix:** Define proper types for Worklet API, WASM imports, Window globals
-  - **Files:** tuner-processor.ts (9 instances), src/main.ts (2 instances)
+  - **Fix:** Created type declarations: audio-worklet.d.ts (AudioWorkletProcessor, registerProcessor, globals), wasm-module.d.ts (PitchDetector, init), global.d.ts (Window.getTunerState)
+  - **Result:** Full type safety, zero type errors with strict mode, TypeScript compilation passes, all tests pass (24/24), no bundle size increase
+  - **Commit:** 986a91d
 
 - [ ] **Centralize mode configuration**
   - **Problem:** Config retrieved 3x per frame (lines 22, 271, 307), scattered logic
