@@ -1,4 +1,5 @@
 import init, { PitchDetector } from './pure_tone_lib.mjs';
+import { findClosestString, calculateCents } from '../utils/frequency';
 
 // ============================================================================
 // TYPES & CONSTANTS
@@ -26,12 +27,12 @@ interface TunerState {
 // NOTE: Synchronized with src/constants/guitar-strings.ts
 // Inlined here because worklet has separate bundling context
 const GUITAR_STRINGS = [
-  { note: 'E2', frequency: 82.41, stringNumber: 6, label: 'Low E' },
-  { note: 'A2', frequency: 110.00, stringNumber: 5, label: 'A' },
-  { note: 'D3', frequency: 146.83, stringNumber: 4, label: 'D' },
-  { note: 'G3', frequency: 196.00, stringNumber: 3, label: 'G' },
-  { note: 'B3', frequency: 246.94, stringNumber: 2, label: 'B' },
-  { note: 'E4', frequency: 329.63, stringNumber: 1, label: 'High E' }
+  { note: 'E2', frequency: 82.41, stringNumber: 6, label: 'Low E', id: 'string-6' },
+  { note: 'A2', frequency: 110.00, stringNumber: 5, label: 'A', id: 'string-5' },
+  { note: 'D3', frequency: 146.83, stringNumber: 4, label: 'D', id: 'string-4' },
+  { note: 'G3', frequency: 196.00, stringNumber: 3, label: 'G', id: 'string-3' },
+  { note: 'B3', frequency: 246.94, stringNumber: 2, label: 'B', id: 'string-2' },
+  { note: 'E4', frequency: 329.63, stringNumber: 1, label: 'High E', id: 'string-1' }
 ];
 
 // Configuration constants (synchronized with src/constants/tuner-config.ts)
@@ -216,25 +217,15 @@ class NoteDetector {
     const correctedPitch = this.correctOctave(pitch, clarity);
 
     // Find closest string
-    let closestString = GUITAR_STRINGS[0];
-    let minDiff = Math.abs(correctedPitch - closestString.frequency);
-
-    for (const str of GUITAR_STRINGS) {
-      const diff = Math.abs(correctedPitch - str.frequency);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closestString = str;
-      }
-    }
-
-    const cents = 1200 * Math.log2(correctedPitch / closestString.frequency);
+    const closestString = findClosestString(correctedPitch, GUITAR_STRINGS);
+    const cents = calculateCents(correctedPitch, closestString.frequency);
 
     // Apply string locking (prevents jumping between strings)
     const finalNote = this.lockString(closestString.note);
 
     // Recalculate cents if note was locked
     const finalString = GUITAR_STRINGS.find(s => s.note === finalNote) || closestString;
-    const finalCents = 1200 * Math.log2(correctedPitch / finalString.frequency);
+    const finalCents = calculateCents(correctedPitch, finalString.frequency);
 
     return {
       noteName: finalNote,
@@ -361,7 +352,7 @@ class StateManager {
           if (rawPitch > 60 && rawPitch < 500) {
             const targetString = GUITAR_STRINGS.find(s => s.note === this.heldState!.noteName);
             if (targetString) {
-              const updatedCents = 1200 * Math.log2(rawPitch / targetString.frequency);
+              const updatedCents = calculateCents(rawPitch, targetString.frequency);
               return {
                 ...this.heldState,
                 cents: updatedCents,
@@ -440,8 +431,6 @@ class TunerProcessor extends AudioWorkletProcessor {
   private config: TunerConfig;
   private manualStringLock: { note: string; frequency: number } | null = null;
 
-  // Timing
-  private startTime: number = currentTime * 1000;
 
   constructor() {
     super();
@@ -524,7 +513,8 @@ class TunerProcessor extends AudioWorkletProcessor {
       const result = this.detector.process(this.buffer);
       const { pitch, clarity } = result;
 
-      const now = this.startTime + (currentTime * 1000);
+      // Use AudioWorkletGlobalScope's currentTime (in seconds), convert to ms
+      const now = currentTime * 1000;
 
       // Simplified 3-stage pipeline
       const finalState = this.runPipeline(pitch, clarity, volume, now);

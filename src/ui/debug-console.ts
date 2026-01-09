@@ -6,8 +6,8 @@ export function initDebugConsole() {
     }
 
     // Storage key for debug console visibility preference
-    const STORAGE_KEY = 'debug-console-visible';
-    const isVisible = localStorage.getItem(STORAGE_KEY) === 'true';
+    const STORAGE_KEY_DEBUG = 'tuner:debug';
+    const isVisible = localStorage.getItem(STORAGE_KEY_DEBUG) === 'true';
 
     const debugDiv = document.createElement('div');
     debugDiv.id = 'debug-console';
@@ -89,7 +89,7 @@ export function initDebugConsole() {
         debugDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
         copyBtn.style.display = isCurrentlyVisible ? 'none' : 'block';
         clearBtn.style.display = isCurrentlyVisible ? 'none' : 'block';
-        localStorage.setItem(STORAGE_KEY, String(!isCurrentlyVisible));
+        localStorage.setItem(STORAGE_KEY_DEBUG, String(!isCurrentlyVisible));
         return !isCurrentlyVisible;
     };
 

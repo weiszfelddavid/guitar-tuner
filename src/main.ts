@@ -12,15 +12,18 @@ import pkg from '../package.json';
 initDebugConsole();
 
 // Mode management with local storage
-const STORAGE_KEY = 'tuner-mode';
-let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY) as TunerMode) || 'strict';
+const STORAGE_KEY_MODE = 'tuner:mode';
+let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY_MODE) as TunerMode) || 'strict';
+
+// Audio context monitoring interval (milliseconds)
+const AUDIO_CONTEXT_CHECK_INTERVAL_MS = 1000;
 
 // Centralized configuration - updated when mode changes
 let currentConfig: TunerConfig = getDefaultConfig(currentMode);
 
 function setMode(mode: TunerMode, tunerNode?: AudioWorkletNode) {
     currentMode = mode;
-    localStorage.setItem(STORAGE_KEY, mode);
+    localStorage.setItem(STORAGE_KEY_MODE, mode);
 
     // Update centralized configuration
     currentConfig = getDefaultConfig(mode);
@@ -48,8 +51,10 @@ const kalman = new KalmanFilter(currentConfig.smoothingFactor, KALMAN_MEASUREMEN
 let stringSelector: StringSelector | null = null;
 let smoothedCents = 0;
 
-// Expose state for testing
-window.getTunerState = () => currentState;
+// Expose state for testing (dev/test only)
+if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
+    window.getTunerState = () => currentState;
+}
 
 async function startTuner() {
   try {
@@ -265,7 +270,7 @@ async function startTuner() {
             });
 
             // Set initial label state
-            const isDebugVisible = localStorage.getItem('debug-console-visible') === 'true';
+            const isDebugVisible = localStorage.getItem('tuner:debug') === 'true';
             const label = document.getElementById('debug-label');
             if (label) {
                 label.textContent = isDebugVisible ? 'Visible' : 'Hidden';
@@ -330,7 +335,7 @@ async function startTuner() {
     };
 
     // Check periodically
-    setInterval(checkState, 1000);
+    setInterval(checkState, AUDIO_CONTEXT_CHECK_INTERVAL_MS);
 
     // Also check on touch
     document.addEventListener('touchstart', async () => {

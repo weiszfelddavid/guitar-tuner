@@ -2,6 +2,7 @@
 
 import { GUITAR_STRINGS, getStringByNote } from '../constants/guitar-strings';
 import { STRICT_MODE_CONFIG, FORGIVING_MODE_CONFIG } from '../constants/tuner-config';
+import { findClosestString, calculateCents } from '../utils/frequency';
 
 // Helper function to get string info from note name
 export function getStringInfo(noteName: string): { stringNumber: number; stringName: string } | null {
@@ -75,18 +76,8 @@ export function getTunerState(pitch: number, clarity: number, volume: number, co
     return { noteName: '--', cents: 0, clarity, volume, isLocked: false, frequency: pitch, isAttacking: false };
   }
 
-  let closestString = GUITAR_STRINGS[0];
-  let minDiff = Math.abs(pitch - closestString.frequency);
-
-  for (const str of GUITAR_STRINGS) {
-    const diff = Math.abs(pitch - str.frequency);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closestString = str;
-    }
-  }
-
-  const cents = 1200 * Math.log2(pitch / closestString.frequency);
+  const closestString = findClosestString(pitch);
+  const cents = calculateCents(pitch, closestString.frequency);
 
   return {
     noteName: closestString.note, // Keep full name with octave (e.g., E2, A2, D3)
