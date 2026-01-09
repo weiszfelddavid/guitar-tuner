@@ -13,102 +13,115 @@ const path = require('path');
   const browser = await chromium.launch({
     args: ['--use-fake-ui-for-media-stream']
   });
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 }, // iPhone 12 Pro
-    deviceScaleFactor: 3,
-    permissions: ['microphone']
-  });
-  const page = await context.newPage();
 
-  // Capture logs
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  // Test both mobile and desktop viewports
+  const viewports = [
+    { name: 'mobile', width: 390, height: 844, deviceScaleFactor: 3 }, // iPhone 12 Pro
+    { name: 'desktop', width: 1920, height: 1080, deviceScaleFactor: 1 } // Desktop 1080p
+  ];
 
-  try {
-    console.log('Navigating...');
-    
-    // Inject mock
-    await page.addInitScript(() => {
-        console.log("INIT SCRIPT RUNNING");
-        if (!navigator.mediaDevices) {
-            // @ts-ignore
-            navigator.mediaDevices = {};
-        }
-        
-        let osc;
-        let ctx;
-        
-        // @ts-ignore
-        window.setMockFreq = (freq) => {
-            if (osc && ctx) {
-                console.log(`Setting mock freq to ${freq}`);
-                osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            } else {
-                console.log("Oscillator not ready yet");
-            }
-        };
+  for (const viewport of viewports) {
+    console.log(`\n=== Testing ${viewport.name} viewport (${viewport.width}x${viewport.height}) ===`);
 
-        // Use defineProperty to ensure we can overwrite it
-        Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
-            value: async (constraints) => {
-                console.log("Mock getUserMedia called with constraints:", JSON.stringify(constraints));
-                ctx = new AudioContext();
-                osc = ctx.createOscillator();
-                osc.frequency.value = 82.41; // Start with E2
-                const dest = ctx.createMediaStreamDestination();
-                osc.connect(dest);
-                osc.start();
-                return dest.stream;
-            },
-            writable: true
-        });
+    const context = await browser.newContext({
+      viewport: { width: viewport.width, height: viewport.height },
+      deviceScaleFactor: viewport.deviceScaleFactor,
+      permissions: ['microphone']
     });
+    const page = await context.newPage();
 
-    await page.goto('http://localhost:4174');
+    // Capture logs
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
 
-    console.log('Clicking Start...');
-    await page.click('#start-btn');
-    
-    await page.waitForSelector('canvas', { timeout: 10000 });
-    
-    // Melody: E2, A2, D3, G3, B3, E4
-    const melody = [
-        { note: 'E', freq: 82.41 },
-        { note: 'A', freq: 110.00 },
-        { note: 'D', freq: 146.83 },
-        { note: 'G', freq: 196.00 },
-        { note: 'B', freq: 246.94 },
-        { note: 'E', freq: 329.63 } // E4 is detected as E
-    ];
+    try {
+      console.log('Navigating...');
 
-    for (const item of melody) {
-        console.log(`Testing note: ${item.note} (${item.freq} Hz)`);
-        
-        // Set frequency
-        await page.evaluate((f) => window.setMockFreq(f), item.freq);
-        
-        // Wait for stabilization (simulating singing/playing)
-        await page.waitForTimeout(2000);
-        
-        // Check state
-        const state = await page.evaluate(() => window.getTunerState());
-        console.log(`Detected: ${state.noteName}, Clarity: ${state.clarity}, Volume: ${state.volume}, Locked: ${state.isLocked}`);
-        
-        if (state.noteName !== item.note) {
-            console.error(`FAILED: Expected ${item.note}, got ${state.noteName}`);
-        } else {
-            console.log(`PASSED: Detected ${item.note}`);
-        }
+      // Inject mock
+      await page.addInitScript(() => {
+          console.log("INIT SCRIPT RUNNING");
+          if (!navigator.mediaDevices) {
+              // @ts-ignore
+              navigator.mediaDevices = {};
+          }
 
-        await page.screenshot({ path: `tests/screenshot-${item.note}.png` });
+          let osc;
+          let ctx;
+
+          // @ts-ignore
+          window.setMockFreq = (freq) => {
+              if (osc && ctx) {
+                  console.log(`Setting mock freq to ${freq}`);
+                  osc.frequency.setValueAtTime(freq, ctx.currentTime);
+              } else {
+                  console.log("Oscillator not ready yet");
+              }
+          };
+
+          // Use defineProperty to ensure we can overwrite it
+          Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+              value: async (constraints) => {
+                  console.log("Mock getUserMedia called with constraints:", JSON.stringify(constraints));
+                  ctx = new AudioContext();
+                  osc = ctx.createOscillator();
+                  osc.frequency.value = 82.41; // Start with E2
+                  const dest = ctx.createMediaStreamDestination();
+                  osc.connect(dest);
+                  osc.start();
+                  return dest.stream;
+              },
+              writable: true
+          });
+      });
+
+      await page.goto('http://localhost:4174');
+
+      console.log('Clicking Start...');
+      await page.click('#start-btn');
+
+      await page.waitForSelector('canvas', { timeout: 10000 });
+
+      // Melody: E2, A2, D3, G3, B3, E4
+      const melody = [
+          { note: 'E2', freq: 82.41 },
+          { note: 'A2', freq: 110.00 },
+          { note: 'D3', freq: 146.83 },
+          { note: 'G3', freq: 196.00 },
+          { note: 'B3', freq: 246.94 },
+          { note: 'E4', freq: 329.63 }
+      ];
+
+      for (const item of melody) {
+          console.log(`Testing note: ${item.note} (${item.freq} Hz)`);
+
+          // Set frequency
+          await page.evaluate((f) => window.setMockFreq(f), item.freq);
+
+          // Wait for stabilization (simulating singing/playing)
+          await page.waitForTimeout(2000);
+
+          // Check state
+          const state = await page.evaluate(() => window.getTunerState());
+          console.log(`Detected: ${state.noteName}, Clarity: ${state.clarity}, Volume: ${state.volume}, Locked: ${state.isLocked}`);
+
+          if (state.noteName !== item.note) {
+              console.error(`FAILED: Expected ${item.note}, got ${state.noteName}`);
+          } else {
+              console.log(`PASSED: Detected ${item.note}`);
+          }
+
+          await page.screenshot({ path: `tests/screenshot-${item.note}-${viewport.name}.png` });
+      }
+
+      console.log(`Melody test complete for ${viewport.name}.`);
+
+    } catch (e) {
+      console.error(`Error testing ${viewport.name}:`, e);
+    } finally {
+      await context.close();
     }
-
-    console.log('Melody test complete.');
-
-  } catch (e) {
-    console.error("Error:", e);
-  } finally {
-    await browser.close();
-    server.kill();
-    process.exit(0);
   }
+
+  await browser.close();
+  server.kill();
+  process.exit(0);
 })();
