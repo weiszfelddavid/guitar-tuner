@@ -2,7 +2,7 @@ import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
-import { KalmanFilter, TunerState, TunerMode, getDefaultConfig } from './ui/tuner';
+import { KalmanFilter, TunerState, TunerMode, TunerConfig, getDefaultConfig } from './ui/tuner';
 import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
@@ -14,13 +14,16 @@ initDebugConsole();
 const STORAGE_KEY = 'tuner-mode';
 let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY) as TunerMode) || 'strict';
 
+// Centralized configuration - updated when mode changes
+let currentConfig: TunerConfig = getDefaultConfig(currentMode);
+
 function setMode(mode: TunerMode, tunerNode?: AudioWorkletNode) {
     currentMode = mode;
     localStorage.setItem(STORAGE_KEY, mode);
 
-    // Update Kalman filter smoothing based on mode
-    const config = getDefaultConfig(mode);
-    kalman.setProcessNoise(config.smoothingFactor);
+    // Update centralized configuration
+    currentConfig = getDefaultConfig(mode);
+    kalman.setProcessNoise(currentConfig.smoothingFactor);
 
     // Send mode update to worklet
     if (tunerNode) {
@@ -40,7 +43,7 @@ function updateModeToggle() {
 
 // State management - only visual state on main thread now
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0, isAttacking: false };
-const kalman = new KalmanFilter(getDefaultConfig(currentMode).smoothingFactor, 0.1);
+const kalman = new KalmanFilter(currentConfig.smoothingFactor, 0.1);
 let stringSelector: StringSelector | null = null;
 let smoothedCents = 0;
 
@@ -356,9 +359,8 @@ async function startTuner() {
 
           // Attack-aware Kalman filter for visual needle smoothing
           // Fast response during pluck attacks, slow during sustain
-          const baseSmoothing = getDefaultConfig(currentMode).smoothingFactor;
           const attackSmoothing = 0.5; // Fast response during attack
-          kalman.setProcessNoise(currentState.isAttacking ? attackSmoothing : baseSmoothing);
+          kalman.setProcessNoise(currentState.isAttacking ? attackSmoothing : currentConfig.smoothingFactor);
 
           if (currentState.noteName !== '--') {
               smoothedCents = kalman.filter(currentState.cents);
