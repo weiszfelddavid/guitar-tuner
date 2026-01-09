@@ -58,6 +58,228 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'test') {
     window.getTunerState = () => currentState;
 }
 
+/**
+ * Error recovery configuration for WASM loading
+ */
+const WASM_RETRY_CONFIG = {
+  maxAttempts: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 5000,
+  backoffMultiplier: 2
+};
+
+/**
+ * Retry a promise-based operation with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  attempt: number = 1
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (attempt >= WASM_RETRY_CONFIG.maxAttempts) {
+      throw error; // Max attempts reached
+    }
+
+    // Calculate delay with exponential backoff
+    const delay = Math.min(
+      WASM_RETRY_CONFIG.initialDelayMs * Math.pow(WASM_RETRY_CONFIG.backoffMultiplier, attempt - 1),
+      WASM_RETRY_CONFIG.maxDelayMs
+    );
+
+    console.warn(`${operationName} failed (attempt ${attempt}/${WASM_RETRY_CONFIG.maxAttempts}). Retrying in ${delay}ms...`);
+    console.warn('Error:', error);
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return retryWithBackoff(operation, operationName, attempt + 1);
+  }
+}
+
+/**
+ * Categorize WASM loading errors for better user messaging
+ */
+function categorizeWasmError(error: unknown): { category: string; message: string; technicalDetails: string; suggestions: string[] } {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+
+  // Network errors
+  if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+    return {
+      category: 'network',
+      message: 'Unable to download audio engine',
+      technicalDetails: errorMessage,
+      suggestions: [
+        'Check your internet connection',
+        'Try refreshing the page',
+        'Check if your firewall is blocking the connection'
+      ]
+    };
+  }
+
+  // Content-Type errors
+  if (errorMessage.includes('Content-Type')) {
+    return {
+      category: 'server',
+      message: 'Server configuration issue',
+      technicalDetails: errorMessage,
+      suggestions: [
+        'The server is not configured correctly',
+        'Try again later',
+        'Contact support if the problem persists'
+      ]
+    };
+  }
+
+  // Timeout errors
+  if (errorMessage.includes('timeout')) {
+    return {
+      category: 'timeout',
+      message: 'Audio engine initialization timed out',
+      technicalDetails: errorMessage,
+      suggestions: [
+        'Your device may be slow or busy',
+        'Close other browser tabs',
+        'Try again'
+      ]
+    };
+  }
+
+  // Compilation errors
+  if (errorMessage.includes('CompileError') || errorMessage.includes('LinkError')) {
+    return {
+      category: 'compatibility',
+      message: 'Browser compatibility issue',
+      technicalDetails: errorMessage,
+      suggestions: [
+        'Your browser may not support WebAssembly',
+        'Try updating your browser',
+        'Try a different browser (Chrome, Firefox, Edge)'
+      ]
+    };
+  }
+
+  // Generic error
+  return {
+    category: 'unknown',
+    message: 'Failed to load audio engine',
+    technicalDetails: errorMessage,
+    suggestions: [
+      'Try refreshing the page',
+      'Clear your browser cache',
+      'Try a different browser'
+    ]
+  };
+}
+
+/**
+ * Show a user-friendly error dialog with retry option
+ */
+function showErrorDialog(errorInfo: ReturnType<typeof categorizeWasmError>, onRetry: () => void): void {
+  // Remove any existing error dialogs
+  document.querySelectorAll('.error-dialog').forEach(el => el.remove());
+
+  const dialog = document.createElement('div');
+  dialog.className = 'error-dialog';
+  dialog.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1a1a1a;
+    border: 2px solid #ff5555;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 10000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    font-family: sans-serif;
+    color: white;
+  `;
+
+  dialog.innerHTML = `
+    <div style="text-align: center;">
+      <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+      <h2 style="margin: 0 0 16px 0; color: #ff5555; font-size: 24px;">${errorInfo.message}</h2>
+      <div style="text-align: left; margin-bottom: 24px;">
+        <p style="margin: 8px 0; color: #cccccc;">What you can try:</p>
+        <ul style="margin: 8px 0; padding-left: 24px; color: #aaaaaa;">
+          ${errorInfo.suggestions.map(s => `<li style="margin: 4px 0;">${s}</li>`).join('')}
+        </ul>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button id="retry-btn" style="
+          background: var(--color-accent, #4a9eff);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: transform 0.1s, background 0.2s;
+        ">↻ Retry</button>
+        <button id="details-btn" style="
+          background: transparent;
+          color: #888888;
+          border: 1px solid #444444;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: border-color 0.2s;
+        ">Technical Details</button>
+      </div>
+      <details style="margin-top: 24px; text-align: left; display: none;" id="tech-details">
+        <summary style="cursor: pointer; color: #888888; margin-bottom: 8px;">Technical Information</summary>
+        <pre style="
+          background: #0a0a0a;
+          padding: 12px;
+          border-radius: 4px;
+          overflow-x: auto;
+          font-size: 12px;
+          color: #ff8888;
+          margin: 0;
+        ">${errorInfo.technicalDetails}</pre>
+      </details>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  // Add event listeners
+  const retryBtn = dialog.querySelector('#retry-btn') as HTMLButtonElement;
+  const detailsBtn = dialog.querySelector('#details-btn') as HTMLButtonElement;
+  const techDetails = dialog.querySelector('#tech-details') as HTMLDetailsElement;
+
+  retryBtn.addEventListener('click', () => {
+    dialog.remove();
+    onRetry();
+  });
+
+  retryBtn.addEventListener('mouseenter', () => {
+    retryBtn.style.transform = 'scale(1.05)';
+  });
+
+  retryBtn.addEventListener('mouseleave', () => {
+    retryBtn.style.transform = 'scale(1)';
+  });
+
+  detailsBtn.addEventListener('click', () => {
+    techDetails.style.display = 'block';
+    detailsBtn.style.display = 'none';
+  });
+
+  detailsBtn.addEventListener('mouseenter', () => {
+    detailsBtn.style.borderColor = '#666666';
+  });
+
+  detailsBtn.addEventListener('mouseleave', () => {
+    detailsBtn.style.borderColor = '#444444';
+  });
+}
+
 async function startTuner() {
   try {
     console.log("Starting Tuner...");
@@ -144,31 +366,41 @@ async function startTuner() {
     loadingOverlay.appendChild(loadingText);
     document.body.appendChild(loadingOverlay);
 
-    // Load WASM from main thread and pass to worklet
+    // Load WASM with automatic retry and error recovery
     let wasmInitialized = false;
 
-    // Listen for WASM initialization confirmation from worklet
-    const wasmInitPromise = new Promise<void>((resolve) => {
+    const loadWasmWithRetry = async (): Promise<void> => {
+      // Listen for WASM initialization confirmation from worklet
+      const wasmInitPromise = new Promise<void>((resolve, reject) => {
         const messageHandler = (event: MessageEvent) => {
-            if (event.data.type === 'log' && event.data.message.includes('WASM initialized successfully')) {
-                wasmInitialized = true;
-                tunerNode.port.removeEventListener('message', messageHandler);
-                resolve();
-            }
+          if (event.data.type === 'log' && event.data.message.includes('WASM initialized successfully')) {
+            wasmInitialized = true;
+            tunerNode.port.removeEventListener('message', messageHandler);
+            resolve();
+          }
         };
         tunerNode.port.addEventListener('message', messageHandler);
-    });
 
-    try {
+        // Add timeout to reject promise if initialization takes too long
+        setTimeout(() => {
+          tunerNode.port.removeEventListener('message', messageHandler);
+          reject(new Error('WASM initialization timeout'));
+        }, WASM_INIT_TIMEOUT_MS);
+      });
+
+      // Wrap WASM loading in retry logic
+      await retryWithBackoff(async () => {
         loadingText.textContent = 'Loading audio engine...';
         console.log("Loading WASM from main thread...");
 
         const wasmRes = await fetch('/pure_tone_bg.wasm');
-        if (!wasmRes.ok) throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
+        if (!wasmRes.ok) {
+          throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
+        }
 
         const contentType = wasmRes.headers.get('Content-Type');
         if (contentType && !contentType.includes('wasm')) {
-            throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
+          throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
         }
 
         loadingText.textContent = 'Initializing audio processor...';
@@ -177,19 +409,47 @@ async function startTuner() {
         console.log("WASM sent to worklet");
 
         // Wait for worklet to confirm initialization
-        await Promise.race([
-            wasmInitPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('WASM initialization timeout')), WASM_INIT_TIMEOUT_MS))
-        ]);
+        await wasmInitPromise;
 
         loadingText.textContent = 'Ready!';
         console.log("WASM initialization confirmed");
+      }, 'WASM loading');
+    };
+
+    try {
+      await loadWasmWithRetry();
     } catch (e) {
-        console.error("Main Thread WASM Load Error:", e);
-        loadingText.textContent = `Error: ${e instanceof Error ? e.message : 'Failed to load tuner'}`;
-        loadingText.style.color = '#ff5555';
-        // Wait 2 seconds to show error before removing overlay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      console.error("WASM Load Error (all retry attempts failed):", e);
+
+      // Remove loading overlay
+      loadingOverlay.remove();
+
+      // Show user-friendly error dialog with retry option
+      const errorInfo = categorizeWasmError(e);
+      showErrorDialog(errorInfo, async () => {
+        // User clicked retry - show loading overlay again and try
+        document.body.appendChild(loadingOverlay);
+        loadingText.textContent = 'Retrying...';
+        loadingText.style.color = 'rgba(255, 255, 255, 0.9)';
+
+        try {
+          await loadWasmWithRetry();
+          // Success! Remove overlay and continue
+          setTimeout(() => {
+            loadingOverlay.style.opacity = '0';
+            loadingOverlay.style.transition = 'opacity 0.3s';
+            setTimeout(() => loadingOverlay.remove(), 300);
+          }, 300);
+        } catch (retryError) {
+          // Failed again, show error dialog
+          loadingOverlay.remove();
+          const retryErrorInfo = categorizeWasmError(retryError);
+          showErrorDialog(retryErrorInfo, () => location.reload()); // Full page reload on second failure
+        }
+      });
+
+      // Don't continue initialization if WASM failed
+      return;
     }
 
     // Send initial mode to worklet
@@ -434,7 +694,24 @@ async function startTuner() {
     console.log("Tuner started!");
   } catch (e) {
     console.error("Failed to start tuner:", e);
-    document.body.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Error: ${e}</div>`;
+
+    // Don't destroy the page! Show a helpful error dialog instead
+    const errorInfo = {
+      category: 'startup',
+      message: 'Failed to start tuner',
+      technicalDetails: e instanceof Error ? e.message : String(e),
+      suggestions: [
+        'Check that your browser supports audio',
+        'Make sure you granted microphone permission',
+        'Try refreshing the page',
+        'Try a different browser'
+      ]
+    };
+
+    showErrorDialog(errorInfo, () => {
+      // Retry by reloading the page
+      location.reload();
+    });
   }
 }
 

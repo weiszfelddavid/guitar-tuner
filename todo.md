@@ -128,11 +128,24 @@
   - **Fix:** Dirty region tracking, cache static arc/labels in offscreen canvas
   - **Files:** src/ui/canvas.ts
 
-- [ ] **Add error recovery for WASM loading**
-  - **Problem:** Generic error text replaces body if WASM fails (line 397)
-  - **Impact:** No retry, no fallback, dead end for users
-  - **Fix:** Retry with exponential backoff, fallback to JS-based detection
+- [x] **Add error recovery for WASM loading** ✅ COMPLETED
+  - **Problem:** Generic error text replaces body if WASM fails, no retry mechanism
+  - **Impact:** Dead end for users on transient network failures
+  - **Solution Implemented:**
+    * Automatic retry with exponential backoff (3 attempts: 1s, 2s, 4s delays)
+    * Intelligent error categorization (network, timeout, compatibility, server)
+    * User-friendly error dialog with specific suggestions per error type
+    * Manual retry button that preserves app state
+    * Technical details collapsible section for debugging
+    * Graceful degradation instead of destructive page replacement
+  - **Benefits:**
+    * Recovers from transient network issues automatically
+    * Clear user guidance for different failure scenarios
+    * Professional error experience (no red error text)
+    * Maintains app structure even on failure
+  - **Bundle Impact:** Main bundle: 20.95 kB → 26.45 kB (+5.5 kB for comprehensive error recovery)
   - **Files:** src/main.ts
+  - **Commit:** TBD
 
 - [ ] **Add OKLCH color fallbacks for older browsers**
   - **Problem:** OKLCH requires Safari 16.4+, Chrome 111+, Firefox 113+
