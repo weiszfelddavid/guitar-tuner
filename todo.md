@@ -130,11 +130,28 @@
   - **Fix:** Show lock icon or badge near note display
   - **Files:** src/ui/canvas.ts, src/main.ts
 
-- [ ] **Fix microphone recovery on tab switch**
-  - **Problem:** Fully releases mic → new permission prompt every tab switch (lines 335-392)
-  - **Impact:** Annoying, breaks workflow
-  - **Fix:** Suspend AudioContext but keep MediaStream alive
-  - **Files:** src/main.ts
+- [x] **Fix microphone recovery on tab switch** ✅ COMPLETED
+  - **Problem:** Fully released microphone when tab was hidden, triggering new permission prompt every tab switch
+  - **Impact:** Annoying UX, broke workflow for multi-tasking users
+  - **Solution Implemented:**
+    * Suspend AudioContext when tab is hidden (saves CPU/battery)
+    * Keep MediaStream alive (maintain microphone permission)
+    * Disconnect/reconnect audio source without releasing tracks
+    * Reset visual state during suspension
+    * Instant resume when tab returns visible
+  - **Benefits:**
+    * Zero permission prompts on tab switch
+    * Seamless workflow for users switching between tabs
+    * Better battery life (AudioContext suspended when hidden)
+    * Faster resume (no stream renegotiation)
+    * Professional UX matching modern web apps
+  - **Trade-offs:**
+    * Microphone stays allocated when tab is hidden
+    * Browser shows persistent "recording" indicator
+    * Standard behavior for media apps (YouTube, Discord, etc.)
+  - **Bundle Impact:** 21.07 kB → 20.84 kB (-230 bytes, code simplified)
+  - **Files:** src/main.ts (lines 650-692)
+  - **Commit:** 9446ef0
 
 - [x] **Canvas performance optimization** ✅ COMPLETED
   - **Problem:** Full clearRect + redraw every frame, colors loaded on resize
