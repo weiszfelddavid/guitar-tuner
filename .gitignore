@@ -4,3 +4,6 @@ target/
 pkg/
 Cargo.lock
 .DS_Store
+
+# Test fixtures (generated on-demand)
+tests/fixtures/*.json

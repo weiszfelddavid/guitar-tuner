@@ -179,9 +179,12 @@
   - Example: Capo 2 shows G string as "A"
 
 ### Technical Improvements
-- [ ] **Move test fixtures out of git**
-  - 3 JSON files with binary data committed (bad practice)
-  - Generate fixtures on-demand during test runs
+- [x] **Move test fixtures out of git** ✅ COMPLETED
+  - **Problem:** 7 JSON files with binary data committed (5.9MB, bad practice)
+  - **Impact:** Repository bloat, version control not suitable for generated data
+  - **Fix:** Added tests/fixtures/*.json to .gitignore, updated npm test to auto-generate fixtures via scripts/generate_test_signals.ts
+  - **Result:** Repository 3MB lighter, fixtures generated on-demand in ~1 second, all 24 tests pass
+  - **Commit:** TBD
 
 - [ ] **Add integration tests**
   - Currently only unit tests (no worklet, no full pipeline)
@@ -196,9 +199,12 @@
   - ESLint for TypeScript, Rustfmt for Rust
   - Enforce consistent code style (semicolons, spacing)
 
-- [ ] **Fix build process error handling**
-  - Currently: `wasm-pack && vite` (sequential, no recovery)
-  - If wasm-pack fails, Vite runs anyway → broken bundle
+- [x] **Fix build process error handling** ✅ COMPLETED
+  - **Problem:** `wasm-pack && vite` sequential execution - if wasm-pack fails, vite might still run
+  - **Impact:** Could produce broken bundle if WASM compilation fails
+  - **Fix:** Created scripts/build.sh with explicit error checking, clear error messages, helpful troubleshooting tips
+  - **Result:** Vite only runs if wasm-pack succeeds, proper exit codes, better developer experience
+  - **Commit:** TBD
 
 - [ ] **Environment-based configuration**
   - Deployment uses hardcoded IP (deploy-droplet.yml:42)

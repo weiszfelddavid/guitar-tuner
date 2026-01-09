@@ -4,9 +4,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "wasm-pack build --target web && vite build",
+    "build": "./scripts/build.sh",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npm run generate-fixtures && vitest run",
+    "generate-fixtures": "npx tsx scripts/generate_test_signals.ts",
     "pre-flight": "./scripts/pre-flight.sh"
   },
   "repository": {
