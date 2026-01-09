@@ -11,6 +11,10 @@ export async function createTunerWorklet(context: AudioContext): Promise<TunerWo
   try {
     await context.audioWorklet.addModule(processorUrl);
     console.log('[worklet.ts] Worklet module loaded successfully');
+
+    // Add a small delay to ensure registerProcessor has executed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log('[worklet.ts] Creating AudioWorkletNode');
   } catch (error) {
     console.error('[worklet.ts] Failed to load worklet module:', error);
     throw error;
