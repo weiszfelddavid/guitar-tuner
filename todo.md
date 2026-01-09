@@ -52,11 +52,12 @@
   - **Result:** Reduced from 6 stages to 3 stages, clearer responsibilities, worklet 10.25 kB → 9.88 kB (-3.6%)
   - **Commit:** 759d370
 
-- [ ] **Fix dual smoothing systems**
-  - **Problem:** Kalman filter + PluckDetector both smooth cents independently
-  - **Impact:** Conflicting filters produce unpredictable needle behavior
-  - **Fix:** Single smoothing strategy with configurable parameters per mode
-  - **Files:** src/main.ts (line 38), src/ui/tuner.ts
+- [x] **Fix dual smoothing systems** ✅ COMPLETED
+  - **Problem:** Kalman filter + PluckDetector both smoothed cents independently, PluckDetector calculated attack factor (0.1 during attack, 1.0 sustain) but never used it
+  - **Impact:** Conflicting filters produced unpredictable needle behavior
+  - **Fix:** Added isAttacking to TunerState, made Kalman filter attack-aware (0.5 during pluck, mode-based during sustain)
+  - **Result:** Single smoothing system, fast response during plucks, smooth sustain, worklet 9.88→9.96 kB (+0.08), main 20.72→20.87 kB (+0.15)
+  - **Commit:** 97793e5
 
 - [ ] **Add proper TypeScript types (eliminate @ts-ignore)**
   - **Problem:** 11 occurrences suppressing legitimate type errors
