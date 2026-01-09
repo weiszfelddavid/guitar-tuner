@@ -26,6 +26,7 @@ describe('TunerCanvas', () => {
       volume: 0.5,
       isLocked: false,
       frequency: 440,
+      isAttacking: false,
     };
     canvas.render(state, 0);
     expect(ctx.fillText).toHaveBeenCalledWith('A', expect.any(Number), expect.any(Number));
@@ -39,6 +40,7 @@ describe('TunerCanvas', () => {
       volume: 0,
       isLocked: false,
       frequency: 0,
+      isAttacking: false,
     };
     canvas.render(state, 0);
     expect(ctx.fillText).toHaveBeenCalledWith('--', expect.any(Number), expect.any(Number));
@@ -52,6 +54,7 @@ describe('TunerCanvas', () => {
       volume: 0.5,
       isLocked: false,
       frequency: 82.41,
+      isAttacking: false,
     };
     canvas.render(state, 0);
 
@@ -79,6 +82,7 @@ describe('TunerCanvas', () => {
       volume: 0.5,
       isLocked: false,
       frequency: 85,
+      isAttacking: false,
     };
     canvas.render(state, 25);
 
@@ -110,6 +114,7 @@ describe('TunerCanvas', () => {
       volume: 0.5,
       isLocked: false,
       frequency: 80,
+      isAttacking: false,
     };
     canvas.render(state, -25);
 
@@ -141,6 +146,7 @@ describe('TunerCanvas', () => {
       volume: 0.1, // This will be scaled
       isLocked: false,
       frequency: 110,
+      isAttacking: false,
     };
     canvas.render(state, 0);
 
@@ -169,6 +175,7 @@ describe('TunerCanvas', () => {
       volume: 0.5,
       isLocked: false,
       frequency: 450,
+      isAttacking: false,
     };
     tunerCanvas.render(state, 15);
 

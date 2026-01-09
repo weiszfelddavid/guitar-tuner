@@ -275,7 +275,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.7,
             volume: 0.5,
             isLocked: false,
-            frequency: 82.41
+            frequency: 82.41,
+            isAttacking: false
         };
 
         // Process valid state
@@ -289,7 +290,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.3,
             volume: 0.5,
             isLocked: false,
-            frequency: 0
+            frequency: 0,
+            isAttacking: false
         };
 
         // Within 4 seconds - should still show 'E'
@@ -315,7 +317,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.95,
             volume: 0.5,
             isLocked: false,
-            frequency: 82.41
+            frequency: 82.41,
+            isAttacking: false
         };
 
         holdManager.process(validState, 0.5, 'strict', timestamp);
@@ -327,7 +330,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.5,
             volume: 0.5,
             isLocked: false,
-            frequency: 0
+            frequency: 0,
+            isAttacking: false
         };
 
         // Within 400ms hold window - should still show the note
@@ -350,7 +354,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.7,
             volume: 0.5,
             isLocked: false,
-            frequency: 110
+            frequency: 110,
+            isAttacking: false
         };
 
         holdManager.process(validState, 0.5, 'forgiving', timestamp);
@@ -362,7 +367,8 @@ describe('VisualHoldManager', () => {
             clarity: 0.1,
             volume: 0.005, // Below threshold
             isLocked: false,
-            frequency: 0
+            frequency: 0,
+            isAttacking: false
         };
 
         const result = holdManager.process(silenceState, 0.005, 'forgiving', timestamp + 100);
@@ -437,7 +443,8 @@ describe('Fixture-Based Integration Tests', () => {
                 clarity: 0.95,
                 volume: 0.5,
                 isLocked: false,
-                frequency: 82.41
+                frequency: 82.41,
+            isAttacking: false
             };
 
             strictHoldManager.process(cleanState, 0.5, 'strict', 100);
@@ -450,7 +457,8 @@ describe('Fixture-Based Integration Tests', () => {
                 clarity: 0.3,
                 volume: 0.5, // Volume still present
                 isLocked: false,
-                frequency: 0
+                frequency: 0,
+            isAttacking: false
             };
 
             const strictResult = strictHoldManager.process(dropoutState, 0.5, 'strict', 350);

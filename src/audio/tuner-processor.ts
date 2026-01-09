@@ -20,6 +20,7 @@ interface TunerState {
   volume: number;
   isLocked: boolean;
   frequency: number;
+  isAttacking: boolean;
 }
 
 // Standard E Guitar Tuning Frequencies
@@ -181,7 +182,8 @@ class NoteDetector {
       clarity: clarity,
       volume: volume,
       isLocked: clarity > 0.95 && Math.abs(finalCents) < 2,
-      frequency: correctedPitch
+      frequency: correctedPitch,
+      isAttacking: false  // Will be set by StateManager
     };
   }
 
@@ -280,10 +282,10 @@ class StateManager {
     timestamp: number
   ): TunerState {
     // 1. Detect pluck attacks
-    const attackInfo = this.detectAttack(volume, timestamp);
+    this.detectAttack(volume, timestamp);
 
     // 2. Reset hold on new attack
-    if (attackInfo.isAttacking) {
+    if (this.isAttacking) {
       this.heldState = null;
       this.holdStartTime = 0;
     }
@@ -304,28 +306,29 @@ class StateManager {
                 ...this.heldState,
                 cents: updatedCents,
                 frequency: rawPitch,
-                volume: volume
+                volume: volume,
+                isAttacking: this.isAttacking
               };
             }
           }
-          return this.heldState;
+          return { ...this.heldState, isAttacking: this.isAttacking };
         }
       }
 
       // No hold - return empty state
-      return { noteName: '--', cents: 0, clarity: 0, volume, isLocked: false, frequency: rawPitch };
+      return { noteName: '--', cents: 0, clarity: 0, volume, isLocked: false, frequency: rawPitch, isAttacking: this.isAttacking };
     }
 
     // 4. Valid state - store for potential hold
     this.heldState = currentState;
     this.holdStartTime = timestamp;
-    return currentState;
+    return { ...currentState, isAttacking: this.isAttacking };
   }
 
   /**
    * Detect pluck attacks (sudden volume increase)
    */
-  private detectAttack(volume: number, now: number): { isAttacking: boolean; factor: number } {
+  private detectAttack(volume: number, now: number): void {
     const toDb = (amp: number) => 20 * Math.log10(Math.max(amp, 0.0001));
 
     const currentDb = toDb(volume);
@@ -344,11 +347,6 @@ class StateManager {
     }
 
     this.lastVolume = volume;
-
-    return {
-      isAttacking: this.isAttacking,
-      factor: this.isAttacking ? 0.1 : 1.0
-    };
   }
 
   reset() {

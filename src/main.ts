@@ -39,7 +39,7 @@ function updateModeToggle() {
 }
 
 // State management - only visual state on main thread now
-let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
+let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0, isAttacking: false };
 const kalman = new KalmanFilter(getDefaultConfig(currentMode).smoothingFactor, 0.1);
 let stringSelector: StringSelector | null = null;
 let smoothedCents = 0;
@@ -355,7 +355,12 @@ async function startTuner() {
               stringSelector.setAutoDetectedString(currentState.noteName);
           }
 
-          // Apply Kalman filter for visual needle smoothing
+          // Attack-aware Kalman filter for visual needle smoothing
+          // Fast response during pluck attacks, slow during sustain
+          const baseSmoothing = getDefaultConfig(currentMode).smoothingFactor;
+          const attackSmoothing = 0.5; // Fast response during attack
+          kalman.setProcessNoise(currentState.isAttacking ? attackSmoothing : baseSmoothing);
+
           if (currentState.noteName !== '--') {
               smoothedCents = kalman.filter(currentState.cents);
           } else {
@@ -394,7 +399,7 @@ async function startTuner() {
           });
 
           // Reset state to show no note
-          currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0 };
+          currentState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0, isAttacking: false };
           smoothedCents = 0;
         }
 
