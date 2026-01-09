@@ -276,17 +276,28 @@ export class TunerCanvas {
     }
 
     // 4. Draw The Meter
-    // Only draw if there is *some* signal history (prevent UI clutter in dead silence)
-    if (this.displayedVolume > 0.01 || this.peakVolume > 0.01) {
-        const barWidth = this.width * 0.6;
-        const barHeight = 4;
-        const barX = (this.width - barWidth) / 2;
-        const barY = this.height - 40;
+    // Always show meter so users can verify microphone is working
+    const barWidth = this.width * 0.6;
+    const barHeight = 4;
+    const barX = (this.width - barWidth) / 2;
+    const barY = this.height - 40;
 
-        // Background Track (Subtle)
-        this.ctx.fillStyle = this.colors.textSubtle;
-        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+    const hasSignal = this.displayedVolume > 0.01 || this.peakVolume > 0.01;
 
+    // Background Track - Always visible
+    // Dim when no signal, brighter when active
+    this.ctx.fillStyle = hasSignal ? this.colors.textSubtle : 'rgba(255, 255, 255, 0.1)';
+    this.ctx.fillRect(barX, barY, barWidth, barHeight);
+
+    // Show "READY" indicator when no signal (mic is working but silent)
+    if (!hasSignal) {
+        this.ctx.font = `11px sans-serif`;
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('MIC READY', centerX, barY - 10);
+    }
+
+    if (hasSignal) {
         // Determine Zone Color & Feedback Text
         let zoneColor = this.colors.textSubtle; // Default Weak
         let feedbackText = "";
