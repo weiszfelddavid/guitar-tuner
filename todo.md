@@ -115,7 +115,7 @@
     * Professional, polished user experience
   - **Bundle Impact:** Main bundle: 26.45 kB → 26.73 kB (+280 bytes, +1%)
   - **Files:** src/ui/canvas.ts (lines 306-359)
-  - **Commit:** TBD
+  - **Commit:** 7a0b783
 
 - [x] **Show volume meter always (not just during signal)** ✅ COMPLETED
   - **Problem:** Meter hidden when volume < 0.01, users couldn't verify mic was working before playing
