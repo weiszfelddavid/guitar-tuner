@@ -66,9 +66,16 @@ class SignalProcessor {
   private readonly alpha: number = 0.1;
   private readonly gateThresholdDb: number = 6;
 
-  // Pitch stabilizer state
-  private pitchBuffer: number[] = [];
+  // Pitch stabilizer state - using circular buffer for efficiency
   private readonly bufferSize: number = 11;
+  private pitchBuffer: Float32Array = new Float32Array(this.bufferSize);
+  private bufferCount: number = 0;
+  private bufferIndex: number = 0;
+
+  // Pre-allocated arrays to avoid GC pressure
+  private sortedBuffer: Float32Array = new Float32Array(this.bufferSize);
+  private validSamples: Float32Array = new Float32Array(this.bufferSize);
+  private validCount: number = 0;
 
   /**
    * Process incoming pitch/volume signal
@@ -92,40 +99,92 @@ class SignalProcessor {
 
     const isGateOpen = currentDb > (floorDb + this.gateThresholdDb);
     if (!isGateOpen) {
-      this.pitchBuffer = [];
+      this.bufferCount = 0;
+      this.bufferIndex = 0;
       return null;
     }
 
     // 2. Pitch Stabilizer - only accept high-clarity pitches
     if (clarity > 0.9) {
-      this.pitchBuffer.push(pitch);
-      if (this.pitchBuffer.length > this.bufferSize) {
-        this.pitchBuffer.shift();
+      // Add to circular buffer
+      this.pitchBuffer[this.bufferIndex] = pitch;
+      this.bufferIndex = (this.bufferIndex + 1) % this.bufferSize;
+      if (this.bufferCount < this.bufferSize) {
+        this.bufferCount++;
       }
     } else {
-      this.pitchBuffer = [];
+      this.bufferCount = 0;
+      this.bufferIndex = 0;
     }
 
-    if (this.pitchBuffer.length === 0) return null;
-    if (this.pitchBuffer.length < 3) return this.pitchBuffer[this.pitchBuffer.length - 1];
+    if (this.bufferCount === 0) return null;
+    if (this.bufferCount < 3) {
+      // Return most recent sample
+      const lastIdx = (this.bufferIndex - 1 + this.bufferSize) % this.bufferSize;
+      return this.pitchBuffer[lastIdx];
+    }
 
-    // Calculate stable pitch using median filtering
-    const sorted = [...this.pitchBuffer].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
+    // Calculate stable pitch using median filtering (optimized)
+    // Copy current buffer values to sorted buffer
+    for (let i = 0; i < this.bufferCount; i++) {
+      this.sortedBuffer[i] = this.pitchBuffer[i];
+    }
 
-    const validSamples = this.pitchBuffer.filter(p => {
-      const ratio = p / median;
-      return ratio > 0.97 && ratio < 1.03;
-    });
+    // Sort only the valid portion
+    this.quickSort(this.sortedBuffer, 0, this.bufferCount - 1);
+    const median = this.sortedBuffer[Math.floor(this.bufferCount / 2)];
 
-    if (validSamples.length === 0) return null;
+    // Filter samples within 3% of median (reuse validSamples array)
+    this.validCount = 0;
+    for (let i = 0; i < this.bufferCount; i++) {
+      const ratio = this.pitchBuffer[i] / median;
+      if (ratio > 0.97 && ratio < 1.03) {
+        this.validSamples[this.validCount++] = this.pitchBuffer[i];
+      }
+    }
 
-    const sum = validSamples.reduce((a, b) => a + b, 0);
-    return sum / validSamples.length;
+    if (this.validCount === 0) return null;
+
+    // Average valid samples
+    let sum = 0;
+    for (let i = 0; i < this.validCount; i++) {
+      sum += this.validSamples[i];
+    }
+    return sum / this.validCount;
+  }
+
+  /**
+   * In-place quicksort for Float32Array (optimized for small arrays)
+   */
+  private quickSort(arr: Float32Array, left: number, right: number): void {
+    if (left >= right) return;
+
+    const pivot = arr[Math.floor((left + right) / 2)];
+    let i = left;
+    let j = right;
+
+    while (i <= j) {
+      while (arr[i] < pivot) i++;
+      while (arr[j] > pivot) j--;
+
+      if (i <= j) {
+        // Swap
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+        i++;
+        j--;
+      }
+    }
+
+    if (left < j) this.quickSort(arr, left, j);
+    if (i < right) this.quickSort(arr, i, right);
   }
 
   reset() {
-    this.pitchBuffer = [];
+    this.bufferCount = 0;
+    this.bufferIndex = 0;
+    this.validCount = 0;
   }
 }
 
