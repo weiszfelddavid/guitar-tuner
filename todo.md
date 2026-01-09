@@ -145,7 +145,7 @@
     * Maintains app structure even on failure
   - **Bundle Impact:** Main bundle: 20.95 kB → 26.45 kB (+5.5 kB for comprehensive error recovery)
   - **Files:** src/main.ts
-  - **Commit:** TBD
+  - **Commit:** 1ec00ec
 
 - [ ] **Add OKLCH color fallbacks for older browsers**
   - **Problem:** OKLCH requires Safari 16.4+, Chrome 111+, Firefox 113+
