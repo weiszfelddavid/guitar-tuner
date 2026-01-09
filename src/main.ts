@@ -3,6 +3,7 @@ import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
 import { TunerCanvas } from './ui/canvas';
 import { KalmanFilter, TunerState, TunerMode, TunerConfig, getDefaultConfig } from './ui/tuner';
+import { ATTACK_SMOOTHING_FACTOR, KALMAN_MEASUREMENT_NOISE } from './constants/tuner-config';
 import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
@@ -43,7 +44,7 @@ function updateModeToggle() {
 
 // State management - only visual state on main thread now
 let currentState: TunerState = { noteName: '--', cents: 0, clarity: 0, volume: 0, isLocked: false, frequency: 0, isAttacking: false };
-const kalman = new KalmanFilter(currentConfig.smoothingFactor, 0.1);
+const kalman = new KalmanFilter(currentConfig.smoothingFactor, KALMAN_MEASUREMENT_NOISE);
 let stringSelector: StringSelector | null = null;
 let smoothedCents = 0;
 
@@ -359,8 +360,7 @@ async function startTuner() {
 
           // Attack-aware Kalman filter for visual needle smoothing
           // Fast response during pluck attacks, slow during sustain
-          const attackSmoothing = 0.5; // Fast response during attack
-          kalman.setProcessNoise(currentState.isAttacking ? attackSmoothing : currentConfig.smoothingFactor);
+          kalman.setProcessNoise(currentState.isAttacking ? ATTACK_SMOOTHING_FACTOR : currentConfig.smoothingFactor);
 
           if (currentState.noteName !== '--') {
               smoothedCents = kalman.filter(currentState.cents);

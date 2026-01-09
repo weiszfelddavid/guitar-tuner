@@ -1,6 +1,7 @@
 // src/ui/tuner.ts
 
 import { GUITAR_STRINGS, getStringByNote } from '../constants/guitar-strings';
+import { STRICT_MODE_CONFIG, FORGIVING_MODE_CONFIG } from '../constants/tuner-config';
 
 // Helper function to get string info from note name
 export function getStringInfo(noteName: string): { stringNumber: number; stringName: string } | null {
@@ -64,19 +65,7 @@ export class KalmanFilter {
 }
 
 export function getDefaultConfig(mode: TunerMode): TunerConfig {
-  if (mode === 'strict') {
-    return {
-      mode: 'strict',
-      clarityThreshold: 0.9,
-      smoothingFactor: 0.1
-    };
-  } else {
-    return {
-      mode: 'forgiving',
-      clarityThreshold: 0.6,
-      smoothingFactor: 0.3
-    };
-  }
+  return mode === 'strict' ? STRICT_MODE_CONFIG : FORGIVING_MODE_CONFIG;
 }
 
 export function getTunerState(pitch: number, clarity: number, volume: number, config?: TunerConfig): TunerState {

@@ -34,20 +34,22 @@ const GUITAR_STRINGS = [
   { note: 'E4', frequency: 329.63, stringNumber: 1, label: 'High E' }
 ];
 
+// Configuration constants (synchronized with src/constants/tuner-config.ts)
+// Note: Inlined here because worklet has separate bundling context
+const STRICT_CONFIG: TunerConfig = {
+  mode: 'strict',
+  clarityThreshold: 0.9,    // Only accept very clean signals
+  smoothingFactor: 0.1      // Minimal smoothing for instant response
+};
+
+const FORGIVING_CONFIG: TunerConfig = {
+  mode: 'forgiving',
+  clarityThreshold: 0.6,    // Accept noisier signals
+  smoothingFactor: 0.3      // More smoothing for stable reading
+};
+
 function getDefaultConfig(mode: TunerMode): TunerConfig {
-  if (mode === 'strict') {
-    return {
-      mode: 'strict',
-      clarityThreshold: 0.9,
-      smoothingFactor: 0.1
-    };
-  } else {
-    return {
-      mode: 'forgiving',
-      clarityThreshold: 0.6,
-      smoothingFactor: 0.3
-    };
-  }
+  return mode === 'strict' ? STRICT_CONFIG : FORGIVING_CONFIG;
 }
 
 // ============================================================================
