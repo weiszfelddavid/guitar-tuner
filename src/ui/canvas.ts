@@ -307,16 +307,20 @@ export class TunerCanvas {
         // Determine Zone Color & Feedback Text
         let zoneColor = this.colors.textSubtle; // Default Weak
         let feedbackText = "";
+        let feedbackIcon = "";
 
         if (this.displayedVolume > VOLUME_GOOD_THRESHOLD) {
             zoneColor = this.colors.danger; // Hot/Clip (Red)
             feedbackText = "TOO LOUD / MOVE BACK";
+            feedbackIcon = "⚠";
         } else if (this.displayedVolume > 0.15) {
             zoneColor = this.colors.success; // Good (Green)
-            feedbackText = ""; // Silence is Golden (Reward)
+            feedbackText = "OPTIMAL";
+            feedbackIcon = "✓";
         } else {
             zoneColor = this.colors.textMuted; // Weak (Grey)
             feedbackText = "MOVE CLOSER";
+            feedbackIcon = "↑";
         }
 
         // Draw Active Volume Bar
@@ -331,12 +335,26 @@ export class TunerCanvas {
         this.ctx.fillStyle = this.colors.text;
         this.ctx.fillRect(peakX, barY - 2, 2, barHeight + 4);
 
-        // Draw Feedback Text
+        // Draw Feedback Text with Icon
         if (feedbackText) {
-            this.ctx.font = `bold 12px sans-serif`;
+            // Draw icon
+            this.ctx.font = `bold 14px sans-serif`;
             this.ctx.fillStyle = zoneColor;
             this.ctx.textAlign = 'center';
-            this.ctx.fillText(feedbackText, centerX, barY - 10);
+
+            // Add subtle glow effect for optimal zone
+            if (feedbackIcon === "✓") {
+                this.ctx.shadowBlur = 8;
+                this.ctx.shadowColor = this.colors.success;
+            }
+
+            this.ctx.fillText(feedbackIcon, centerX - 35, barY - 8);
+            this.ctx.shadowBlur = 0; // Reset
+
+            // Draw text
+            this.ctx.font = `bold 11px sans-serif`;
+            this.ctx.fillStyle = zoneColor;
+            this.ctx.fillText(feedbackText, centerX + 5, barY - 10);
         }
     }
   }

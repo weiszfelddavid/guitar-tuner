@@ -97,11 +97,25 @@
   - **Fix:** Add tooltip/help text: "Pro = instant response, Easy = holds note for 4s"
   - **Files:** src/main.ts (line 32), CSS for tooltip
 
-- [ ] **Add visual feedback for optimal volume**
-  - **Problem:** "Good" volume zone shows no feedback (canvas.ts:299)
-  - **Impact:** User unsure if microphone is working correctly
-  - **Fix:** Show "Ready" or checkmark icon when in optimal range
-  - **Files:** src/ui/canvas.ts (lines 290-303)
+- [x] **Add visual feedback for optimal volume** ✅ COMPLETED
+  - **Problem:** "Good" volume zone showed no feedback (canvas.ts:316)
+  - **Impact:** Users unsure if microphone is working correctly, no positive reinforcement
+  - **Solution Implemented:**
+    * Added visual feedback icons for all volume zones:
+      - ✓ "OPTIMAL" (green checkmark) for good volume (0.15-0.8)
+      - ⚠ "TOO LOUD / MOVE BACK" (warning) for clipping (>0.8)
+      - ↑ "MOVE CLOSER" (arrow) for weak signal (<0.15)
+    * Green glow effect on checkmark icon for optimal zone
+    * Clear icon + text combination for quick recognition
+    * Professional feedback that encourages proper mic positioning
+  - **Benefits:**
+    * Users instantly know when volume is optimal
+    * Positive reinforcement reduces uncertainty
+    * Clear guidance for all volume levels
+    * Professional, polished user experience
+  - **Bundle Impact:** Main bundle: 26.45 kB → 26.73 kB (+280 bytes, +1%)
+  - **Files:** src/ui/canvas.ts (lines 306-359)
+  - **Commit:** TBD
 
 - [x] **Show volume meter always (not just during signal)** ✅ COMPLETED
   - **Problem:** Meter hidden when volume < 0.01, users couldn't verify mic was working before playing
