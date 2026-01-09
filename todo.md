@@ -24,11 +24,12 @@
   - **Fix:** Show spinner/progress during fetch + validation (lines 92-105)
   - **Files:** src/main.ts
 
-- [ ] **Remove debug console from production build**
+- [x] **Remove debug console from production build** ✅ COMPLETED
   - **Problem:** 110-line debug console ships to all users (debug-console.ts)
   - **Impact:** Increases bundle size, confuses end users, unprofessional
   - **Fix:** Wrap in `if (import.meta.env.DEV)` or separate build target
-  - **Files:** src/debug-console.ts, src/main.ts (lines 154-178)
+  - **Result:** Bundle reduced 22.08 kB → 18.59 kB (-15.8%), debug code tree-shaken
+  - **Commit:** cb79df4
 
 ---
 

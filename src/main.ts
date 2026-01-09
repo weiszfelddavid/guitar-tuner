@@ -117,10 +117,12 @@ async function startTuner() {
     }
     const canvas = new TunerCanvas('tuner-canvas');
 
-    // Re-append debug console if it was wiped (just in case)
-    const debugConsole = document.getElementById('debug-console');
-    if (debugConsole) {
-        document.body.appendChild(debugConsole); // Move to end to ensure z-index
+    // Re-append debug console if it was wiped (DEV only)
+    if (import.meta.env.DEV) {
+        const debugConsole = document.getElementById('debug-console');
+        if (debugConsole) {
+            document.body.appendChild(debugConsole); // Move to end to ensure z-index
+        }
     }
 
     // Add version overlay if not present
@@ -150,31 +152,33 @@ async function startTuner() {
         });
     }
 
-    // Add debug console toggle button next to mode toggle
-    let debugToggle = document.getElementById('debug-toggle');
-    if (!debugToggle) {
-        debugToggle = document.createElement('div');
-        debugToggle.id = 'debug-toggle';
-        debugToggle.innerHTML = `
-            <span class="mode-prefix">Logs:</span>
-            <span id="debug-label">Hidden</span>
-        `;
-        document.body.appendChild(debugToggle);
+    // Add debug console toggle button next to mode toggle (DEV only)
+    if (import.meta.env.DEV) {
+        let debugToggle = document.getElementById('debug-toggle');
+        if (!debugToggle) {
+            debugToggle = document.createElement('div');
+            debugToggle.id = 'debug-toggle';
+            debugToggle.innerHTML = `
+                <span class="mode-prefix">Logs:</span>
+                <span id="debug-label">Hidden</span>
+            `;
+            document.body.appendChild(debugToggle);
 
-        // Toggle debug console on click
-        debugToggle.addEventListener('click', () => {
-            const isVisible = (window as any).toggleDebugConsole();
+            // Toggle debug console on click
+            debugToggle.addEventListener('click', () => {
+                const isVisible = (window as any).toggleDebugConsole();
+                const label = document.getElementById('debug-label');
+                if (label) {
+                    label.textContent = isVisible ? 'Visible' : 'Hidden';
+                }
+            });
+
+            // Set initial label state
+            const isDebugVisible = localStorage.getItem('debug-console-visible') === 'true';
             const label = document.getElementById('debug-label');
             if (label) {
-                label.textContent = isVisible ? 'Visible' : 'Hidden';
+                label.textContent = isDebugVisible ? 'Visible' : 'Hidden';
             }
-        });
-
-        // Set initial label state
-        const isDebugVisible = localStorage.getItem('debug-console-visible') === 'true';
-        const label = document.getElementById('debug-label');
-        if (label) {
-            label.textContent = isDebugVisible ? 'Visible' : 'Hidden';
         }
     }
 
