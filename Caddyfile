@@ -1,7 +1,7 @@
 # Caddy configuration for Pure Tone Guitar Tuner
 # Serves the application with required security headers for WASM/AudioWorklet
 
-138.197.70.108 {
+tuner.weiszfeld.com {
     # Serve files from the deployment directory
     root * /var/www/tuner
     file_server
