@@ -184,7 +184,7 @@
   - **Impact:** Repository bloat, version control not suitable for generated data
   - **Fix:** Added tests/fixtures/*.json to .gitignore, updated npm test to auto-generate fixtures via scripts/generate_test_signals.ts
   - **Result:** Repository 3MB lighter, fixtures generated on-demand in ~1 second, all 24 tests pass
-  - **Commit:** TBD
+  - **Commit:** 7544a37
 
 - [ ] **Add integration tests**
   - Currently only unit tests (no worklet, no full pipeline)
@@ -204,7 +204,7 @@
   - **Impact:** Could produce broken bundle if WASM compilation fails
   - **Fix:** Created scripts/build.sh with explicit error checking, clear error messages, helpful troubleshooting tips
   - **Result:** Vite only runs if wasm-pack succeeds, proper exit codes, better developer experience
-  - **Commit:** TBD
+  - **Commit:** 7544a37
 
 - [ ] **Environment-based configuration**
   - Deployment uses hardcoded IP (deploy-droplet.yml:42)
