@@ -1,21 +1,12 @@
 // src/ui/string-selector.ts
 
-export interface StringInfo {
-  note: string;
-  label: string;
-  id: string;
-  frequency: number;
-  stringNumber: number;
-}
+import { GUITAR_STRINGS, type GuitarString } from '../constants/guitar-strings';
 
-export const STANDARD_TUNING: StringInfo[] = [
-  { note: 'E2', label: 'Low E', id: 'string-6', frequency: 82.41, stringNumber: 6 },
-  { note: 'A2', label: 'A', id: 'string-5', frequency: 110.00, stringNumber: 5 },
-  { note: 'D3', label: 'D', id: 'string-4', frequency: 146.83, stringNumber: 4 },
-  { note: 'G3', label: 'G', id: 'string-3', frequency: 196.00, stringNumber: 3 },
-  { note: 'B3', label: 'B', id: 'string-2', frequency: 246.94, stringNumber: 2 },
-  { note: 'E4', label: 'High E', id: 'string-1', frequency: 329.63, stringNumber: 1 },
-];
+// Re-export type for backward compatibility
+export type StringInfo = GuitarString;
+
+// Re-export constant with legacy name for backward compatibility
+export const STANDARD_TUNING = GUITAR_STRINGS;
 
 export class StringSelector {
   private container: HTMLElement;

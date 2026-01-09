@@ -1,20 +1,12 @@
 // src/ui/tuner.ts
 
-// Standard E Guitar Tuning Frequencies
-const GUITAR_STRINGS = [
-  { name: 'E2', freq: 82.41, stringNumber: 6, stringName: 'Low E' },
-  { name: 'A2', freq: 110.00, stringNumber: 5, stringName: 'A' },
-  { name: 'D3', freq: 146.83, stringNumber: 4, stringName: 'D' },
-  { name: 'G3', freq: 196.00, stringNumber: 3, stringName: 'G' },
-  { name: 'B3', freq: 246.94, stringNumber: 2, stringName: 'B' },
-  { name: 'E4', freq: 329.63, stringNumber: 1, stringName: 'High E' }
-];
+import { GUITAR_STRINGS, getStringByNote } from '../constants/guitar-strings';
 
 // Helper function to get string info from note name
 export function getStringInfo(noteName: string): { stringNumber: number; stringName: string } | null {
-  const stringData = GUITAR_STRINGS.find(s => s.name === noteName);
+  const stringData = getStringByNote(noteName);
   if (stringData) {
-    return { stringNumber: stringData.stringNumber, stringName: stringData.stringName };
+    return { stringNumber: stringData.stringNumber, stringName: stringData.label };
   }
   return null;
 }
@@ -94,20 +86,20 @@ export function getTunerState(pitch: number, clarity: number, volume: number, co
   }
 
   let closestString = GUITAR_STRINGS[0];
-  let minDiff = Math.abs(pitch - closestString.freq);
+  let minDiff = Math.abs(pitch - closestString.frequency);
 
   for (const str of GUITAR_STRINGS) {
-    const diff = Math.abs(pitch - str.freq);
+    const diff = Math.abs(pitch - str.frequency);
     if (diff < minDiff) {
       minDiff = diff;
       closestString = str;
     }
   }
 
-  const cents = 1200 * Math.log2(pitch / closestString.freq);
+  const cents = 1200 * Math.log2(pitch / closestString.frequency);
 
   return {
-    noteName: closestString.name, // Keep full name with octave (e.g., E2, A2, D3)
+    noteName: closestString.note, // Keep full name with octave (e.g., E2, A2, D3)
     cents: cents,
     clarity: clarity,
     volume: volume,
@@ -234,10 +226,10 @@ export class OctaveDiscriminator {
         const fundamental = pitch / 2;
         const double = pitch * 2;
 
-        const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.freq)) < 100);
+        const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.frequency)) < 100);
 
         if (isString(fundamental)) {
-            if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.freq)) < 100)?.name) {
+            if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.frequency)) < 100)?.note) {
                 return fundamental;
             }
             if (clarity < 0.98) return fundamental;
@@ -315,12 +307,12 @@ export class VisualHoldManager {
                 if (rawPitch > 60 && rawPitch < 500) {
                     // Find the target frequency for the held note
                     const targetString = GUITAR_STRINGS.find(s =>
-                        s.name === this.lastValidState!.noteName
+                        s.note === this.lastValidState!.noteName
                     );
 
                     if (targetString) {
                         // Calculate cents relative to the held note's target frequency
-                        const updatedCents = 1200 * Math.log2(rawPitch / targetString.freq);
+                        const updatedCents = 1200 * Math.log2(rawPitch / targetString.frequency);
 
                         // Return held note with updated pitch tracking
                         return {

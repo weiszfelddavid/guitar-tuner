@@ -38,11 +38,12 @@
 ## HIGH PRIORITY (Major Quality Issues)
 **Impact:** Code maintainability, type safety, performance
 
-- [ ] **Consolidate guitar string definitions**
+- [x] **Consolidate guitar string definitions** ✅ COMPLETED
   - **Problem:** Strings defined 3x with different property names (tuner.ts:4-11, string-selector.ts:11-18)
   - **Impact:** Changes require editing multiple files,易出错
   - **Fix:** Single source of truth in shared constants file
-  - **Files:** src/ui/tuner.ts, src/ui/string-selector.ts
+  - **Result:** Created src/constants/guitar-strings.ts with unified interface, helper functions
+  - **Commit:** e31ceff
 
 - [ ] **Simplify processing pipeline classes**
   - **Problem:** 8 separate classes (KalmanFilter, PluckDetector, etc.) with tight coupling

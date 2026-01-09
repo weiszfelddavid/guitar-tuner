@@ -23,13 +23,15 @@ interface TunerState {
 }
 
 // Standard E Guitar Tuning Frequencies
+// NOTE: Synchronized with src/constants/guitar-strings.ts
+// Inlined here because worklet has separate bundling context
 const GUITAR_STRINGS = [
-  { name: 'E2', freq: 82.41, stringNumber: 6, stringName: 'Low E' },
-  { name: 'A2', freq: 110.00, stringNumber: 5, stringName: 'A' },
-  { name: 'D3', freq: 146.83, stringNumber: 4, stringName: 'D' },
-  { name: 'G3', freq: 196.00, stringNumber: 3, stringName: 'G' },
-  { name: 'B3', freq: 246.94, stringNumber: 2, stringName: 'B' },
-  { name: 'E4', freq: 329.63, stringNumber: 1, stringName: 'High E' }
+  { note: 'E2', frequency: 82.41, stringNumber: 6, label: 'Low E' },
+  { note: 'A2', frequency: 110.00, stringNumber: 5, label: 'A' },
+  { note: 'D3', frequency: 146.83, stringNumber: 4, label: 'D' },
+  { note: 'G3', frequency: 196.00, stringNumber: 3, label: 'G' },
+  { note: 'B3', frequency: 246.94, stringNumber: 2, label: 'B' },
+  { note: 'E4', frequency: 329.63, stringNumber: 1, label: 'High E' }
 ];
 
 function getDefaultConfig(mode: TunerMode): TunerConfig {
@@ -113,10 +115,10 @@ class OctaveDiscriminator {
   process(pitch: number, clarity: number): number {
     const fundamental = pitch / 2;
 
-    const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.freq)) < 100);
+    const isString = (p: number) => GUITAR_STRINGS.some(s => Math.abs(1200 * Math.log2(p / s.frequency)) < 100);
 
     if (isString(fundamental)) {
-      if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.freq)) < 100)?.name) {
+      if (this.lastNote === GUITAR_STRINGS.find(s => Math.abs(1200 * Math.log2(fundamental / s.frequency)) < 100)?.note) {
         return fundamental;
       }
       if (clarity < 0.98) return fundamental;
@@ -235,11 +237,11 @@ class VisualHoldManager {
       if (timeSinceLast < holdDuration) {
         if (rawPitch > 60 && rawPitch < 500) {
           const targetString = GUITAR_STRINGS.find(s =>
-            s.name === this.lastValidState!.noteName
+            s.note === this.lastValidState!.noteName
           );
 
           if (targetString) {
-            const updatedCents = 1200 * Math.log2(rawPitch / targetString.freq);
+            const updatedCents = 1200 * Math.log2(rawPitch / targetString.frequency);
 
             return {
               ...this.lastValidState,
@@ -269,20 +271,20 @@ function getTunerState(pitch: number, clarity: number, volume: number, config: T
   }
 
   let closestString = GUITAR_STRINGS[0];
-  let minDiff = Math.abs(pitch - closestString.freq);
+  let minDiff = Math.abs(pitch - closestString.frequency);
 
   for (const str of GUITAR_STRINGS) {
-    const diff = Math.abs(pitch - str.freq);
+    const diff = Math.abs(pitch - str.frequency);
     if (diff < minDiff) {
       minDiff = diff;
       closestString = str;
     }
   }
 
-  const cents = 1200 * Math.log2(pitch / closestString.freq);
+  const cents = 1200 * Math.log2(pitch / closestString.frequency);
 
   return {
-    noteName: closestString.name,
+    noteName: closestString.note,
     cents: cents,
     clarity: clarity,
     volume: volume,
