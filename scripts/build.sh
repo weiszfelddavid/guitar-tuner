@@ -14,6 +14,19 @@ if wasm-pack build --target web; then
     echo "✓ WASM build successful"
     echo ""
     echo "============================================"
+    echo "Copying fresh WASM files..."
+    echo "============================================"
+
+    # Copy the WASM binary to public/ (served at runtime)
+    cp -v pkg/pure_tone_bg.wasm public/pure_tone_bg.wasm
+
+    # Copy the JS glue code to src/audio/ (bundled with app)
+    cp -v pkg/pure_tone.js src/audio/pure_tone_lib.mjs
+
+    echo ""
+    echo "✓ WASM files updated"
+    echo ""
+    echo "============================================"
     echo "Building application with Vite..."
     echo "============================================"
 

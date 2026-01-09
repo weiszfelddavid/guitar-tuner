@@ -28,17 +28,11 @@ function passArrayF32ToWasm0(arg, malloc) {
     return ptr;
 }
 
-// Lazy load TextDecoder to avoid top-level failures in restricted environments
-let cachedTextDecoder = null; 
-
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
 let numBytesDecoded = 0;
 function decodeText(ptr, len) {
-    if (!cachedTextDecoder) {
-        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-        cachedTextDecoder.decode();
-    }
-
     numBytesDecoded += len;
     if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
         cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
