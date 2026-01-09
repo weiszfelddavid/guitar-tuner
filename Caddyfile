@@ -18,6 +18,13 @@ tuner.weiszfeld.com {
         path *.wasm
     }
     header @wasm Content-Type "application/wasm"
+    header @wasm Cross-Origin-Resource-Policy "same-origin"
+
+    # Serve JavaScript files (including worklets) with CORP header
+    @js {
+        path *.js *.mjs
+    }
+    header @js Cross-Origin-Resource-Policy "same-origin"
 
     # Enable gzip compression for better performance
     encode gzip
