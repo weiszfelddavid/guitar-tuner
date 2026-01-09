@@ -73,11 +73,12 @@
   - **Result:** Eliminated 180 allocations/sec → 0 (only on mode change), bundle 20.87→20.82 kB (-50 bytes)
   - **Commit:** 11554a6
 
-- [ ] **Memoize expensive calculations**
-  - **Problem:** Array sorts in hot path (PitchStabilizer median filtering every frame)
+- [x] **Memoize expensive calculations** ✅ COMPLETED
+  - **Problem:** PitchStabilizer created ~300 array allocations/sec (spread, sort, filter, shift operations every frame)
   - **Impact:** GC pressure, 0.5-1ms wasted per frame
-  - **Fix:** Use circular buffer instead of sorted arrays, pre-allocate buffers
-  - **Files:** tuner-processor.ts PitchStabilizer (line ~95)
+  - **Fix:** Implemented zero-allocation circular buffer with pre-allocated Float32Arrays, custom in-place quickSort
+  - **Result:** Eliminated 300 allocations/sec → 0, worklet 9.96→10.78 kB (+0.82 for quickSort, acceptable trade-off)
+  - **Commit:** 3bf3e91
 
 ---
 
