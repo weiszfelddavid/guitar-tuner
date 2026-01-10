@@ -1,13 +1,8 @@
-console.log('[tuner-processor] Module starting to load...');
-
-// WASM is loaded dynamically in initWasm() to avoid top-level import blocking registerProcessor
 // Types for WASM module (loaded dynamically, not imported at top level)
 type WasmInit = (input?: any) => Promise<any>;
 type PitchDetectorClass = new (sampleRate: number, bufferSize: number) => {
   process(buffer: Float32Array): { pitch: number; clarity: number };
 };
-
-console.log('[tuner-processor] Imports successful (WASM will load dynamically)');
 
 import { findClosestString, calculateCents } from '../utils/frequency';
 
@@ -483,53 +478,33 @@ class TunerProcessor extends AudioWorkletProcessor {
     this.config = getDefaultConfig(this.currentMode);
 
     this.port.onmessage = this.handleMessage.bind(this);
-
-    // Send ready signal immediately after construction
-    // This confirms that the processor was constructed successfully
-    console.log('[tuner-processor] Constructor completed, sending initial ready signal');
     this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
   }
 
   async handleMessage(event: MessageEvent) {
     if (event.data.type === 'check-ready') {
-      // Respond to ready check from main thread
-      console.log('[tuner-processor] Received check-ready, responding with worklet-ready');
       this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
     } else if (event.data.type === 'load-wasm') {
-      this.port.postMessage({ type: 'log', message: '[Worklet] Received WASM bytes' });
       await this.initWasm(event.data.wasmBytes);
     } else if (event.data.type === 'set-mode') {
       this.currentMode = event.data.mode;
       this.config = getDefaultConfig(this.currentMode);
-      this.port.postMessage({ type: 'log', message: `[Worklet] Mode changed to ${this.currentMode}` });
     } else if (event.data.type === 'set-string-lock') {
       this.manualStringLock = event.data.stringLock;
-      this.port.postMessage({ type: 'log', message: `[Worklet] String lock: ${this.manualStringLock ? this.manualStringLock.note : 'none'}` });
     }
   }
 
   async initWasm(wasmBytes: ArrayBuffer) {
     try {
-      console.log('[tuner-processor] initWasm called, importing WASM module...');
-      // Dynamically import WASM module to avoid top-level await blocking registerProcessor
       const wasmModule = await import('./pure_tone_lib.mjs');
-      console.log('[tuner-processor] WASM module imported:', Object.keys(wasmModule));
-
       const init = wasmModule.default;
       const PitchDetector = wasmModule.PitchDetector;
-
-      console.log('[tuner-processor] Initializing WASM with bytes...');
       await init(wasmBytes);
-      console.log('[tuner-processor] WASM initialized, creating PitchDetector...');
-
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
-      console.log('[tuner-processor] PitchDetector created successfully');
-      this.port.postMessage({ type: 'log', message: '[Worklet] WASM initialized successfully' });
+      this.port.postMessage({ type: 'wasm-ready' });
     } catch (e) {
-      console.error('[tuner-processor] WASM initialization error:', e);
-      this.port.postMessage({ type: 'log', message: `[Worklet] Failed to initialize WASM: ${e}` });
-      this.port.postMessage({ type: 'log', message: `[Worklet] Error stack: ${e instanceof Error ? e.stack : 'No stack'}` });
+      this.port.postMessage({ type: 'wasm-error', error: e instanceof Error ? e.message : String(e) });
     }
   }
 
@@ -586,7 +561,7 @@ class TunerProcessor extends AudioWorkletProcessor {
         state: finalState
       });
     } catch (e) {
-      this.port.postMessage({ type: 'log', message: `[Worklet] Error in processBuffer: ${e}` });
+      // Silent error handling
     }
   }
 
@@ -619,14 +594,4 @@ class TunerProcessor extends AudioWorkletProcessor {
   }
 }
 
-// Register processor immediately when module loads
-try {
-  console.log('[tuner-processor] About to call registerProcessor...');
-  registerProcessor('tuner-processor', TunerProcessor);
-  console.log('[tuner-processor] Successfully registered processor');
-} catch (error) {
-  console.error('[tuner-processor] Failed to register:', error);
-  console.error('[tuner-processor] Error details:', error instanceof Error ? error.message : String(error));
-  console.error('[tuner-processor] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-  throw error;
-}
+registerProcessor('tuner-processor', TunerProcessor);

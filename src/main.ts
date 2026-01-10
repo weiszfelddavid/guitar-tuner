@@ -68,9 +68,8 @@ import {
   AUDIO_CONTEXT_CHECK_INTERVAL_MS,
   WASM_INIT_TIMEOUT_MS
 } from './constants/tuner-config';
-// TEMPORARY: Disabled old debug console - using on-screen logger instead
-// import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
+import { MobileDebugOverlay } from './ui/mobile-debug-overlay';
 import pkg from '../package.json';
 
 console.log('[MAIN] All modules imported successfully');
@@ -344,214 +343,83 @@ function showErrorDialog(errorInfo: ReturnType<typeof categorizeWasmError>, onRe
 }
 
 async function startTuner() {
+  const debugOverlay = new MobileDebugOverlay();
+  debugOverlay.show();
+
   try {
-    console.log("Starting Tuner...");
-
-    // 1. Setup Audio
+    debugOverlay.log('1. Starting Audio Context...');
     const context = await getAudioContext();
-    console.log("AudioContext created. State:", context.state);
+    debugOverlay.success('Audio Context created');
 
-    // FIX: Force resume AudioContext if it's suspended (Common on Android/iOS)
     if (context.state === 'suspended') {
-      console.log("AudioContext suspended, resuming...");
+      debugOverlay.log('   Resuming suspended context...');
       await context.resume();
+      debugOverlay.success('Audio Context resumed');
     }
 
+    debugOverlay.log('2. Requesting microphone access...');
     let micStream = await getMicrophoneStream(context);
+    debugOverlay.success('Microphone access granted');
 
-    // Log active settings to debug "Silence" issue
-    let track = micStream.getAudioTracks()[0];
-    if (track) {
-        console.log("Mic Label:", track.label);
-        console.log("Mic Settings:", JSON.stringify(track.getSettings(), null, 2));
-        console.log("Mic Constraints:", JSON.stringify(track.getConstraints(), null, 2));
-    } else {
-        console.error("No audio track found in stream!");
-    }
-
-    // FIX 2: Check resume AGAIN after permission prompt (which might have broken the user gesture chain)
     if (context.state === 'suspended') {
-      console.log("AudioContext suspended after permission, resuming...");
       await context.resume();
     }
 
     let source = context.createMediaStreamSource(micStream);
 
-    // Create AudioWorklet with verification handshake
+    debugOverlay.log('3. Creating Audio Worklet...');
     let tunerNode: AudioWorkletNode;
     try {
       tunerNode = await createTunerWorklet(context);
-    } catch (workletError) {
-      console.error("Failed to create AudioWorklet:", workletError);
-
-      // Show specific error for worklet failure
-      const errorInfo = {
-        category: 'audioworklet',
-        message: 'Failed to initialize audio processor',
-        technicalDetails: workletError instanceof Error ? workletError.message : String(workletError),
-        suggestions: [
-          'The audio processor failed to register or initialize properly',
-          'This may be due to slow network connection or browser compatibility',
-          'Try refreshing the page',
-          'Clear your browser cache and try again',
-          'Try a different browser (Chrome or Edge recommended)',
-        ]
-      };
-
-      showErrorDialog(errorInfo, async () => {
-        // Retry the full initialization
-        await startTuner();
-      });
-
-      return; // Don't continue with initialization
-    }
-
-    // Show loading overlay
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.id = 'loading-overlay';
-    loadingOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        font-family: sans-serif;
-    `;
-
-    const loadingText = document.createElement('div');
-    loadingText.style.cssText = `
-        font-size: 18px;
-        margin-top: 20px;
-        color: rgba(255, 255, 255, 0.9);
-    `;
-    loadingText.textContent = 'Initializing tuner...';
-
-    const spinner = document.createElement('div');
-    spinner.style.cssText = `
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        border-top: 4px solid var(--color-accent, #4a9eff);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    `;
-
-    // Add spinner animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(style);
-
-    loadingOverlay.appendChild(spinner);
-    loadingOverlay.appendChild(loadingText);
-    document.body.appendChild(loadingOverlay);
-
-    // Load WASM with automatic retry and error recovery
-    let wasmInitialized = false;
-
-    const loadWasmWithRetry = async (): Promise<void> => {
-      // Listen for WASM initialization confirmation from worklet
-      const wasmInitPromise = new Promise<void>((resolve, reject) => {
-        const messageHandler = (event: MessageEvent) => {
-          if (event.data.type === 'log' && event.data.message.includes('WASM initialized successfully')) {
-            wasmInitialized = true;
-            tunerNode.port.removeEventListener('message', messageHandler);
-            resolve();
-          }
-        };
-        tunerNode.port.addEventListener('message', messageHandler);
-
-        // Add timeout to reject promise if initialization takes too long
-        setTimeout(() => {
-          tunerNode.port.removeEventListener('message', messageHandler);
-          reject(new Error('WASM initialization timeout'));
-        }, WASM_INIT_TIMEOUT_MS);
-      });
-
-      // Wrap WASM loading in retry logic
-      await retryWithBackoff(async () => {
-        loadingText.textContent = 'Loading audio engine...';
-        console.log("Loading WASM from main thread...");
-
-        const wasmRes = await fetch('/pure_tone_bg.wasm');
-        if (!wasmRes.ok) {
-          throw new Error(`Failed to fetch WASM: ${wasmRes.status} ${wasmRes.statusText}`);
-        }
-
-        const contentType = wasmRes.headers.get('Content-Type');
-        if (contentType && !contentType.includes('wasm')) {
-          throw new Error(`Invalid Content-Type for WASM: ${contentType} (Expected application/wasm)`);
-        }
-
-        loadingText.textContent = 'Initializing audio processor...';
-        const wasmBuffer = await wasmRes.arrayBuffer();
-        tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
-        console.log("WASM sent to worklet");
-
-        // Wait for worklet to confirm initialization
-        await wasmInitPromise;
-
-        loadingText.textContent = 'Ready!';
-        console.log("WASM initialization confirmed");
-      }, 'WASM loading');
-    };
-
-    try {
-      await loadWasmWithRetry();
-    } catch (e) {
-      console.error("WASM Load Error (all retry attempts failed):", e);
-
-      // Remove loading overlay
-      loadingOverlay.remove();
-
-      // Show user-friendly error dialog with retry option
-      const errorInfo = categorizeWasmError(e);
-      showErrorDialog(errorInfo, async () => {
-        // User clicked retry - show loading overlay again and try
-        document.body.appendChild(loadingOverlay);
-        loadingText.textContent = 'Retrying...';
-        loadingText.style.color = 'rgba(255, 255, 255, 0.9)';
-
-        try {
-          await loadWasmWithRetry();
-          // Success! Remove overlay and continue
-          setTimeout(() => {
-            loadingOverlay.style.opacity = '0';
-            loadingOverlay.style.transition = 'opacity 0.3s';
-            setTimeout(() => loadingOverlay.remove(), 300);
-          }, 300);
-        } catch (retryError) {
-          // Failed again, show error dialog
-          loadingOverlay.remove();
-          const retryErrorInfo = categorizeWasmError(retryError);
-          showErrorDialog(retryErrorInfo, () => location.reload()); // Full page reload on second failure
-        }
-      });
-
-      // Don't continue initialization if WASM failed
+      debugOverlay.success('Worklet created');
+    } catch (nodeError) {
+      debugOverlay.error(
+        'Failed to create AudioWorkletNode',
+        nodeError instanceof Error ? nodeError.stack : String(nodeError)
+      );
       return;
     }
 
-    // Send initial mode to worklet
+    debugOverlay.log('4. Loading WASM module...');
+
+    const wasmInitPromise = new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('WASM initialization timeout'));
+      }, WASM_INIT_TIMEOUT_MS);
+
+      const messageHandler = (event: MessageEvent) => {
+        if (event.data.type === 'wasm-ready') {
+          clearTimeout(timeoutId);
+          tunerNode.port.removeEventListener('message', messageHandler);
+          resolve();
+        } else if (event.data.type === 'wasm-error') {
+          clearTimeout(timeoutId);
+          tunerNode.port.removeEventListener('message', messageHandler);
+          reject(new Error(event.data.error));
+        }
+      };
+      tunerNode.port.addEventListener('message', messageHandler);
+      tunerNode.port.start();
+    });
+
+    const wasmRes = await fetch('/pure_tone_bg.wasm');
+    if (!wasmRes.ok) {
+      debugOverlay.error('Failed to fetch WASM', `${wasmRes.status} ${wasmRes.statusText}`);
+      return;
+    }
+
+    const wasmBuffer = await wasmRes.arrayBuffer();
+    tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
+
+    debugOverlay.log('   Waiting for WASM initialization...');
+    await wasmInitPromise;
+    debugOverlay.success('WASM initialized');
+
     tunerNode.port.postMessage({ type: 'set-mode', mode: currentMode });
 
-    // Remove loading overlay
-    setTimeout(() => {
-        loadingOverlay.style.opacity = '0';
-        loadingOverlay.style.transition = 'opacity 0.3s';
-        setTimeout(() => loadingOverlay.remove(), 300);
-    }, 300);
+    debugOverlay.log('5. Initializing UI...');
+    debugOverlay.success('All systems ready!');
+    setTimeout(() => debugOverlay.hide(), 2000);
 
     // 2. Setup UI
     // Remove start container instead of wiping body
@@ -782,86 +650,12 @@ async function startTuner() {
       }
     });
 
-    console.log("Tuner started!");
+    debugOverlay.success('Tuner started!');
   } catch (e) {
-    console.error("Failed to start tuner:", e);
-
-    // Parse specific errors for better user messaging
-    let errorInfo;
-
-    if (e instanceof Error && (e.message.includes('tuner-processor') || e.message.includes('AudioWorklet'))) {
-      // Specific AudioWorklet registration error
-      errorInfo = {
-        category: 'audioworklet',
-        message: 'Audio processor failed to initialize',
-        technicalDetails: e.message,
-        suggestions: [
-          'The audio processor failed to register in your browser',
-          'This is often caused by slow network connections',
-          'Try refreshing the page and waiting a bit longer',
-          'Clear your browser cache and reload',
-          'Try a different browser (Chrome, Firefox, or Edge recommended)'
-        ]
-      };
-    } else if (e instanceof Error && e.name === 'NotAllowedError') {
-      // Microphone permission denied
-      errorInfo = {
-        category: 'permission',
-        message: 'Microphone access denied',
-        technicalDetails: e.message,
-        suggestions: [
-          'Click the camera/microphone icon in your browser\'s address bar',
-          'Allow microphone access for this site',
-          'Refresh the page after granting permission',
-          'Check your system microphone permissions'
-        ]
-      };
-    } else if (e instanceof Error && e.name === 'NotFoundError') {
-      // No microphone found
-      errorInfo = {
-        category: 'hardware',
-        message: 'No microphone detected',
-        technicalDetails: e.message,
-        suggestions: [
-          'Connect a microphone to your device',
-          'Check your system audio settings',
-          'Make sure your microphone is enabled',
-          'Try a different microphone if available'
-        ]
-      };
-    } else if (e instanceof Error && e.name === 'NotSupportedError') {
-      // Browser doesn't support required features
-      errorInfo = {
-        category: 'compatibility',
-        message: 'Browser does not support required features',
-        technicalDetails: e.message,
-        suggestions: [
-          'Your browser may not support WebAudio API or AudioWorklets',
-          'Try updating your browser to the latest version',
-          'Try a modern browser (Chrome, Firefox, or Edge)',
-          'Check if your browser has WebAudio disabled'
-        ]
-      };
-    } else {
-      // Generic error
-      errorInfo = {
-        category: 'startup',
-        message: 'Failed to start tuner',
-        technicalDetails: e instanceof Error ? e.message : String(e),
-        suggestions: [
-          'Check that your browser supports audio',
-          'Make sure you granted microphone permission',
-          'Try refreshing the page',
-          'Clear your browser cache',
-          'Try a different browser'
-        ]
-      };
-    }
-
-    showErrorDialog(errorInfo, () => {
-      // Retry by reloading the page
-      location.reload();
-    });
+    debugOverlay.error(
+      'Failed to start tuner',
+      e instanceof Error ? e.stack : String(e)
+    );
   }
 }
 
