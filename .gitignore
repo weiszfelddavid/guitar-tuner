@@ -5,5 +5,8 @@ pkg/
 Cargo.lock
 .DS_Store
 
+# Chrome installer (too large for git)
+*.deb
+
 # Test fixtures (generated on-demand)
 tests/fixtures/*.json
