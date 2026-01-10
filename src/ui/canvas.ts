@@ -233,7 +233,11 @@ export class TunerCanvas {
     // Draw cached static elements from offscreen canvas
     if (this.offscreenCanvas && this.staticElementsCached) {
       try {
-        this.ctx.drawImage(this.offscreenCanvas, 0, 0);
+        // Draw the offscreen canvas mapped to logical dimensions
+        // The offscreen canvas is high-DPI (physical pixels), so we draw it into
+        // the logical coordinate space (this.width/height). The context's scale
+        // handles the mapping back to physical pixels.
+        this.ctx.drawImage(this.offscreenCanvas, 0, 0, this.width, this.height);
       } catch (e) {
         // Fallback: If drawImage fails (e.g., in some test environments),
         // draw static elements directly to main canvas
