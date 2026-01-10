@@ -380,7 +380,36 @@ async function startTuner() {
       return;
     }
 
-    debugOverlay.log('4. Fetching WASM module from server...');
+    debugOverlay.log('4. Loading WASM JS glue code...');
+    const glueRes = await fetch('/pure_tone_lib.mjs');
+    if (!glueRes.ok) {
+      debugOverlay.error('Failed to fetch WASM glue', `${glueRes.status} ${glueRes.statusText}`);
+      return;
+    }
+    const glueCode = await glueRes.text();
+
+    debugOverlay.log('   Sending glue code to worklet...');
+    const glueLoadPromise = new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('Glue load timeout')), 5000);
+      const handler = (event: MessageEvent) => {
+        if (event.data.type === 'glue-loaded') {
+          clearTimeout(timeoutId);
+          tunerNode.port.removeEventListener('message', handler);
+          resolve();
+        } else if (event.data.type === 'glue-error') {
+          clearTimeout(timeoutId);
+          tunerNode.port.removeEventListener('message', handler);
+          reject(new Error(event.data.error));
+        }
+      };
+      tunerNode.port.addEventListener('message', handler);
+      tunerNode.port.start();
+    });
+    tunerNode.port.postMessage({ type: 'load-glue', glueCode });
+    await glueLoadPromise;
+    debugOverlay.success('Glue code loaded');
+
+    debugOverlay.log('5. Fetching WASM module from server...');
     const wasmRes = await fetch('/pure_tone_bg.wasm');
     if (!wasmRes.ok) {
       debugOverlay.error('Failed to fetch WASM', `${wasmRes.status} ${wasmRes.statusText}`);
@@ -392,7 +421,7 @@ async function startTuner() {
     const wasmModule = await WebAssembly.compile(wasmBytes);
     debugOverlay.success('WASM module compiled');
 
-    debugOverlay.log('5. Sending compiled module to worklet...');
+    debugOverlay.log('6. Sending compiled module to worklet...');
     const wasmInitPromise = new Promise<void>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('WASM initialization timeout'));
@@ -421,7 +450,7 @@ async function startTuner() {
 
     tunerNode.port.postMessage({ type: 'set-mode', mode: currentMode });
 
-    debugOverlay.log('6. Initializing UI...');
+    debugOverlay.log('7. Initializing UI...');
     debugOverlay.success('All systems ready!');
     setTimeout(() => debugOverlay.hide(), 2000);
 

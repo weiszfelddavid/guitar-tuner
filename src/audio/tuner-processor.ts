@@ -1,4 +1,3 @@
-import { initSync, PitchDetector } from './pure_tone_lib.mjs';
 import { findClosestString, calculateCents } from '../utils/frequency';
 
 // Import constants (note: these are bundled separately for worklet context)
@@ -442,6 +441,10 @@ class StateManager {
 // WORKLET PROCESSOR
 // ============================================================================
 
+// WASM glue code loaded from main thread
+let initSync: any = null;
+let PitchDetector: any = null;
+
 class TunerProcessor extends AudioWorkletProcessor {
   private detector: { process(buffer: Float32Array): { pitch: number; clarity: number } } | null = null;
   private buffer: Float32Array;
@@ -479,6 +482,8 @@ class TunerProcessor extends AudioWorkletProcessor {
   handleMessage(event: MessageEvent) {
     if (event.data.type === 'check-ready') {
       this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
+    } else if (event.data.type === 'load-glue') {
+      this.loadGlue(event.data.glueCode);
     } else if (event.data.type === 'load-wasm') {
       this.initWasm(event.data.wasmModule);
     } else if (event.data.type === 'set-mode') {
@@ -489,8 +494,23 @@ class TunerProcessor extends AudioWorkletProcessor {
     }
   }
 
+  loadGlue(glueCode: string) {
+    try {
+      // Evaluate the WASM glue code to get initSync and PitchDetector
+      const glueExports = new Function(glueCode + '; return { initSync, PitchDetector };')();
+      initSync = glueExports.initSync;
+      PitchDetector = glueExports.PitchDetector;
+      this.port.postMessage({ type: 'glue-loaded' });
+    } catch (e) {
+      this.port.postMessage({ type: 'glue-error', error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
   initWasm(wasmModule: WebAssembly.Module) {
     try {
+      if (!initSync || !PitchDetector) {
+        throw new Error('WASM glue code not loaded');
+      }
       initSync(wasmModule);
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
