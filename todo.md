@@ -1,84 +1,51 @@
 # Pro-Guitar Tuner Roadmap
 
-## CRITICAL PRIORITY (Ship-Blocking)
-**Impact:** Performance bugs, architectural flaws, production issues
+## NEW IMPROVEMENTS (Code Quality & Cleanup)
+**Impact:** Reliability, maintainability, and professional polish
 
-- [x] **Move audio processing pipeline to AudioWorklet** ✅ COMPLETED
-  - **Problem:** 7-stage processing runs on main thread (60fps) blocking rendering
-  - **Impact:** Causes frame drops, janky UI on slower devices
-  - **Fix:** Move NoiseGate, PitchStabilizer, OctaveDiscriminator, etc. into tuner-processor.ts
-  - **Benefit:** Main thread freed up (5ms → 0ms), silky 60fps, better battery life
-  - **Result:** Worklet: 5.03 kB → 10.25 kB, Main: 28.05 kB → 22.08 kB
-  - **Commit:** d5d254f
+- [ ] **Remove excessive console logging**
+  - **Problem:** `src/main.ts` and test files contain many `console.log` statements
+  - **Impact:** Clutters console, unprofessional in production
+  - **Fix:** Remove debug logs or use a proper logger with log levels (debug/info/warn/error) that can be stripped in prod
+  - **Files:** `src/main.ts`, `tests/melody_test.js`, `test-production.mjs`
 
-- [x] **Fix state synchronization for manual string lock** ✅ COMPLETED
-  - **Problem:** Manual lock mutates state after pipeline calculates it (main.ts:275-284)
-  - **Impact:** Breaks single source of truth, logic split across 2 locations
-  - **Fix:** String lock should be input to pipeline, not post-processing override
-  - **Result:** String lock now sent to worklet via message, processed in pipeline
-  - **Commit:** d5d254f
+- [ ] **Refine AudioWorklet error handling**
+  - **Problem:** `processBuffer` in `tuner-processor.ts` has a silent empty catch block
+  - **Impact:** Runtime errors during audio processing are swallowed, making debugging "silent failures" impossible
+  - **Fix:** Send error messages to main thread via port (throttled to avoid flooding)
+  - **Files:** `src/audio/tuner-processor.ts`
 
-- [x] **Add loading state during WASM initialization** ✅ COMPLETED
-  - **Problem:** 1-2 seconds of frozen UI after clicking "Start Tuner"
-  - **Impact:** Users think app crashed, abandon before it starts
-  - **Fix:** Show spinner/progress during fetch + validation (lines 92-105)
-  - **Result:** Professional loading overlay with animated spinner, progress messages, error handling
-  - **Bundle:** +2.12 kB (acceptable for critical UX fix)
-  - **Commit:** f3f7ab6
+- [ ] **Reduce `any` type usage**
+  - **Problem:** 20+ instances of `any` or `as any` remaining
+  - **Impact:** Bypasses type safety, hides potential bugs
+  - **Fix:** define proper interfaces for:
+    - `globalThis` in Worklet (add `TextDecoder`, `initSync`, `PitchDetector`)
+    - Canvas context mocks in tests
+    - Window globals (`toggleDebugConsole`)
+  - **Files:** `src/audio/tuner-processor.ts`, `src/ui/canvas.test.ts`, `src/ui/debug-console.ts`
 
-- [x] **Remove debug console from production build** ✅ COMPLETED
-  - **Problem:** 110-line debug console ships to all users (debug-console.ts)
-  - **Impact:** Increases bundle size, confuses end users, unprofessional
-  - **Fix:** Wrap in `if (import.meta.env.DEV)` or separate build target
-  - **Result:** Bundle reduced 22.08 kB → 18.59 kB (-15.8%), debug code tree-shaken
-  - **Commit:** cb79df4
+- [ ] **Refactor Canvas drawing logic**
+  - **Problem:** `drawStaticElementsToContext` is a monolithic function mixing geometry, styling, and text
+  - **Impact:** Hard to read, test, or modify specific visual elements
+  - **Fix:** Extract helper methods: `drawTunerArc`, `drawTargetZone`, `drawTickMarks`, `drawFlatSharpSymbols`
+  - **Files:** `src/ui/canvas.ts`
+
+- [ ] **Consolidate Theme Constants**
+  - **Problem:** Fallback hex colors in `src/ui/canvas.ts` are hardcoded strings
+  - **Impact:** Changing the default theme requires editing JS code
+  - **Fix:** Move default color palette to `src/constants/theme.ts` or `tuner-config.ts`
+  - **Files:** `src/ui/canvas.ts`
 
 ---
 
 ## HIGH PRIORITY (Major Quality Issues)
 **Impact:** Code maintainability, type safety, performance
 
-- [x] **Consolidate guitar string definitions** ✅ COMPLETED
-  - **Problem:** Strings defined 3x with different property names (tuner.ts:4-11, string-selector.ts:11-18)
-  - **Impact:** Changes require editing multiple files,易出错
-  - **Fix:** Single source of truth in shared constants file
-  - **Result:** Created src/constants/guitar-strings.ts with unified interface, helper functions
-  - **Commit:** e31ceff
-
-- [x] **Simplify processing pipeline classes** ✅ COMPLETED
-  - **Problem:** 6 separate classes (NoiseGate, PitchStabilizer, OctaveDiscriminator, StringLocker, PluckDetector, VisualHoldManager)
-  - **Impact:** Initialization overhead, complexity, hard to modify
-  - **Fix:** Consolidated into 3 classes: SignalProcessor, NoteDetector, StateManager
-  - **Result:** Reduced from 6 stages to 3 stages, clearer responsibilities, worklet 10.25 kB → 9.88 kB (-3.6%)
-  - **Commit:** 759d370
-
-- [x] **Fix dual smoothing systems** ✅ COMPLETED
-  - **Problem:** Kalman filter + PluckDetector both smoothed cents independently, PluckDetector calculated attack factor (0.1 during attack, 1.0 sustain) but never used it
-  - **Impact:** Conflicting filters produced unpredictable needle behavior
-  - **Fix:** Added isAttacking to TunerState, made Kalman filter attack-aware (0.5 during pluck, mode-based during sustain)
-  - **Result:** Single smoothing system, fast response during plucks, smooth sustain, worklet 9.88→9.96 kB (+0.08), main 20.72→20.87 kB (+0.15)
-  - **Commit:** 97793e5
-
-- [x] **Add proper TypeScript types (eliminate @ts-ignore)** ✅ COMPLETED
-  - **Problem:** 15 @ts-ignore comments suppressing legitimate type errors (13 in tuner-processor.ts, 1 in main.ts, 1 any type)
-  - **Impact:** No type safety, runtime errors possible, hard to refactor
-  - **Fix:** Created type declarations: audio-worklet.d.ts (AudioWorkletProcessor, registerProcessor, globals), wasm-module.d.ts (PitchDetector, init), global.d.ts (Window.getTunerState)
-  - **Result:** Full type safety, zero type errors with strict mode, TypeScript compilation passes, all tests pass (24/24), no bundle size increase
-  - **Commit:** 986a91d
-
-- [x] **Centralize mode configuration** ✅ COMPLETED
-  - **Problem:** getDefaultConfig() called 180x/sec (3x per frame at 60fps: init, mode change, every frame read)
-  - **Impact:** 10,800 object allocations per minute, GC pressure, wasted 0.5-1ms per frame
-  - **Fix:** Created centralized currentConfig variable, update only on mode change, reference cached value
-  - **Result:** Eliminated 180 allocations/sec → 0 (only on mode change), bundle 20.87→20.82 kB (-50 bytes)
-  - **Commit:** 11554a6
-
-- [x] **Memoize expensive calculations** ✅ COMPLETED
-  - **Problem:** PitchStabilizer created ~300 array allocations/sec (spread, sort, filter, shift operations every frame)
-  - **Impact:** GC pressure, 0.5-1ms wasted per frame
-  - **Fix:** Implemented zero-allocation circular buffer with pre-allocated Float32Arrays, custom in-place quickSort
-  - **Result:** Eliminated 300 allocations/sec → 0, worklet 9.96→10.78 kB (+0.82 for quickSort, acceptable trade-off)
-  - **Commit:** 3bf3e91
+- [ ] **Add OKLCH color fallbacks for older browsers**
+  - **Problem:** OKLCH requires Safari 16.4+, Chrome 111+, Firefox 113+
+  - **Impact:** Broken colors on older devices (renders as black)
+  - **Fix:** Add hex fallbacks before OKLCH declarations
+  - **Files:** src/styles/colors.css
 
 ---
 
@@ -97,105 +64,11 @@
   - **Fix:** Add tooltip/help text: "Pro = instant response, Easy = holds note for 4s"
   - **Files:** src/main.ts (line 32), CSS for tooltip
 
-- [x] **Add visual feedback for optimal volume** ✅ COMPLETED
-  - **Problem:** "Good" volume zone showed no feedback (canvas.ts:316)
-  - **Impact:** Users unsure if microphone is working correctly, no positive reinforcement
-  - **Solution Implemented:**
-    * Added visual feedback icons for all volume zones:
-      - ✓ "OPTIMAL" (green checkmark) for good volume (0.15-0.8)
-      - ⚠ "TOO LOUD / MOVE BACK" (warning) for clipping (>0.8)
-      - ↑ "MOVE CLOSER" (arrow) for weak signal (<0.15)
-    * Green glow effect on checkmark icon for optimal zone
-    * Clear icon + text combination for quick recognition
-    * Professional feedback that encourages proper mic positioning
-  - **Benefits:**
-    * Users instantly know when volume is optimal
-    * Positive reinforcement reduces uncertainty
-    * Clear guidance for all volume levels
-    * Professional, polished user experience
-  - **Bundle Impact:** Main bundle: 26.45 kB → 26.73 kB (+280 bytes, +1%)
-  - **Files:** src/ui/canvas.ts (lines 306-359)
-  - **Commit:** 7a0b783
-
-- [x] **Show volume meter always (not just during signal)** ✅ COMPLETED
-  - **Problem:** Meter hidden when volume < 0.01, users couldn't verify mic was working before playing
-  - **Impact:** Poor UX for setup and troubleshooting, no feedback that audio input was ready
-  - **Fix:** Always show meter background (dimmed when no signal), added "MIC READY" indicator
-  - **Result:** Users can verify mic without playing, better setup experience, main 20.86→21.07 kB (+210 bytes)
-  - **Commit:** bd69491
-
 - [ ] **Add visual indicator when string is locked**
   - **Problem:** String selector shows "active" but main display doesn't
   - **Impact:** Easy to forget lock is engaged, confusing behavior
   - **Fix:** Show lock icon or badge near note display
   - **Files:** src/ui/canvas.ts, src/main.ts
-
-- [x] **Fix microphone recovery on tab switch** ✅ COMPLETED
-  - **Problem:** Fully released microphone when tab was hidden, triggering new permission prompt every tab switch
-  - **Impact:** Annoying UX, broke workflow for multi-tasking users
-  - **Solution Implemented:**
-    * Suspend AudioContext when tab is hidden (saves CPU/battery)
-    * Keep MediaStream alive (maintain microphone permission)
-    * Disconnect/reconnect audio source without releasing tracks
-    * Reset visual state during suspension
-    * Instant resume when tab returns visible
-  - **Benefits:**
-    * Zero permission prompts on tab switch
-    * Seamless workflow for users switching between tabs
-    * Better battery life (AudioContext suspended when hidden)
-    * Faster resume (no stream renegotiation)
-    * Professional UX matching modern web apps
-  - **Trade-offs:**
-    * Microphone stays allocated when tab is hidden
-    * Browser shows persistent "recording" indicator
-    * Standard behavior for media apps (YouTube, Discord, etc.)
-  - **Bundle Impact:** 21.07 kB → 20.84 kB (-230 bytes, code simplified)
-  - **Files:** src/main.ts (lines 650-692)
-  - **Commit:** 9446ef0
-
-- [x] **Canvas performance optimization** ✅ COMPLETED
-  - **Problem:** Full clearRect + redraw every frame, colors loaded on resize
-  - **Impact:** Wastes 1-2ms per frame on unchanged elements
-  - **Solution Implemented:**
-    * Added offscreen canvas to cache static elements (arc, target zone, tick marks, symbols)
-    * Created `renderStaticElements()` to cache static elements once
-    * Created `drawStaticElementsToContext()` helper for reusable drawing
-    * Modified `render()` to use cached offscreen canvas via `drawImage()`
-    * Added intelligent fallback for test environments (draws directly when offscreen canvas fails)
-    * Static elements only re-rendered on resize, not every frame
-  - **Benefits:**
-    * Reduced per-frame rendering cost (only dynamic elements redrawn)
-    * ~1-2ms saved per frame on unchanged static elements
-    * Smoother 60fps rendering performance
-    * Professional optimization with graceful fallbacks
-  - **Bundle Impact:** Main bundle: 26.73 kB → 28.00 kB (+1.27 kB, +4.8%)
-  - **Files:** src/ui/canvas.ts
-  - **Commit:** ad107fb
-
-- [x] **Add error recovery for WASM loading** ✅ COMPLETED
-  - **Problem:** Generic error text replaces body if WASM fails, no retry mechanism
-  - **Impact:** Dead end for users on transient network failures
-  - **Solution Implemented:**
-    * Automatic retry with exponential backoff (3 attempts: 1s, 2s, 4s delays)
-    * Intelligent error categorization (network, timeout, compatibility, server)
-    * User-friendly error dialog with specific suggestions per error type
-    * Manual retry button that preserves app state
-    * Technical details collapsible section for debugging
-    * Graceful degradation instead of destructive page replacement
-  - **Benefits:**
-    * Recovers from transient network issues automatically
-    * Clear user guidance for different failure scenarios
-    * Professional error experience (no red error text)
-    * Maintains app structure even on failure
-  - **Bundle Impact:** Main bundle: 20.95 kB → 26.45 kB (+5.5 kB for comprehensive error recovery)
-  - **Files:** src/main.ts
-  - **Commit:** 1ec00ec
-
-- [ ] **Add OKLCH color fallbacks for older browsers**
-  - **Problem:** OKLCH requires Safari 16.4+, Chrome 111+, Firefox 113+
-  - **Impact:** Broken colors on older devices (renders as black)
-  - **Fix:** Add hex fallbacks before OKLCH declarations
-  - **Files:** src/styles/colors.css
 
 ---
 
@@ -203,7 +76,6 @@
 **Impact:** Feature completeness, delight
 
 ### Essential Tuner Features
-- [x] **Manual String Selection:** Clickable string buttons to lock tuner
 - [ ] **Reference Pitch Adjustment:** Support 432Hz, 442Hz, custom A4 frequencies
 - [ ] **Alternate Tunings:** Drop D, Open G, DADGAD, etc. via menu
 
@@ -236,47 +108,9 @@
   - Example: Capo 2 shows G string as "A"
 
 ### Technical Improvements
-- [x] **Move test fixtures out of git** ✅ COMPLETED
-  - **Problem:** 7 JSON files with binary data committed (5.9MB, bad practice)
-  - **Impact:** Repository bloat, version control not suitable for generated data
-  - **Fix:** Added tests/fixtures/*.json to .gitignore, updated npm test to auto-generate fixtures via scripts/generate_test_signals.ts
-  - **Result:** Repository 3MB lighter, fixtures generated on-demand in ~1 second, all 24 tests pass
-  - **Commit:** 7544a37
-
-- [x] **Add integration tests** ✅ COMPLETED
-  - Created comprehensive integration test suite (62 tests total)
-  - WASM ↔ TypeScript integration tests (6 tests)
-  - Mode switching tests (10 tests) - strict vs forgiving behavior
-  - String locking end-to-end tests (11 tests) - hysteresis, boundaries, manual override
-  - Full pipeline integration tests (11 tests) - complete signal processing chain
-  - All tests passing
-  - **Commit:** 4951380
-
-- [x] **Create constants file for magic numbers** ✅ COMPLETED
-  - Created comprehensive src/constants/tuner-config.ts with 40+ documented constants
-  - Replaced all magic numbers throughout codebase:
-    - Audio buffer constants (AUDIO_BUFFER_SIZE, PITCH_UPDATE_INTERVAL_SAMPLES)
-    - Signal processing (PITCH_STABILIZER_BUFFER_SIZE, PITCH_RATIO_TOLERANCE)
-    - Noise gate (NOISE_GATE_THRESHOLD_DB, NOISE_GATE_ALPHA, adaptive rates)
-    - Attack detection (ATTACK_DB_THRESHOLD, ATTACK_DURATION_MS)
-    - String locking (STRING_LOCK_HYSTERESIS_FRAMES)
-    - Visual hold (FORGIVING_HOLD_DURATION_MS, STRICT_HOLD_DURATION_MS)
-    - Pitch detection (MIN_VALID_PITCH_HZ, MAX_VALID_PITCH_HZ)
-    - UI constants (VOLUME_METER_SENSITIVITY_SCALE, CENTS_DISPLAY_RANGE, NEEDLE_MAX_ANGLE_DEG)
-  - Updated 6 files: tuner-processor.ts, tuner.ts, main.ts, canvas.ts, and imports
-  - All tests passing after refactor
-  - **Commit:** 4951380
-
 - [ ] **Add linting configuration**
   - ESLint for TypeScript, Rustfmt for Rust
   - Enforce consistent code style (semicolons, spacing)
-
-- [x] **Fix build process error handling** ✅ COMPLETED
-  - **Problem:** `wasm-pack && vite` sequential execution - if wasm-pack fails, vite might still run
-  - **Impact:** Could produce broken bundle if WASM compilation fails
-  - **Fix:** Created scripts/build.sh with explicit error checking, clear error messages, helpful troubleshooting tips
-  - **Result:** Vite only runs if wasm-pack succeeds, proper exit codes, better developer experience
-  - **Commit:** 7544a37
 
 - [ ] **Environment-based configuration**
   - Deployment uses hardcoded IP (deploy-droplet.yml:42)
@@ -293,24 +127,36 @@
 
 ---
 
-## Code Quality Quick Wins
-**Small refactors with high impact:**
-
-- [x] Remove `window.getTunerState()` global (main.ts:51) - test pollution in production ✅
-- [x] Extract frequency ↔ note conversion to shared utility ✅
-- [x] Unify timestamp tracking (3 separate `performance.now()` calls) ✅
-- [x] Replace magic `1000` interval with named constant `MONITORING_INTERVAL_MS` ✅
-- [x] Add namespace prefix to localStorage keys (`tuner:mode`, `tuner:debug`) ✅
-- [x] Remove commented code in tuner-processor.ts (lines 17, 32, 48-51) ✅ (already done)
-  - **Commit:** d78a34f
-
----
-
 ## Done ✓
-- [x] Manual string selection bar with visual states
-- [x] String indicator shows detected/active state
-- [x] Bead-style gauge indicator (minimalist design)
-- [x] 37signals Nobuild CSS architecture with OKLCH colors
-- [x] Anti-flicker hold (400ms strict mode)
-- [x] Desktop UI fixes (font scaling, positioning)
-- [x] Desktop viewport test coverage
+- [x] **Move audio processing pipeline to AudioWorklet** (Commit: d5d254f)
+- [x] **Fix state synchronization for manual string lock** (Commit: d5d254f)
+- [x] **Add loading state during WASM initialization** (Commit: f3f7ab6)
+- [x] **Remove debug console from production build** (Commit: cb79df4)
+- [x] **Consolidate guitar string definitions** (Commit: e31ceff)
+- [x] **Simplify processing pipeline classes** (Commit: 759d370)
+- [x] **Fix dual smoothing systems** (Commit: 97793e5)
+- [x] **Add proper TypeScript types** (Commit: 986a91d)
+- [x] **Centralize mode configuration** (Commit: 11554a6)
+- [x] **Memoize expensive calculations** (Commit: 3bf3e91)
+- [x] **Add visual feedback for optimal volume** (Commit: 7a0b783)
+- [x] **Show volume meter always** (Commit: bd69491)
+- [x] **Fix microphone recovery on tab switch** (Commit: 9446ef0)
+- [x] **Canvas performance optimization** (Commit: ad107fb)
+- [x] **Add error recovery for WASM loading** (Commit: 1ec00ec)
+- [x] **Move test fixtures out of git** (Commit: 7544a37)
+- [x] **Add integration tests** (Commit: 4951380)
+- [x] **Create constants file for magic numbers** (Commit: 4951380)
+- [x] **Fix build process error handling** (Commit: 7544a37)
+- [x] **Manual string selection bar with visual states**
+- [x] **String indicator shows detected/active state**
+- [x] **Bead-style gauge indicator**
+- [x] **37signals Nobuild CSS architecture**
+- [x] **Anti-flicker hold (400ms strict mode)**
+- [x] **Desktop UI fixes**
+- [x] **Desktop viewport test coverage**
+- [x] **Code Quality Quick Wins:**
+  - Remove `window.getTunerState()` global
+  - Extract frequency ↔ note conversion to shared utility
+  - Unify timestamp tracking
+  - Replace magic `1000` interval with named constant
+  - Add namespace prefix to localStorage keys

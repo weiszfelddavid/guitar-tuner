@@ -84,7 +84,7 @@ export function initDebugConsole() {
     document.body.appendChild(clearBtn);
 
     // Toggle function exposed globally
-    (window as any).toggleDebugConsole = () => {
+    window.toggleDebugConsole = () => {
         const isCurrentlyVisible = debugDiv.style.display !== 'none';
         debugDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
         copyBtn.style.display = isCurrentlyVisible ? 'none' : 'block';
@@ -97,7 +97,7 @@ export function initDebugConsole() {
     const originalError = console.error;
     const originalWarn = console.warn;
 
-    function logToScreen(type: string, args: any[]) {
+    function logToScreen(type: string, args: unknown[]) {
         const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
         const line = document.createElement('div');
         line.textContent = `[${type}] ${msg}`;

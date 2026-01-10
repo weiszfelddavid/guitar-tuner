@@ -18,7 +18,7 @@
     if (pre) pre.textContent = out.join('\n');
   };
 
-  const log = (...a: any[]) => {
+  const log = (...a: unknown[]) => {
     const msg = a.map(x => {
       try {
         return String(x);
@@ -34,10 +34,10 @@
   console.log = log;
   console.error = log;
   console.warn = log;
-  (window as any).onerror = (m: any, s: any, l: any, c: any, e: any) => {
+  window.onerror = (m: string | Event, s: string | undefined, l: number | undefined, c: number | undefined, e: Error | undefined) => {
     log('ERROR', m, e?.stack || e?.message || 'No error details');
   };
-  (window as any).onunhandledrejection = (e: any) => {
+  window.onunhandledrejection = (e: PromiseRejectionEvent) => {
     log('PROMISE REJECT', e.reason?.stack || e.reason?.message || String(e.reason));
   };
 
@@ -405,7 +405,7 @@ async function startTuner() {
     let wasmReject: (err: Error) => void;
 
     const glueTimeout = setTimeout(() => glueReject?.(new Error('Glue load timeout')), 5000);
-    let wasmTimeout: any;
+    let wasmTimeout: ReturnType<typeof setTimeout>;
 
     const messageHandler = (event: MessageEvent) => {
       debugOverlay.log(`   [Main] Received: ${event.data.type}`);
@@ -542,7 +542,7 @@ async function startTuner() {
 
             // Toggle debug console on click
             debugToggle.addEventListener('click', () => {
-                const isVisible = (window as any).toggleDebugConsole();
+                const isVisible = window.toggleDebugConsole ? window.toggleDebugConsole() : false;
                 const label = document.getElementById('debug-label');
                 if (label) {
                     label.textContent = isVisible ? 'Visible' : 'Hidden';
