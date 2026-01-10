@@ -456,7 +456,7 @@ async function startTuner() {
       wasmResolve = resolve;
       wasmReject = reject;
     });
-    wasmTimeout = setTimeout(() => wasmReject(new Error('WASM initialization timeout')), WASM_INIT_TIMEOUT_MS);
+    wasmTimeout = setTimeout(() => wasmReject(new Error('WASM initialization timeout - Worklet did not respond in time')), WASM_INIT_TIMEOUT_MS);
 
     debugOverlay.log('   Posting load-wasm message to worklet...');
     tunerNode.port.postMessage({ type: 'load-wasm', wasmModule });

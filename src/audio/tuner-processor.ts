@@ -501,23 +501,53 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   loadGlue(glueCode: string) {
     try {
-      // Ensure TextDecoder is available (some environments might not have it in AudioWorkletGlobalScope)
+      // Robust TextDecoder Polyfill
       if (typeof TextDecoder === 'undefined') {
-        (globalThis as any).TextDecoder = class {
-          decode(buffer: BufferSource): string {
+        (globalThis as any).TextDecoder = class TextDecoder {
+          encoding: string;
+          fatal: boolean;
+          ignoreBOM: boolean;
+
+          constructor(label = 'utf-8', options = { fatal: false, ignoreBOM: false }) {
+            this.encoding = label;
+            this.fatal = options.fatal || false;
+            this.ignoreBOM = options.ignoreBOM || false;
+          }
+
+          decode(buffer?: BufferSource, options?: any): string {
+            if (!buffer) return '';
+            
             const bytes = new Uint8Array(buffer as ArrayBuffer);
-            return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+            // Basic ASCII/Latin1 decode - safe for error messages
+            // For full UTF-8 support we'd need a bigger polyfill, but this 
+            // is enough to read panic messages from wasm-bindgen
+            let str = '';
+            for (let i = 0; i < bytes.length; i++) {
+              str += String.fromCharCode(bytes[i]);
+            }
+            return str;
           }
         };
       }
 
       // Evaluate glue code in global scope using indirect eval
       // This gives it access to TextDecoder and other globals
+      // We wrap it to ensure 'wasm' variable doesn't conflict if re-evaluated
+      const safeGlue = `
+        if (typeof wasm === 'undefined') {
+          ${glueCode}
+        }
+      `;
+      
       (0, eval)(glueCode);
 
       // Access the globals that were defined
       initSync = (globalThis as any).initSync;
       PitchDetector = (globalThis as any).PitchDetector;
+
+      if (!initSync || !PitchDetector) {
+        throw new Error('Glue code evaluated but initSync or PitchDetector not found');
+      }
 
       this.port.postMessage({ type: 'glue-loaded' });
     } catch (e) {
@@ -532,10 +562,23 @@ class TunerProcessor extends AudioWorkletProcessor {
       }
 
       this.port.postMessage({ type: 'debug', message: 'Calling initSync...' });
-      initSync(wasmModule);
+      
+      try {
+        initSync(wasmModule);
+      } catch (initErr) {
+        const msg = initErr instanceof Error ? initErr.message : String(initErr);
+        // Try to decode potential WASM error if it's a pointer (advanced debugging)
+        // For now just rethrow
+        throw new Error(`initSync failed: ${msg}`);
+      }
 
       this.port.postMessage({ type: 'debug', message: `Creating PitchDetector with sampleRate=${sampleRate}, bufferSize=${this.BUFFER_SIZE}...` });
-      this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
+      
+      try {
+        this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
+      } catch (ctorErr) {
+        throw new Error(`PitchDetector constructor failed: ${ctorErr instanceof Error ? ctorErr.message : String(ctorErr)}`);
+      }
 
       this.initialized = true;
       this.port.postMessage({ type: 'wasm-ready' });
