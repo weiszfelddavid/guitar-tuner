@@ -51,18 +51,10 @@
     transform: scale(1.05);
   }
 
-  .string-button .string-note {
-    font-size: var(--text-lg);
+  .string-button .string-full-label {
+    font-size: var(--text-sm);
     font-weight: bold;
     color: var(--btn-color);
-    line-height: 1;
-    margin-bottom: 2px;
-  }
-
-  .string-button .string-label {
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    text-transform: uppercase;
     line-height: 1;
     white-space: nowrap;
   }
@@ -82,13 +74,8 @@
     box-shadow: 0 0 15px oklch(from var(--color-accent) l c h / 0.5);
   }
 
-  .string-button.active .string-note {
-    font-size: var(--text-xl);
-  }
-
-  .string-button.active .string-label {
-    color: var(--color-text);
-    font-weight: bold;
+  .string-button.active .string-full-label {
+    font-size: var(--text-base);
   }
 
   /* Responsive - content-based breakpoints */
@@ -100,37 +87,29 @@
     }
 
     .string-button {
-      --btn-size: 45px;
+      --btn-size: 40px;
     }
 
-    .string-button .string-note {
-      font-size: var(--text-base);
+    .string-button .string-full-label {
+      font-size: 10px;
     }
 
-    .string-button .string-label {
-      font-size: 7px;
-    }
-
-    .string-button.active .string-note {
-      font-size: var(--text-lg);
+    .string-button.active .string-full-label {
+      font-size: var(--text-sm);
     }
   }
 
   @media (min-width: 1024px) {
     .string-button {
-      --btn-size: 60px;
+      --btn-size: 55px;
     }
 
-    .string-button .string-note {
-      font-size: var(--text-xl);
+    .string-button .string-full-label {
+      font-size: var(--text-base);
     }
 
-    .string-button .string-label {
-      font-size: 9px;
-    }
-
-    .string-button.active .string-note {
-      font-size: var(--text-2xl);
+    .string-button.active .string-full-label {
+      font-size: var(--text-lg);
     }
   }
 }

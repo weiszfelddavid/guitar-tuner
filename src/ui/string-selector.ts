@@ -27,18 +27,18 @@ export class StringSelector {
       button.id = string.id;
       button.dataset.stringId = string.id;
 
-      // Note label (E, A, D, G, B, E)
-      const noteLabel = document.createElement('div');
-      noteLabel.className = 'string-note';
-      noteLabel.textContent = string.note.charAt(0); // Just the letter (E, A, D, etc)
+      // Single label: Note + Hint (e.g., E (low), A, D, G, B, E (high))
+      const fullLabel = document.createElement('div');
+      fullLabel.className = 'string-full-label';
+      
+      const noteLetter = string.note.charAt(0);
+      let displayHint = '';
+      if (string.label.toLowerCase().includes('low')) displayHint = ' (low)';
+      if (string.label.toLowerCase().includes('high')) displayHint = ' (high)';
+      
+      fullLabel.textContent = `${noteLetter}${displayHint}`;
 
-      // String label (Low E, A, D, G, B, High E)
-      const stringLabel = document.createElement('div');
-      stringLabel.className = 'string-label';
-      stringLabel.textContent = string.label;
-
-      button.appendChild(noteLabel);
-      button.appendChild(stringLabel);
+      button.appendChild(fullLabel);
 
       // Click handler
       button.addEventListener('click', () => this.handleStringClick(string.id));
