@@ -313,7 +313,35 @@ async function startTuner() {
     }
 
     let source = context.createMediaStreamSource(micStream);
-    const tunerNode = await createTunerWorklet(context);
+
+    // Create AudioWorklet with verification handshake
+    let tunerNode: AudioWorkletNode;
+    try {
+      tunerNode = await createTunerWorklet(context);
+    } catch (workletError) {
+      console.error("Failed to create AudioWorklet:", workletError);
+
+      // Show specific error for worklet failure
+      const errorInfo = {
+        category: 'audioworklet',
+        message: 'Failed to initialize audio processor',
+        technicalDetails: workletError instanceof Error ? workletError.message : String(workletError),
+        suggestions: [
+          'The audio processor failed to register or initialize properly',
+          'This may be due to slow network connection or browser compatibility',
+          'Try refreshing the page',
+          'Clear your browser cache and try again',
+          'Try a different browser (Chrome or Edge recommended)',
+        ]
+      };
+
+      showErrorDialog(errorInfo, async () => {
+        // Retry the full initialization
+        await startTuner();
+      });
+
+      return; // Don't continue with initialization
+    }
 
     // Show loading overlay
     const loadingOverlay = document.createElement('div');
@@ -695,18 +723,77 @@ async function startTuner() {
   } catch (e) {
     console.error("Failed to start tuner:", e);
 
-    // Don't destroy the page! Show a helpful error dialog instead
-    const errorInfo = {
-      category: 'startup',
-      message: 'Failed to start tuner',
-      technicalDetails: e instanceof Error ? e.message : String(e),
-      suggestions: [
-        'Check that your browser supports audio',
-        'Make sure you granted microphone permission',
-        'Try refreshing the page',
-        'Try a different browser'
-      ]
-    };
+    // Parse specific errors for better user messaging
+    let errorInfo;
+
+    if (e instanceof Error && (e.message.includes('tuner-processor') || e.message.includes('AudioWorklet'))) {
+      // Specific AudioWorklet registration error
+      errorInfo = {
+        category: 'audioworklet',
+        message: 'Audio processor failed to initialize',
+        technicalDetails: e.message,
+        suggestions: [
+          'The audio processor failed to register in your browser',
+          'This is often caused by slow network connections',
+          'Try refreshing the page and waiting a bit longer',
+          'Clear your browser cache and reload',
+          'Try a different browser (Chrome, Firefox, or Edge recommended)'
+        ]
+      };
+    } else if (e instanceof Error && e.name === 'NotAllowedError') {
+      // Microphone permission denied
+      errorInfo = {
+        category: 'permission',
+        message: 'Microphone access denied',
+        technicalDetails: e.message,
+        suggestions: [
+          'Click the camera/microphone icon in your browser\'s address bar',
+          'Allow microphone access for this site',
+          'Refresh the page after granting permission',
+          'Check your system microphone permissions'
+        ]
+      };
+    } else if (e instanceof Error && e.name === 'NotFoundError') {
+      // No microphone found
+      errorInfo = {
+        category: 'hardware',
+        message: 'No microphone detected',
+        technicalDetails: e.message,
+        suggestions: [
+          'Connect a microphone to your device',
+          'Check your system audio settings',
+          'Make sure your microphone is enabled',
+          'Try a different microphone if available'
+        ]
+      };
+    } else if (e instanceof Error && e.name === 'NotSupportedError') {
+      // Browser doesn't support required features
+      errorInfo = {
+        category: 'compatibility',
+        message: 'Browser does not support required features',
+        technicalDetails: e.message,
+        suggestions: [
+          'Your browser may not support WebAudio API or AudioWorklets',
+          'Try updating your browser to the latest version',
+          'Try a modern browser (Chrome, Firefox, or Edge)',
+          'Check if your browser has WebAudio disabled'
+        ]
+      };
+    } else {
+      // Generic error
+      errorInfo = {
+        category: 'startup',
+        message: 'Failed to start tuner',
+        technicalDetails: e instanceof Error ? e.message : String(e),
+        suggestions: [
+          'Check that your browser supports audio',
+          'Make sure you granted microphone permission',
+          'Try refreshing the page',
+          'Clear your browser cache',
+          'Try a different browser'
+        ]
+      };
+    }
 
     showErrorDialog(errorInfo, () => {
       // Retry by reloading the page

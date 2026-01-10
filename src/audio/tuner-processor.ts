@@ -478,10 +478,19 @@ class TunerProcessor extends AudioWorkletProcessor {
     this.config = getDefaultConfig(this.currentMode);
 
     this.port.onmessage = this.handleMessage.bind(this);
+
+    // Send ready signal immediately after construction
+    // This confirms that the processor was constructed successfully
+    console.log('[tuner-processor] Constructor completed, sending initial ready signal');
+    this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
   }
 
   async handleMessage(event: MessageEvent) {
-    if (event.data.type === 'load-wasm') {
+    if (event.data.type === 'check-ready') {
+      // Respond to ready check from main thread
+      console.log('[tuner-processor] Received check-ready, responding with worklet-ready');
+      this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
+    } else if (event.data.type === 'load-wasm') {
       this.port.postMessage({ type: 'log', message: '[Worklet] Received WASM bytes' });
       await this.initWasm(event.data.wasmBytes);
     } else if (event.data.type === 'set-mode') {
