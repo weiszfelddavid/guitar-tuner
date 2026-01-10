@@ -602,9 +602,12 @@ class TunerProcessor extends AudioWorkletProcessor {
 
 // Register processor immediately when module loads
 try {
+  console.log('[tuner-processor] About to call registerProcessor...');
   registerProcessor('tuner-processor', TunerProcessor);
   console.log('[tuner-processor] Successfully registered processor');
 } catch (error) {
   console.error('[tuner-processor] Failed to register:', error);
+  console.error('[tuner-processor] Error details:', error instanceof Error ? error.message : String(error));
+  console.error('[tuner-processor] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
   throw error;
 }
