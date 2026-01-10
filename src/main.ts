@@ -367,14 +367,14 @@ async function startTuner() {
 
     let source = context.createMediaStreamSource(micStream);
 
-    debugOverlay.log('3. Creating Audio Worklet...');
+    debugOverlay.log('3. Loading worklet module...');
     let tunerNode: AudioWorkletNode;
     try {
       tunerNode = await createTunerWorklet(context);
-      debugOverlay.success('Worklet created');
+      debugOverlay.success('Worklet initialized and ready');
     } catch (nodeError) {
       debugOverlay.error(
-        'Failed to create AudioWorkletNode',
+        'Failed to initialize worklet',
         nodeError instanceof Error ? nodeError.stack : String(nodeError)
       );
       return;
