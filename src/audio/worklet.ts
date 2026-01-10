@@ -39,6 +39,61 @@ function waitForWorkletReady(node: AudioWorkletNode, timeoutMs: number): Promise
   });
 }
 
+/**
+ * Attempt to create AudioWorkletNode with retry logic
+ * Retries with exponential backoff if processor is not yet registered
+ */
+async function createNodeWithRetry(
+  context: AudioContext,
+  maxAttempts: number = 5,
+  initialDelayMs: number = 100
+): Promise<TunerWorkletNode> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Calculate delay with exponential backoff
+    const delayMs = initialDelayMs * Math.pow(2, attempt - 1); // 100, 200, 400, 800, 1600ms
+
+    if (attempt > 1) {
+      console.log(`[worklet.ts] Retry attempt ${attempt}/${maxAttempts} after ${delayMs}ms delay...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    } else {
+      console.log('[worklet.ts] Waiting for processor registration to complete...');
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    try {
+      console.log(`[worklet.ts] Attempting to create AudioWorkletNode (attempt ${attempt}/${maxAttempts})`);
+      const node = new TunerWorkletNode(context);
+      console.log('[worklet.ts] AudioWorkletNode created successfully');
+      return node;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Check if it's the "not defined" error
+      if (lastError.message.includes('not defined')) {
+        console.warn(`[worklet.ts] Processor not yet registered (attempt ${attempt}/${maxAttempts})`);
+        // Continue to next attempt
+        if (attempt === maxAttempts) {
+          // Last attempt failed
+          throw new Error(
+            `AudioWorklet registration failed after ${maxAttempts} attempts over ${delayMs * 2}ms. ` +
+            'The tuner-processor is not defined in AudioWorkletGlobalScope. ' +
+            'This usually indicates: (1) Very slow network connection, (2) Browser compatibility issue, ' +
+            'or (3) Script loading/parsing failure. Try refreshing the page or using a different browser.'
+          );
+        }
+      } else {
+        // Different error, throw immediately
+        throw lastError;
+      }
+    }
+  }
+
+  // Should never reach here, but TypeScript needs it
+  throw lastError || new Error('Failed to create AudioWorkletNode for unknown reason');
+}
+
 export async function createTunerWorklet(context: AudioContext): Promise<TunerWorkletNode> {
   console.log('[worklet.ts] Loading worklet from:', processorUrl);
 
@@ -47,17 +102,10 @@ export async function createTunerWorklet(context: AudioContext): Promise<TunerWo
     await context.audioWorklet.addModule(processorUrl);
     console.log('[worklet.ts] Worklet module loaded successfully');
 
-    // Step 2: Add small delay to ensure registerProcessor completes
-    // This is necessary because addModule() may resolve before registerProcessor() finishes
-    console.log('[worklet.ts] Waiting for processor registration to complete...');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Step 2: Create node with retry logic (handles race condition)
+    const node = await createNodeWithRetry(context);
 
-    // Step 3: Attempt to create the node
-    console.log('[worklet.ts] Creating AudioWorkletNode');
-    const node = new TunerWorkletNode(context);
-    console.log('[worklet.ts] AudioWorkletNode created successfully');
-
-    // Step 4: Wait for worklet to confirm it's ready
+    // Step 3: Wait for worklet to confirm it's ready
     console.log('[worklet.ts] Waiting for worklet ready confirmation...');
     const ready = await waitForWorkletReady(node, 5000);
 
@@ -73,16 +121,6 @@ export async function createTunerWorklet(context: AudioContext): Promise<TunerWo
     return node;
   } catch (error) {
     console.error('[worklet.ts] Failed to create worklet:', error);
-
-    // Provide specific error message for the common case
-    if (error instanceof Error && error.message.includes('not defined')) {
-      throw new Error(
-        'AudioWorklet registration failed: tuner-processor is not defined in AudioWorkletGlobalScope. ' +
-        'This usually happens when the worklet module fails to load or register properly. ' +
-        'Possible causes: slow network connection, browser compatibility issues, or script loading errors. ' +
-        'Try refreshing the page or using a different browser.'
-      );
-    }
     throw error;
   }
 }
