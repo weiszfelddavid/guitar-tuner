@@ -47,12 +47,13 @@ import {
   AUDIO_CONTEXT_CHECK_INTERVAL_MS,
   WASM_INIT_TIMEOUT_MS
 } from './constants/tuner-config';
-import { initDebugConsole } from './ui/debug-console';
+// TEMPORARY: Disabled old debug console - using on-screen logger instead
+// import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
 
 // Enable on-screen debugging for mobile
-initDebugConsole();
+// initDebugConsole(); // DISABLED - using top-level logger instead
 
 // Mode management with local storage
 const STORAGE_KEY_MODE = 'tuner:mode';
