@@ -1,3 +1,26 @@
+// TEMPORARY: On-screen console for mobile debugging
+(function () {
+  const out: string[] = [];
+  const show = () => {
+    document.body.innerHTML =
+      '<pre style="white-space:pre-wrap;font-size:12px;padding:10px;background:#000;color:#0f0;margin:0;height:100vh;overflow:auto">' +
+      out.join('\n') +
+      '</pre>';
+  };
+
+  const log = (...a: any[]) => {
+    out.push(a.map(x => String(x)).join(' '));
+    if (out.length > 200) out.shift(); // Keep last 200 lines
+    show();
+  };
+
+  console.log = log;
+  console.error = log;
+  console.warn = log;
+  (window as any).onerror = (m: any, s: any, l: any, c: any, e: any) => log('ERROR', m, e?.stack || '');
+  (window as any).onunhandledrejection = (e: any) => log('PROMISE REJECT', e.reason);
+})();
+
 import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
 import { createTunerWorklet } from './audio/worklet';
