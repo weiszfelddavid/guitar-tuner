@@ -510,14 +510,26 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   async initWasm(wasmBytes: ArrayBuffer) {
     try {
+      console.log('[tuner-processor] initWasm called, importing WASM module...');
       // Dynamically import WASM module to avoid top-level await blocking registerProcessor
-      const { default: init, PitchDetector } = await import('./pure_tone_lib.mjs');
+      const wasmModule = await import('./pure_tone_lib.mjs');
+      console.log('[tuner-processor] WASM module imported:', Object.keys(wasmModule));
+
+      const init = wasmModule.default;
+      const PitchDetector = wasmModule.PitchDetector;
+
+      console.log('[tuner-processor] Initializing WASM with bytes...');
       await init(wasmBytes);
+      console.log('[tuner-processor] WASM initialized, creating PitchDetector...');
+
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
+      console.log('[tuner-processor] PitchDetector created successfully');
       this.port.postMessage({ type: 'log', message: '[Worklet] WASM initialized successfully' });
     } catch (e) {
+      console.error('[tuner-processor] WASM initialization error:', e);
       this.port.postMessage({ type: 'log', message: `[Worklet] Failed to initialize WASM: ${e}` });
+      this.port.postMessage({ type: 'log', message: `[Worklet] Error stack: ${e instanceof Error ? e.stack : 'No stack'}` });
     }
   }
 
