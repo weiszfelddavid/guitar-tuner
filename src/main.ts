@@ -386,7 +386,15 @@ async function startTuner() {
       debugOverlay.error('Failed to fetch WASM glue', `${glueRes.status} ${glueRes.statusText}`);
       return;
     }
-    const glueCode = await glueRes.text();
+    let glueCode = await glueRes.text();
+
+    // Transform ES module exports to make code evaluable in worklet
+    debugOverlay.log('   Transforming glue code...');
+    glueCode = glueCode
+      .replace(/export class PitchDetector/g, 'class PitchDetector')
+      .replace(/export class TunerResult/g, 'class TunerResult')
+      .replace(/export \{ initSync \};/g, '// initSync already defined')
+      .replace(/export default __wbg_init;/g, 'const default_init = __wbg_init;');
 
     debugOverlay.log('   Sending glue code to worklet...');
     const glueLoadPromise = new Promise<void>((resolve, reject) => {

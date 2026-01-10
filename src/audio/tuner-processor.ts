@@ -496,8 +496,12 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   loadGlue(glueCode: string) {
     try {
-      // Evaluate the WASM glue code to get initSync and PitchDetector
-      const glueExports = new Function(glueCode + '; return { initSync, PitchDetector };')();
+      // Wrap the glue code in a function that returns the exports
+      const wrappedCode = `
+        ${glueCode}
+        return { initSync, PitchDetector };
+      `;
+      const glueExports = new Function(wrappedCode)();
       initSync = glueExports.initSync;
       PitchDetector = glueExports.PitchDetector;
       this.port.postMessage({ type: 'glue-loaded' });
