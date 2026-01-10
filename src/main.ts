@@ -1,11 +1,19 @@
 // TEMPORARY: On-screen console for mobile debugging
 (function () {
   const out: string[] = [];
+  let pre: HTMLPreElement | null = null;
+
+  const ensurePre = () => {
+    if (!pre && document.body) {
+      pre = document.createElement('pre');
+      pre.style.cssText = 'white-space:pre-wrap;font-size:12px;padding:10px;background:#000;color:#0f0;margin:0;position:fixed;top:0;left:0;width:100%;height:100%;overflow:auto;z-index:999999';
+      document.body.appendChild(pre);
+    }
+  };
+
   const show = () => {
-    document.body.innerHTML =
-      '<pre style="white-space:pre-wrap;font-size:12px;padding:10px;background:#000;color:#0f0;margin:0;height:100vh;overflow:auto">' +
-      out.join('\n') +
-      '</pre>';
+    ensurePre();
+    if (pre) pre.textContent = out.join('\n');
   };
 
   const log = (...a: any[]) => {
@@ -19,6 +27,13 @@
   console.warn = log;
   (window as any).onerror = (m: any, s: any, l: any, c: any, e: any) => log('ERROR', m, e?.stack || '');
   (window as any).onunhandledrejection = (e: any) => log('PROMISE REJECT', e.reason);
+
+  // Ensure pre exists when DOM loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensurePre);
+  } else {
+    ensurePre();
+  }
 })();
 
 import './style.css';
