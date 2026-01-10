@@ -533,6 +533,7 @@ async function startTuner() {
     if (!modeToggle) {
         modeToggle = document.createElement('div');
         modeToggle.id = 'mode-toggle';
+        modeToggle.className = 'control-toggle';
         modeToggle.innerHTML = `
             <span class="mode-prefix">Mode:</span>
             <span id="mode-label">${currentMode === 'strict' ? 'Pro' : 'Easy'}</span>
@@ -551,6 +552,7 @@ async function startTuner() {
         if (!debugToggle) {
             debugToggle = document.createElement('div');
             debugToggle.id = 'debug-toggle';
+            debugToggle.className = 'control-toggle';
             debugToggle.innerHTML = `
                 <span class="mode-prefix">Logs:</span>
                 <span id="debug-label">Hidden</span>
