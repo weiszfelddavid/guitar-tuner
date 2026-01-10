@@ -476,15 +476,20 @@ class TunerProcessor extends AudioWorkletProcessor {
     this.config = getDefaultConfig(this.currentMode);
 
     this.port.onmessage = this.handleMessage.bind(this);
+    this.port.start(); // Ensure port is started in worklet
     this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
   }
 
   handleMessage(event: MessageEvent) {
+    // Debug: log all received messages
+    this.port.postMessage({ type: 'debug', message: `Received message type: ${event.data.type}` });
+
     if (event.data.type === 'check-ready') {
       this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
     } else if (event.data.type === 'load-glue') {
       this.loadGlue(event.data.glueCode);
     } else if (event.data.type === 'load-wasm') {
+      this.port.postMessage({ type: 'debug', message: 'About to call initWasm...' });
       this.initWasm(event.data.wasmModule);
     } else if (event.data.type === 'set-mode') {
       this.currentMode = event.data.mode;

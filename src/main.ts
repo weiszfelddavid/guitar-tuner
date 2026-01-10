@@ -454,9 +454,10 @@ async function startTuner() {
       tunerNode.port.start();
     });
 
+    debugOverlay.log('   Posting load-wasm message to worklet...');
     tunerNode.port.postMessage({ type: 'load-wasm', wasmModule });
+    debugOverlay.log('   Message posted, waiting for response...');
 
-    debugOverlay.log('   Waiting for worklet to instantiate...');
     await wasmInitPromise;
     debugOverlay.success('WASM instantiated in worklet');
 
