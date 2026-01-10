@@ -496,6 +496,16 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   loadGlue(glueCode: string) {
     try {
+      // Ensure TextDecoder is available (some environments might not have it in AudioWorkletGlobalScope)
+      if (typeof TextDecoder === 'undefined') {
+        (globalThis as any).TextDecoder = class {
+          decode(buffer: BufferSource): string {
+            const bytes = new Uint8Array(buffer as ArrayBuffer);
+            return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
+          }
+        };
+      }
+
       // Evaluate glue code in global scope using indirect eval
       // This gives it access to TextDecoder and other globals
       (0, eval)(glueCode);
