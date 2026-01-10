@@ -398,22 +398,42 @@ async function startTuner() {
       // Also assign PitchDetector to globalThis after class definition
       + '\nglobalThis.PitchDetector = PitchDetector;';
 
+    // Set up ONE persistent message handler for all worklet messages
+    let glueResolve: () => void;
+    let glueReject: (err: Error) => void;
+    let wasmResolve: () => void;
+    let wasmReject: (err: Error) => void;
+
+    const glueTimeout = setTimeout(() => glueReject?.(new Error('Glue load timeout')), 5000);
+    let wasmTimeout: any;
+
+    const messageHandler = (event: MessageEvent) => {
+      debugOverlay.log(`   [Main] Received: ${event.data.type}`);
+
+      if (event.data.type === 'glue-loaded') {
+        clearTimeout(glueTimeout);
+        glueResolve();
+      } else if (event.data.type === 'glue-error') {
+        clearTimeout(glueTimeout);
+        glueReject(new Error(event.data.error));
+      } else if (event.data.type === 'wasm-ready') {
+        clearTimeout(wasmTimeout);
+        wasmResolve();
+      } else if (event.data.type === 'wasm-error') {
+        clearTimeout(wasmTimeout);
+        wasmReject(new Error(event.data.error));
+      } else if (event.data.type === 'debug') {
+        debugOverlay.log(`   [Worklet] ${event.data.message}`);
+      }
+    };
+
+    tunerNode.port.addEventListener('message', messageHandler);
+    tunerNode.port.start();
+
     debugOverlay.log('   Sending glue code to worklet...');
     const glueLoadPromise = new Promise<void>((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('Glue load timeout')), 5000);
-      const handler = (event: MessageEvent) => {
-        if (event.data.type === 'glue-loaded') {
-          clearTimeout(timeoutId);
-          tunerNode.port.removeEventListener('message', handler);
-          resolve();
-        } else if (event.data.type === 'glue-error') {
-          clearTimeout(timeoutId);
-          tunerNode.port.removeEventListener('message', handler);
-          reject(new Error(event.data.error));
-        }
-      };
-      tunerNode.port.addEventListener('message', handler);
-      tunerNode.port.start();
+      glueResolve = resolve;
+      glueReject = reject;
     });
     tunerNode.port.postMessage({ type: 'load-glue', glueCode });
     await glueLoadPromise;
@@ -433,26 +453,10 @@ async function startTuner() {
 
     debugOverlay.log('6. Sending compiled module to worklet...');
     const wasmInitPromise = new Promise<void>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('WASM initialization timeout'));
-      }, WASM_INIT_TIMEOUT_MS);
-
-      const messageHandler = (event: MessageEvent) => {
-        if (event.data.type === 'wasm-ready') {
-          clearTimeout(timeoutId);
-          tunerNode.port.removeEventListener('message', messageHandler);
-          resolve();
-        } else if (event.data.type === 'wasm-error') {
-          clearTimeout(timeoutId);
-          tunerNode.port.removeEventListener('message', messageHandler);
-          reject(new Error(event.data.error));
-        } else if (event.data.type === 'debug') {
-          debugOverlay.log(`   [Worklet] ${event.data.message}`);
-        }
-      };
-      tunerNode.port.addEventListener('message', messageHandler);
-      tunerNode.port.start();
+      wasmResolve = resolve;
+      wasmReject = reject;
     });
+    wasmTimeout = setTimeout(() => wasmReject(new Error('WASM initialization timeout')), WASM_INIT_TIMEOUT_MS);
 
     debugOverlay.log('   Posting load-wasm message to worklet...');
     tunerNode.port.postMessage({ type: 'load-wasm', wasmModule });
