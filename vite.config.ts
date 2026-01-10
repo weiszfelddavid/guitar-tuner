@@ -21,6 +21,18 @@ export default defineConfig({
       topLevelAwait()
     ]
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Ensure worklet files are generated as separate chunks
+        manualChunks(id) {
+          if (id.includes('tuner-processor')) {
+            return 'tuner-processor';
+          }
+        }
+      }
+    }
+  },
   test: {
     setupFiles: ['./tests/setup.ts'],
     environment: 'jsdom', // or 'happy-dom'

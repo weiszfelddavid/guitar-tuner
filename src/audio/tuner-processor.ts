@@ -1,8 +1,13 @@
 console.log('[tuner-processor] Module starting to load...');
 
-import init, { PitchDetector } from './pure_tone_lib.mjs';
+// WASM is loaded dynamically in initWasm() to avoid top-level import blocking registerProcessor
+// Types for WASM module (loaded dynamically, not imported at top level)
+type WasmInit = (input?: any) => Promise<any>;
+type PitchDetectorClass = new (sampleRate: number, bufferSize: number) => {
+  process(buffer: Float32Array): { pitch: number; clarity: number };
+};
 
-console.log('[tuner-processor] Imports successful');
+console.log('[tuner-processor] Imports successful (WASM will load dynamically)');
 
 import { findClosestString, calculateCents } from '../utils/frequency';
 
@@ -448,7 +453,7 @@ class StateManager {
 // ============================================================================
 
 class TunerProcessor extends AudioWorkletProcessor {
-  private detector: PitchDetector | null = null;
+  private detector: { process(buffer: Float32Array): { pitch: number; clarity: number } } | null = null;
   private buffer: Float32Array;
   private samplesProcessed: number = 0;
   private readonly BUFFER_SIZE = AUDIO_BUFFER_SIZE;
@@ -505,6 +510,8 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   async initWasm(wasmBytes: ArrayBuffer) {
     try {
+      // Dynamically import WASM module to avoid top-level await blocking registerProcessor
+      const { default: init, PitchDetector } = await import('./pure_tone_lib.mjs');
       await init(wasmBytes);
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
