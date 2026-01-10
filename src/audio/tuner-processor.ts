@@ -1,9 +1,4 @@
-// Types for WASM module (loaded dynamically, not imported at top level)
-type WasmInit = (input?: any) => Promise<any>;
-type PitchDetectorClass = new (sampleRate: number, bufferSize: number) => {
-  process(buffer: Float32Array): { pitch: number; clarity: number };
-};
-
+import { initSync, PitchDetector } from './pure_tone_lib.mjs';
 import { findClosestString, calculateCents } from '../utils/frequency';
 
 // Import constants (note: these are bundled separately for worklet context)
@@ -481,11 +476,11 @@ class TunerProcessor extends AudioWorkletProcessor {
     this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
   }
 
-  async handleMessage(event: MessageEvent) {
+  handleMessage(event: MessageEvent) {
     if (event.data.type === 'check-ready') {
       this.port.postMessage({ type: 'worklet-ready', initialized: this.initialized });
     } else if (event.data.type === 'load-wasm') {
-      await this.initWasm(event.data.wasmBytes);
+      this.initWasm(event.data.wasmModule);
     } else if (event.data.type === 'set-mode') {
       this.currentMode = event.data.mode;
       this.config = getDefaultConfig(this.currentMode);
@@ -494,12 +489,9 @@ class TunerProcessor extends AudioWorkletProcessor {
     }
   }
 
-  async initWasm(wasmBytes: ArrayBuffer) {
+  initWasm(wasmModule: WebAssembly.Module) {
     try {
-      const wasmModule = await import('./pure_tone_lib.mjs');
-      const init = wasmModule.default;
-      const PitchDetector = wasmModule.PitchDetector;
-      await init(wasmBytes);
+      initSync(wasmModule);
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
       this.initialized = true;
       this.port.postMessage({ type: 'wasm-ready' });

@@ -380,8 +380,19 @@ async function startTuner() {
       return;
     }
 
-    debugOverlay.log('4. Loading WASM module...');
+    debugOverlay.log('4. Fetching WASM module from server...');
+    const wasmRes = await fetch('/pure_tone_bg.wasm');
+    if (!wasmRes.ok) {
+      debugOverlay.error('Failed to fetch WASM', `${wasmRes.status} ${wasmRes.statusText}`);
+      return;
+    }
 
+    debugOverlay.log('   Compiling WASM module on main thread...');
+    const wasmBytes = await wasmRes.arrayBuffer();
+    const wasmModule = await WebAssembly.compile(wasmBytes);
+    debugOverlay.success('WASM module compiled');
+
+    debugOverlay.log('5. Sending compiled module to worklet...');
     const wasmInitPromise = new Promise<void>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('WASM initialization timeout'));
@@ -402,22 +413,15 @@ async function startTuner() {
       tunerNode.port.start();
     });
 
-    const wasmRes = await fetch('/pure_tone_bg.wasm');
-    if (!wasmRes.ok) {
-      debugOverlay.error('Failed to fetch WASM', `${wasmRes.status} ${wasmRes.statusText}`);
-      return;
-    }
+    tunerNode.port.postMessage({ type: 'load-wasm', wasmModule });
 
-    const wasmBuffer = await wasmRes.arrayBuffer();
-    tunerNode.port.postMessage({ type: 'load-wasm', wasmBytes: wasmBuffer }, [wasmBuffer]);
-
-    debugOverlay.log('   Waiting for WASM initialization...');
+    debugOverlay.log('   Waiting for worklet to instantiate...');
     await wasmInitPromise;
-    debugOverlay.success('WASM initialized');
+    debugOverlay.success('WASM instantiated in worklet');
 
     tunerNode.port.postMessage({ type: 'set-mode', mode: currentMode });
 
-    debugOverlay.log('5. Initializing UI...');
+    debugOverlay.log('6. Initializing UI...');
     debugOverlay.success('All systems ready!');
     setTimeout(() => debugOverlay.hide(), 2000);
 
