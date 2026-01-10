@@ -128,7 +128,8 @@ export class TunerCanvas {
    */
   private drawStaticElementsToContext(ctx: CanvasRenderingContext2D) {
     const centerX = this.width / 2;
-    const centerY = this.height / 2;
+    // Match render loop: Shift visual center up to 40%
+    const centerY = this.height * 0.4;
     const radius = Math.min(this.width, this.height) * 0.4;
     const fontSize = Math.min(Math.floor(radius * 0.75), 80);
     const verticalOffset = radius * 0.6;
@@ -249,7 +250,8 @@ export class TunerCanvas {
     }
 
     const centerX = this.width / 2;
-    const centerY = this.height / 2;
+    // Shift visual center up to 40% to leave room for bottom UI (String Selector)
+    const centerY = this.height * 0.4;
     const radius = Math.min(this.width, this.height) * 0.4;
 
     // Clamp font size to prevent excessive scaling on desktop
@@ -374,7 +376,8 @@ export class TunerCanvas {
     const barWidth = this.width * 0.6;
     const barHeight = 4;
     const barX = (this.width - barWidth) / 2;
-    const barY = this.height - 40;
+    // Raise meter to clear the string selector UI (approx 100px tall)
+    const barY = this.height - 140;
 
     const hasSignal = this.displayedVolume > VOLUME_METER_DISPLAY_THRESHOLD || this.peakVolume > VOLUME_METER_DISPLAY_THRESHOLD;
 

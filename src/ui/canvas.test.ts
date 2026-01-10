@@ -59,7 +59,7 @@ describe('TunerCanvas', () => {
     canvas.render(state, 0);
 
     // For 0 cents, the bead should be at (centerX, pivotY - radius)
-    const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const centerX = (canvas as any).width / 2;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
@@ -88,7 +88,7 @@ describe('TunerCanvas', () => {
 
     // For +25 cents, the bead should be to the right of center
     const centerX = (canvas as any).width / 2;
-    const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
     // Find arc calls that represent the bead (small radius < 20)
@@ -120,7 +120,7 @@ describe('TunerCanvas', () => {
 
     // For -25 cents, the bead should be to the left of center
     const centerX = (canvas as any).width / 2;
-    const pivotY = (canvas as any).height / 2 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
     const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
 
     // Find arc calls that represent the bead (small radius < 20)
