@@ -525,12 +525,18 @@ class TunerProcessor extends AudioWorkletProcessor {
       if (!initSync || !PitchDetector) {
         throw new Error('WASM glue code not loaded');
       }
+
+      this.port.postMessage({ type: 'debug', message: 'Calling initSync...' });
       initSync(wasmModule);
+
+      this.port.postMessage({ type: 'debug', message: `Creating PitchDetector with sampleRate=${sampleRate}, bufferSize=${this.BUFFER_SIZE}...` });
       this.detector = new PitchDetector(sampleRate, this.BUFFER_SIZE);
+
       this.initialized = true;
       this.port.postMessage({ type: 'wasm-ready' });
     } catch (e) {
-      this.port.postMessage({ type: 'wasm-error', error: e instanceof Error ? e.message : String(e) });
+      const errorMsg = e instanceof Error ? `${e.message}\n${e.stack}` : String(e);
+      this.port.postMessage({ type: 'wasm-error', error: errorMsg });
     }
   }
 

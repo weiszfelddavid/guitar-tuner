@@ -446,6 +446,8 @@ async function startTuner() {
           clearTimeout(timeoutId);
           tunerNode.port.removeEventListener('message', messageHandler);
           reject(new Error(event.data.error));
+        } else if (event.data.type === 'debug') {
+          debugOverlay.log(`   [Worklet] ${event.data.message}`);
         }
       };
       tunerNode.port.addEventListener('message', messageHandler);
