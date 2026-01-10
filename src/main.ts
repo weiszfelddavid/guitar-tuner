@@ -877,6 +877,17 @@ document.querySelector('#app')!.innerHTML = `
   </div>
 `;
 
-document.querySelector('#start-btn')?.addEventListener('click', async () => {
-  await startTuner();
-});
+const startBtn = document.querySelector('#start-btn');
+console.log('[MAIN] Start button found:', startBtn ? 'YES' : 'NO');
+
+if (startBtn) {
+  startBtn.addEventListener('click', async () => {
+    console.log('[MAIN] Start button clicked!');
+    try {
+      await startTuner();
+      console.log('[MAIN] startTuner completed');
+    } catch (err) {
+      console.error('[MAIN] startTuner failed:', err);
+    }
+  });
+}
