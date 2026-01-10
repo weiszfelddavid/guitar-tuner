@@ -429,6 +429,13 @@ async function startTuner() {
 
     tunerNode.port.addEventListener('message', messageHandler);
     tunerNode.port.start();
+    
+    // Listen for processor errors (crashes, OOM, etc.)
+    tunerNode.addEventListener('processorerror', (err) => {
+      debugOverlay.error('Worklet crashed', `processorerror event received: ${JSON.stringify(err)}`);
+      // Log more details if available
+      console.error('[MAIN] Worklet processorerror:', err);
+    });
 
     debugOverlay.log('   Sending glue code to worklet...');
     const glueLoadPromise = new Promise<void>((resolve, reject) => {
@@ -446,12 +453,14 @@ async function startTuner() {
       return;
     }
 
-    debugOverlay.log('   Compiling WASM module on main thread...');
+    // We pass ArrayBuffer instead of Module to avoid potential structured clone issues
+    // with WebAssembly.Module on some platforms/versions.
+    // The glue code's initSync function handles ArrayBuffer by creating a Module from it.
+    debugOverlay.log('   Downloading WASM binary...');
     const wasmBytes = await wasmRes.arrayBuffer();
-    const wasmModule = await WebAssembly.compile(wasmBytes);
-    debugOverlay.success('WASM module compiled');
+    debugOverlay.success(`WASM binary downloaded (${wasmBytes.byteLength} bytes)`);
 
-    debugOverlay.log('6. Sending compiled module to worklet...');
+    debugOverlay.log('6. Sending WASM bytes to worklet...');
     const wasmInitPromise = new Promise<void>((resolve, reject) => {
       wasmResolve = resolve;
       wasmReject = reject;
@@ -459,7 +468,7 @@ async function startTuner() {
     wasmTimeout = setTimeout(() => wasmReject(new Error('WASM initialization timeout - Worklet did not respond in time')), WASM_INIT_TIMEOUT_MS);
 
     debugOverlay.log('   Posting load-wasm message to worklet...');
-    tunerNode.port.postMessage({ type: 'load-wasm', wasmModule });
+    tunerNode.port.postMessage({ type: 'load-wasm', wasmModule: wasmBytes });
     debugOverlay.log('   Message posted, waiting for response...');
 
     await wasmInitPromise;

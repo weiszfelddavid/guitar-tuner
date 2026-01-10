@@ -539,7 +539,7 @@ class TunerProcessor extends AudioWorkletProcessor {
         }
       `;
       
-      (0, eval)(glueCode);
+      (0, eval)(safeGlue);
 
       // Access the globals that were defined
       initSync = (globalThis as any).initSync;
