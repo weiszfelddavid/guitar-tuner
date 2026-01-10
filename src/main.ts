@@ -1,6 +1,6 @@
 // TEMPORARY: On-screen console for mobile debugging
 (function () {
-  const out: string[] = [];
+  const out: string[] = ['[LOGGER] Starting on-screen logger...'];
   let pre: HTMLPreElement | null = null;
 
   const ensurePre = () => {
@@ -8,6 +8,8 @@
       pre = document.createElement('pre');
       pre.style.cssText = 'white-space:pre-wrap;font-size:12px;padding:10px;background:#000;color:#0f0;margin:0;position:fixed;top:0;left:0;width:100%;height:100%;overflow:auto;z-index:999999';
       document.body.appendChild(pre);
+      out.push('[LOGGER] Pre element created and appended to body');
+      if (pre) pre.textContent = out.join('\n');
     }
   };
 
@@ -17,7 +19,14 @@
   };
 
   const log = (...a: any[]) => {
-    out.push(a.map(x => String(x)).join(' '));
+    const msg = a.map(x => {
+      try {
+        return String(x);
+      } catch (e) {
+        return '[Unstringifiable]';
+      }
+    }).join(' ');
+    out.push(msg);
     if (out.length > 200) out.shift(); // Keep last 200 lines
     show();
   };
@@ -25,16 +34,28 @@
   console.log = log;
   console.error = log;
   console.warn = log;
-  (window as any).onerror = (m: any, s: any, l: any, c: any, e: any) => log('ERROR', m, e?.stack || '');
-  (window as any).onunhandledrejection = (e: any) => log('PROMISE REJECT', e.reason);
+  (window as any).onerror = (m: any, s: any, l: any, c: any, e: any) => {
+    log('ERROR', m, e?.stack || e?.message || 'No error details');
+  };
+  (window as any).onunhandledrejection = (e: any) => {
+    log('PROMISE REJECT', e.reason?.stack || e.reason?.message || String(e.reason));
+  };
 
   // Ensure pre exists when DOM loads
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensurePre);
+    document.addEventListener('DOMContentLoaded', () => {
+      ensurePre();
+      log('[LOGGER] DOMContentLoaded fired');
+    });
   } else {
     ensurePre();
+    log('[LOGGER] DOM already ready');
   }
+
+  log('[LOGGER] Logger initialized');
 })();
+
+console.log('[MAIN] Importing modules...');
 
 import './style.css';
 import { getAudioContext, getMicrophoneStream } from './audio/setup';
@@ -51,6 +72,9 @@ import {
 // import { initDebugConsole } from './ui/debug-console';
 import { StringSelector } from './ui/string-selector';
 import pkg from '../package.json';
+
+console.log('[MAIN] All modules imported successfully');
+console.log('[MAIN] Version:', pkg.version);
 
 // Enable on-screen debugging for mobile
 // initDebugConsole(); // DISABLED - using top-level logger instead
