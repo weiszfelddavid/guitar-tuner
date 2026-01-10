@@ -496,14 +496,14 @@ class TunerProcessor extends AudioWorkletProcessor {
 
   loadGlue(glueCode: string) {
     try {
-      // Wrap the glue code in a function that returns the exports
-      const wrappedCode = `
-        ${glueCode}
-        return { initSync, PitchDetector };
-      `;
-      const glueExports = new Function(wrappedCode)();
-      initSync = glueExports.initSync;
-      PitchDetector = glueExports.PitchDetector;
+      // Evaluate glue code in global scope using indirect eval
+      // This gives it access to TextDecoder and other globals
+      (0, eval)(glueCode);
+
+      // Access the globals that were defined
+      initSync = (globalThis as any).initSync;
+      PitchDetector = (globalThis as any).PitchDetector;
+
       this.port.postMessage({ type: 'glue-loaded' });
     } catch (e) {
       this.port.postMessage({ type: 'glue-error', error: e instanceof Error ? e.message : String(e) });

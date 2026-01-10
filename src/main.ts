@@ -393,8 +393,10 @@ async function startTuner() {
     glueCode = glueCode
       .replace(/export class PitchDetector/g, 'class PitchDetector')
       .replace(/export class TunerResult/g, 'class TunerResult')
-      .replace(/export \{ initSync \};/g, '// initSync already defined')
-      .replace(/export default __wbg_init;/g, 'const default_init = __wbg_init;');
+      .replace(/export \{ initSync \};/g, 'globalThis.initSync = initSync;')
+      .replace(/export default __wbg_init;/g, 'const default_init = __wbg_init;')
+      // Also assign PitchDetector to globalThis after class definition
+      + '\nglobalThis.PitchDetector = PitchDetector;';
 
     debugOverlay.log('   Sending glue code to worklet...');
     const glueLoadPromise = new Promise<void>((resolve, reject) => {
