@@ -6,8 +6,25 @@
   const ensurePre = () => {
     if (!pre && document.body) {
       pre = document.createElement('pre');
-      pre.style.cssText = 'white-space:pre-wrap;font-size:11px;padding:8px;background:rgba(0,0,0,0.95);color:#0f0;margin:0;position:fixed;top:0;left:0;width:100%;height:50%;overflow:auto;z-index:999999;border-bottom:2px solid #0f0';
+      pre.style.cssText = 'white-space:pre-wrap;font-size:11px;padding:8px;background:rgba(0,0,0,0.95);color:#0f0;margin:0;position:fixed;top:0;left:0;width:100%;height:50%;overflow:auto;z-index:999999;border-bottom:2px solid #0f0;transition:height 0.3s ease;';
       document.body.appendChild(pre);
+
+      // Add collapse/expand button
+      const toggleBtn = document.createElement('button');
+      toggleBtn.textContent = 'Collapse Logs';
+      toggleBtn.style.cssText = 'position:fixed;top:5px;right:5px;z-index:1000000;padding:4px 8px;font-size:10px;background:#333;color:white;border:1px solid #666;border-radius:4px;cursor:pointer;';
+      
+      let isCollapsed = false;
+      toggleBtn.onclick = () => {
+        isCollapsed = !isCollapsed;
+        if (pre) {
+          pre.style.height = isCollapsed ? '30px' : '50%';
+          pre.style.overflow = isCollapsed ? 'hidden' : 'auto';
+        }
+        toggleBtn.textContent = isCollapsed ? 'Expand Logs' : 'Collapse Logs';
+      };
+      document.body.appendChild(toggleBtn);
+
       out.push('[LOGGER] Pre element created and appended to body');
       if (pre) pre.textContent = out.join('\n');
     }
