@@ -1,10 +1,4 @@
 export function initDebugConsole() {
-    // Only initialize debug console in development mode
-    if (!import.meta.env.DEV) {
-        console.log('Production mode - debug console disabled');
-        return;
-    }
-
     // Storage key for debug console visibility preference
     const STORAGE_KEY_DEBUG = 'tuner:debug';
     const isVisible = localStorage.getItem(STORAGE_KEY_DEBUG) === 'true';

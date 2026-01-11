@@ -36,11 +36,13 @@ export class MobileDebugOverlay {
   }
 
   log(message: string): void {
+    console.log(`[Overlay] ${message}`);
     this.logs.push(message);
     this.render();
   }
 
   error(message: string, errorDetails?: string): void {
+    console.error(`[Overlay] ${message}`, errorDetails || '');
     const errorMsg = `❌ ERROR: ${message}`;
     this.logs.push(errorMsg);
     if (errorDetails) {
@@ -50,6 +52,7 @@ export class MobileDebugOverlay {
   }
 
   success(message: string): void {
+    console.log(`[Overlay] ✅ ${message}`);
     this.logs.push(`✅ ${message}`);
     this.render();
   }

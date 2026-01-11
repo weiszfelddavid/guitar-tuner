@@ -1,76 +1,4 @@
-// TEMPORARY: On-screen console for mobile debugging
-(function () {
-  const out: string[] = ['[LOGGER] Starting on-screen logger...'];
-  let pre: HTMLPreElement | null = null;
-
-  const ensurePre = () => {
-    if (!pre && document.body) {
-      pre = document.createElement('pre');
-      pre.style.cssText = 'white-space:pre-wrap;font-size:11px;padding:8px;background:rgba(0,0,0,0.95);color:#0f0;margin:0;position:fixed;top:0;left:0;width:100%;height:50%;overflow:auto;z-index:999999;border-bottom:2px solid #0f0;transition:height 0.3s ease;';
-      document.body.appendChild(pre);
-
-      // Add collapse/expand button
-      const toggleBtn = document.createElement('button');
-      toggleBtn.textContent = 'Collapse Logs';
-      toggleBtn.style.cssText = 'position:fixed;top:5px;right:5px;z-index:1000000;padding:4px 8px;font-size:10px;background:#333;color:white;border:1px solid #666;border-radius:4px;cursor:pointer;';
-      
-      let isCollapsed = false;
-      toggleBtn.onclick = () => {
-        isCollapsed = !isCollapsed;
-        if (pre) {
-          pre.style.height = isCollapsed ? '30px' : '50%';
-          pre.style.overflow = isCollapsed ? 'hidden' : 'auto';
-        }
-        toggleBtn.textContent = isCollapsed ? 'Expand Logs' : 'Collapse Logs';
-      };
-      document.body.appendChild(toggleBtn);
-
-      out.push('[LOGGER] Pre element created and appended to body');
-      if (pre) pre.textContent = out.join('\n');
-    }
-  };
-
-  const show = () => {
-    ensurePre();
-    if (pre) pre.textContent = out.join('\n');
-  };
-
-  const log = (...a: unknown[]) => {
-    const msg = a.map(x => {
-      try {
-        return String(x);
-      } catch (e) {
-        return '[Unstringifiable]';
-      }
-    }).join(' ');
-    out.push(msg);
-    if (out.length > 200) out.shift(); // Keep last 200 lines
-    show();
-  };
-
-  console.log = log;
-  console.error = log;
-  console.warn = log;
-  window.onerror = (m: string | Event, s: string | undefined, l: number | undefined, c: number | undefined, e: Error | undefined) => {
-    log('ERROR', m, e?.stack || e?.message || 'No error details');
-  };
-  window.onunhandledrejection = (e: PromiseRejectionEvent) => {
-    log('PROMISE REJECT', e.reason?.stack || e.reason?.message || String(e.reason));
-  };
-
-  // Ensure pre exists when DOM loads
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      ensurePre();
-      log('[LOGGER] DOMContentLoaded fired');
-    });
-  } else {
-    ensurePre();
-    log('[LOGGER] DOM already ready');
-  }
-
-  log('[LOGGER] Logger initialized');
-})();
+// TEMPORARY: On-screen console for mobile debugging - REMOVED
 
 console.log('[MAIN] Importing modules...');
 
@@ -87,17 +15,18 @@ import {
 } from './constants/tuner-config';
 import { StringSelector } from './ui/string-selector';
 import { MobileDebugOverlay } from './ui/mobile-debug-overlay';
+import { initDebugConsole } from './ui/debug-console';
 import pkg from '../package.json';
 
 console.log('[MAIN] All modules imported successfully');
 console.log('[MAIN] Version:', pkg.version);
 
 // Enable on-screen debugging for mobile
-// initDebugConsole(); // DISABLED - using top-level logger instead
+initDebugConsole();
 
 // Mode management with local storage
 const STORAGE_KEY_MODE = 'tuner:mode';
-let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY_MODE) as TunerMode) || 'strict';
+let currentMode: TunerMode = (localStorage.getItem(STORAGE_KEY_MODE) as TunerMode) || 'forgiving';
 
 // Centralized configuration - updated when mode changes
 let currentConfig: TunerConfig = getDefaultConfig(currentMode);
@@ -361,7 +290,7 @@ function showErrorDialog(errorInfo: ReturnType<typeof categorizeWasmError>, onRe
 
 async function startTuner() {
   const debugOverlay = new MobileDebugOverlay();
-  debugOverlay.show();
+  // debugOverlay.show(); // Hidden by default
 
   try {
     debugOverlay.log('1. Starting Audio Context...');
@@ -546,8 +475,8 @@ async function startTuner() {
         });
     }
 
-    // Add debug console toggle button next to mode toggle (DEV only)
-    if (import.meta.env.DEV) {
+    // Add debug console toggle button next to mode toggle
+    // if (import.meta.env.DEV) { // Enabled for Prod as well
         let debugToggle = document.getElementById('debug-toggle');
         if (!debugToggle) {
             debugToggle = document.createElement('div');
@@ -575,7 +504,7 @@ async function startTuner() {
                 label.textContent = isDebugVisible ? 'Visible' : 'Hidden';
             }
         }
-    }
+    // }
 
     // Add string selector component
     if (!stringSelector) {
