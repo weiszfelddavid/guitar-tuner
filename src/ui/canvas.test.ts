@@ -59,9 +59,9 @@ describe('TunerCanvas', () => {
     canvas.render(state, 0);
 
     // For 0 cents, the bead should be at (centerX, pivotY - radius)
-    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
+    const pivotY = (canvas as any).height * 0.5 + (Math.min((canvas as any).width, (canvas as any).height) * 0.35) * 0.6;
     const centerX = (canvas as any).width / 2;
-    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
+    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.35;
 
     // Check that the bead (arc) is drawn near the expected position
     const arcCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
@@ -88,8 +88,8 @@ describe('TunerCanvas', () => {
 
     // For +25 cents, the bead should be to the right of center
     const centerX = (canvas as any).width / 2;
-    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
-    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
+    const pivotY = (canvas as any).height * 0.5 + (Math.min((canvas as any).width, (canvas as any).height) * 0.35) * 0.6;
+    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.35;
 
     // Find arc calls that represent the bead (small radius < 20)
     const beadCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
@@ -120,8 +120,8 @@ describe('TunerCanvas', () => {
 
     // For -25 cents, the bead should be to the left of center
     const centerX = (canvas as any).width / 2;
-    const pivotY = (canvas as any).height * 0.4 + (Math.min((canvas as any).width, (canvas as any).height) * 0.4) * 0.6;
-    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.4;
+    const pivotY = (canvas as any).height * 0.5 + (Math.min((canvas as any).width, (canvas as any).height) * 0.35) * 0.6;
+    const radius = Math.min((canvas as any).width, (canvas as any).height) * 0.35;
 
     // Find arc calls that represent the bead (small radius < 20)
     const beadCalls = (ctx.arc as any).mock.calls.filter((call: number[]) => {
@@ -136,29 +136,6 @@ describe('TunerCanvas', () => {
     // Check that at least one bead is to the left of center
     const hasLeftwardBead = beadCalls.some((call: number[]) => call[0] < centerX);
     expect(hasLeftwardBead).toBe(true);
-  });
-
-  it('should render the volume meter correctly', () => {
-    const state: TunerState = {
-      noteName: 'A2',
-      cents: 0,
-      clarity: 1,
-      volume: 0.1, // This will be scaled
-      isLocked: false,
-      frequency: 110,
-      isAttacking: false,
-    };
-    canvas.render(state, 0);
-
-    const SENSITIVITY_SCALE = 0.3;
-    const expectedVolume = Math.min(state.volume / SENSITIVITY_SCALE, 1.0);
-    const barWidth = (canvas as any).width * 0.6;
-
-    // The last call to fillRect is the volume bar
-    const fillRectCalls = (ctx.fillRect as any).mock.calls;
-    const volumeBarCall = fillRectCalls[fillRectCalls.length - 2];
-    
-    expect(volumeBarCall[2]).toBeCloseTo(barWidth * expectedVolume); // Check the width
   });
 
   it('should match the visual snapshot for a given state', () => {

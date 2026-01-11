@@ -430,12 +430,22 @@ async function startTuner() {
     // Remove start container instead of wiping body
     document.querySelector('.start-container')?.remove();
 
-    // Create canvas if it doesn't exist (it shouldn't)
+    // Create central UI wrapper
+    let uiWrapper = document.getElementById('ui-wrapper');
+    if (!uiWrapper) {
+        uiWrapper = document.createElement('div');
+        uiWrapper.id = 'ui-wrapper';
+        uiWrapper.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;';
+        document.body.appendChild(uiWrapper);
+    }
+
+    // Create canvas if it doesn't exist
     let canvasEl = document.getElementById('tuner-canvas');
     if (!canvasEl) {
         canvasEl = document.createElement('canvas');
         canvasEl.id = 'tuner-canvas';
-        document.body.appendChild(canvasEl);
+        canvasEl.style.cssText = 'pointer-events: auto; width: 100%; height: 400px;';
+        uiWrapper.appendChild(canvasEl);
     }
     const canvas = new TunerCanvas('tuner-canvas');
 
@@ -508,7 +518,11 @@ async function startTuner() {
 
     // Add string selector component
     if (!stringSelector) {
-        stringSelector = new StringSelector();
+        stringSelector = new StringSelector('string-selector', uiWrapper);
+        const selectorEl = document.getElementById('string-selector');
+        if (selectorEl) {
+            selectorEl.style.pointerEvents = 'auto';
+        }
 
         // Handle manual string selection
         stringSelector.onSelect((stringId) => {

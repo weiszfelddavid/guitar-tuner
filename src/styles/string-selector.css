@@ -3,19 +3,18 @@
   .string-selector {
     /* Component API variables with defaults */
     --selector-bg: var(--color-overlay);
-    --selector-padding-block: var(--space-lg);
+    --selector-padding-block: var(--space-md);
     --selector-padding-inline: var(--space-sm);
     --selector-gap: var(--space-xs);
 
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
+    width: 100%;
+    margin-top: -80px; /* Pull it up closer to the arc pivot */
     padding-block: var(--selector-padding-block);
     padding-inline: var(--selector-padding-inline);
-    background: linear-gradient(to top, var(--selector-bg) 0%, transparent 100%);
+    background: transparent;
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
     z-index: 1000;
     gap: var(--selector-gap);

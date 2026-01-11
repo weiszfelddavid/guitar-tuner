@@ -84,16 +84,18 @@ export class TunerCanvas {
   }
 
   private resize() {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    this.width = this.canvas.clientWidth || window.innerWidth;
+    this.height = this.canvas.clientHeight || 400;
 
     // 1. Set Physical Resolution (High DPI)
     this.canvas.width = this.width * window.devicePixelRatio;
     this.canvas.height = this.height * window.devicePixelRatio;
 
-    // 2. Set Logical Display Size (CSS)
-    this.canvas.style.width = `${this.width}px`;
-    this.canvas.style.height = `${this.height}px`;
+    // 2. Set Logical Display Size (CSS) - Only if not already set by wrapper
+    if (!this.canvas.style.width) {
+        this.canvas.style.width = `${this.width}px`;
+        this.canvas.style.height = `${this.height}px`;
+    }
 
     // 3. Normalize Coordinate System
     this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
@@ -128,9 +130,9 @@ export class TunerCanvas {
    */
   private drawStaticElementsToContext(ctx: CanvasRenderingContext2D) {
     const centerX = this.width / 2;
-    // Match render loop: Shift visual center up to 40%
-    const centerY = this.height * 0.4;
-    const radius = Math.min(this.width, this.height) * 0.4;
+    // Center vertically for the component wrapper
+    const centerY = this.height / 2;
+    const radius = Math.min(this.width, this.height) * 0.35;
     const fontSize = Math.min(Math.floor(radius * 0.75), 80);
     const verticalOffset = radius * 0.6;
     const pivotY = centerY + verticalOffset;
@@ -250,9 +252,9 @@ export class TunerCanvas {
     }
 
     const centerX = this.width / 2;
-    // Shift visual center up to 40% to leave room for bottom UI (String Selector)
-    const centerY = this.height * 0.4;
-    const radius = Math.min(this.width, this.height) * 0.4;
+    // Center vertically for component wrapper
+    const centerY = this.height / 2;
+    const radius = Math.min(this.width, this.height) * 0.35;
 
     // Clamp font size to prevent excessive scaling on desktop
     const fontSize = Math.min(Math.floor(radius * 0.75), 80);
@@ -340,113 +342,6 @@ export class TunerCanvas {
         this.ctx.font = `${listeningFontSize}px sans-serif`;
         this.ctx.fillStyle = this.colors.textSubtle;
         this.ctx.fillText("Listening...", centerX, pivotY);
-    }
-    
-    // ---------------------------------------------------------
-    // "Input Health" Meter (Signal Quality)
-    // ---------------------------------------------------------
-    
-    // 1. Normalize Volume (0.0 to 1.0)
-    // RMS is typically small. We scale it up.
-    // VOLUME_METER_SENSITIVITY_SCALE RMS is treated as "Max/Clipping" for visualization.
-    const targetVolume = Math.min(state.volume / VOLUME_METER_SENSITIVITY_SCALE, 1.0);
-
-    // 2. Ballistics: Instant Rise, Slow Decay
-    const DECAY_RATE = 0.5; // Units per second
-    if (targetVolume > this.displayedVolume) {
-        this.displayedVolume = targetVolume; // Instant rise
-    } else {
-        this.displayedVolume = Math.max(0, this.displayedVolume - (DECAY_RATE * dt)); // Slow decay
-    }
-
-    // 3. Peak Hold Logic
-    if (this.displayedVolume > this.peakVolume) {
-        this.peakVolume = this.displayedVolume;
-        this.peakTimer = 1.0; // Hold for 1 second
-    } else {
-        this.peakTimer -= dt;
-        if (this.peakTimer <= 0) {
-             // Drop peak slowly after hold
-             this.peakVolume = Math.max(this.displayedVolume, this.peakVolume - (DECAY_RATE * dt));
-        }
-    }
-
-    // 4. Draw The Meter
-    // Always show meter so users can verify microphone is working
-    const barWidth = this.width * 0.6;
-    const barHeight = 4;
-    const barX = (this.width - barWidth) / 2;
-    // Raise meter to clear the string selector UI (approx 100px tall)
-    const barY = this.height - 140;
-
-    const hasSignal = this.displayedVolume > VOLUME_METER_DISPLAY_THRESHOLD || this.peakVolume > VOLUME_METER_DISPLAY_THRESHOLD;
-
-    // Background Track - Always visible
-    // Dim when no signal, brighter when active
-    this.ctx.fillStyle = hasSignal ? this.colors.textSubtle : 'rgba(255, 255, 255, 0.1)';
-    this.ctx.fillRect(barX, barY, barWidth, barHeight);
-
-    // Show "READY" indicator when no signal (mic is working but silent)
-    if (!hasSignal) {
-        this.ctx.font = `11px sans-serif`;
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('MIC READY', centerX, barY - 10);
-    }
-
-    if (hasSignal) {
-        // Determine Zone Color & Feedback Text
-        let zoneColor = this.colors.textSubtle; // Default Weak
-        let feedbackText = "";
-        let feedbackIcon = "";
-
-        if (this.displayedVolume > VOLUME_GOOD_THRESHOLD) {
-            zoneColor = this.colors.danger; // Hot/Clip (Red)
-            feedbackText = "TOO LOUD / MOVE BACK";
-            feedbackIcon = "⚠";
-        } else if (this.displayedVolume > 0.15) {
-            zoneColor = this.colors.success; // Good (Green)
-            feedbackText = "OPTIMAL";
-            feedbackIcon = "✓";
-        } else {
-            zoneColor = this.colors.textMuted; // Weak (Grey)
-            feedbackText = "MOVE CLOSER";
-            feedbackIcon = "↑";
-        }
-
-        // Draw Active Volume Bar
-        this.ctx.fillStyle = zoneColor;
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = zoneColor;
-        this.ctx.fillRect(barX, barY, barWidth * this.displayedVolume, barHeight);
-        this.ctx.shadowBlur = 0; // Reset
-
-        // Draw Peak Marker (White Line)
-        const peakX = barX + (barWidth * this.peakVolume);
-        this.ctx.fillStyle = this.colors.text;
-        this.ctx.fillRect(peakX, barY - 2, 2, barHeight + 4);
-
-        // Draw Feedback Text with Icon
-        if (feedbackText) {
-            // Draw icon
-            this.ctx.font = `bold 14px sans-serif`;
-            this.ctx.fillStyle = zoneColor;
-            this.ctx.textAlign = 'center';
-
-            // Add subtle glow effect for optimal zone
-            if (feedbackIcon === "✓") {
-                this.ctx.shadowBlur = 8;
-                this.ctx.shadowColor = this.colors.success;
-            }
-
-            this.ctx.fillText(feedbackIcon, centerX - 35, barY - 8);
-            this.ctx.shadowBlur = 0; // Reset
-
-            // Draw text
-            this.ctx.font = `bold 11px sans-serif`;
-            this.ctx.fillStyle = zoneColor;
-            this.ctx.fillText(feedbackText, centerX + 5, barY - 10);
-        }
     }
   }
 }

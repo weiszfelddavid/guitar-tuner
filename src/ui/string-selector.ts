@@ -14,7 +14,7 @@ export class StringSelector {
   private autoDetectedString: string | null = null;
   private onStringSelect: ((stringId: string | null) => void) | null = null;
 
-  constructor(containerId: string = 'string-selector') {
+  constructor(containerId: string = 'string-selector', parent: HTMLElement = document.body) {
     // Create container
     this.container = document.createElement('div');
     this.container.id = containerId;
@@ -47,7 +47,7 @@ export class StringSelector {
     });
 
     // Add to DOM
-    document.body.appendChild(this.container);
+    parent.appendChild(this.container);
   }
 
   private handleStringClick(stringId: string) {
